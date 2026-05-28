@@ -28,7 +28,7 @@
 
     <section class="relative flex items-center px-10 py-20 min-h-[80vh] overflow-hidden">
         <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Car wash background" class="w-full h-full object-cover" />
+            <img src="<%=request.getContextPath()%>/image/background_CarWash.avif" class="w-full h-full object-cover" />
             <div class="absolute inset-0 bg-gradient-to-r from-[#111827] via-[#111827]/80 to-transparent"></div>
         </div>
 

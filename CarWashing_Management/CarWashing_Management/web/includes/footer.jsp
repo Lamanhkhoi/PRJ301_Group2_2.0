@@ -9,9 +9,7 @@
     <div class="max-w-6xl mx-auto px-10 flex flex-col md:flex-row justify-between items-center gap-6">
         
         <div class="flex-shrink-0">
-            <div class="w-[200px] h-[60px] border-2 border-dashed border-gray-500 flex items-center justify-center rounded-md bg-gray-800">
-                <span class="text-gray-400 text-sm font-medium">Chèn Logo FPT vào đây</span>
-            </div>
+            <img src="<%=request.getContextPath()%>/image/Logo_Trường_Đại_học_FPT.svg.png" alt="Logo FPT" class="h-20 w-auto object-contain drop-shadow-md">
         </div>
 
         <div class="text-center md:text-right">

@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBContext {
-    private static final String DB_NAME = "CarWashDB";
+    private static final String DB_NAME = "AutoCarWashingDB";
     private static final String DB_USER_NAME = "SA";
     private static final String DB_PASSWORD = "12345";
 

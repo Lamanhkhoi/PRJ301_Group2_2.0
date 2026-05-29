@@ -4,7 +4,7 @@ package dto;
 
 import java.util.Date;
 
-public class CustomerDTO {
+public class Customer {
     private int customerId;
     private int accountId;
     private String phone;
@@ -13,10 +13,10 @@ public class CustomerDTO {
     private String address;
     private Date createdAt;
 
-    public CustomerDTO() {
+    public Customer() {
     }
 
-    public CustomerDTO(int customerId, int accountId, String phone, Date dob, String gender, String address, Date createdAt) {
+    public Customer(int customerId, int accountId, String phone, Date dob, String gender, String address, Date createdAt) {
         this.customerId = customerId;
         this.accountId = accountId;
         this.phone = phone;

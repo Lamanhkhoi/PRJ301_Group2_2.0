@@ -4,7 +4,7 @@ package dto;
 
 import java.util.Date;
 
-public class AccountDTO {
+public class Account {
     private int accountId;
     private String username;
     private String email;
@@ -17,10 +17,10 @@ public class AccountDTO {
     private Date updatedAt;
     private Date lastLoginAt;
 
-    public AccountDTO() {
+    public Account() {
     }
 
-    public AccountDTO(int accountId, String username, String email, String passwordHash, String fullname, String avaUrl, String Role, Boolean status, Date createdAt, Date updatedAt, Date lastLoginAt) {
+    public Account(int accountId, String username, String email, String passwordHash, String fullname, String avaUrl, String Role, Boolean status, Date createdAt, Date updatedAt, Date lastLoginAt) {
         this.accountId = accountId;
         this.username = username;
         this.email = email;

@@ -32,8 +32,8 @@ public class LoginController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
         try {
             //lay email/username va password(chưa mã hóa ) tu form login
-            String login = request.getParameter("txtLogin");
-            String password = request.getParameter("txtPassword");
+            String login = request.getParameter("username");
+            String password = request.getParameter("password");
 
             AccountDAO dao = new AccountDAO();
 
@@ -44,7 +44,7 @@ public class LoginController extends HttpServlet {
                 request.setAttribute("ERROR",
                         "Username/Email or Password is invalid");
 
-                request.getRequestDispatcher("login.jsp")
+                request.getRequestDispatcher("login_view.jsp")
                         .forward(request, response);
 
             } else {

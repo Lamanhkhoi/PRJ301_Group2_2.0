@@ -5,7 +5,9 @@
 package controller;
 
 import dao.AccountDAO;
+import dao.CustomerDAO;
 import dto.Account;
+import dto.Customer;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -39,11 +41,14 @@ public class LoginController extends HttpServlet {
 
             Account acc = dao.checkLogin(login, password);
 
+            CustomerDAO cdao = new CustomerDAO();
+
+            Customer cus = cdao.getCustomerByAccountId(acc.getAccountID());
+            
             if (acc == null) {
 
-                request.setAttribute("ERROR",
-                        "Username/Email or Password is invalid");
-
+                request.setAttribute("ERROR", "Username/Email or Password is invalid");
+                
                 request.getRequestDispatcher("login_view.jsp")
                         .forward(request, response);
 
@@ -51,9 +56,9 @@ public class LoginController extends HttpServlet {
 
                 if (acc.getStatus()) {
 
-                    request.getSession()
-                            .setAttribute("USER", acc);
-
+                    request.getSession().setAttribute("USER", acc);
+                    request.getSession().setAttribute("CUSTOMER", cus);
+                    
                     if ("Admin".equalsIgnoreCase(acc.getRole())) {
 
                         response.sendRedirect("AdminDashboardController");

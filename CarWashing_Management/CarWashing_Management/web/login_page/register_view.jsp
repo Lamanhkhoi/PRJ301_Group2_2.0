@@ -12,7 +12,7 @@
         <p class="text-[#9CA3AF] text-sm mt-2">Trở thành Member để nhận ưu đãi</p>
     </div>
 
-    <form action="register" method="POST" class="space-y-4">
+    <form action="RegisterController" method="POST" class="space-y-4">
         <input type="text" name="reg_fullname" placeholder="Họ và Tên" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
         <input type="email" name="reg_email" placeholder="Email" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
         <input type="tel" name="reg_phoneNumber" placeholder="Nhập số điện thoại" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>

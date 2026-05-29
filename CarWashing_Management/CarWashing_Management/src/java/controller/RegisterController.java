@@ -5,7 +5,7 @@
 package controller;
 
 import dao.AccountDAO;
-import dto.AccountDTO;
+import dto.Account;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -67,11 +67,11 @@ public class RegisterController extends HttpServlet {
 
             AccountDAO dao = new AccountDAO();
 
-            AccountDTO found = dao.getAccountByEmail(email);
+            Account found = dao.getAccountByEmail(email);
 
             if (found == null) {
 
-                AccountDTO acc = new AccountDTO();
+                Account acc = new Account();
 
                 acc.setFullname(fullname);
                 acc.setUsername(username);

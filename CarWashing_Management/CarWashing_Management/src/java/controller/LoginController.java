@@ -5,7 +5,7 @@
 package controller;
 
 import dao.AccountDAO;
-import dto.AccountDTO;
+import dto.Account;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -37,7 +37,7 @@ public class LoginController extends HttpServlet {
 
             AccountDAO dao = new AccountDAO();
 
-            AccountDTO acc = dao.checkLogin(login, password);
+            Account acc = dao.checkLogin(login, password);
 
             if (acc == null) {
 

@@ -4,8 +4,9 @@
  */
 package controller;
 
+import dao.AccountDAO;
+import dto.AccountDTO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,20 +29,52 @@ public class LoginController extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet LoginController</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet LoginController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            //lay email/username va password(chưa mã hóa ) tu form login
+            String login = request.getParameter("txtLogin");
+            String password = request.getParameter("txtPassword");
+
+            AccountDAO dao = new AccountDAO();
+
+            AccountDTO acc = dao.checkLogin(login, password);
+
+            if (acc == null) {
+
+                request.setAttribute("ERROR",
+                        "Username/Email or Password is invalid");
+
+                request.getRequestDispatcher("login.jsp")
+                        .forward(request, response);
+
+            } else {
+
+                if (acc.getStatus()) {
+
+                    request.getSession()
+                            .setAttribute("USER", acc);
+
+                    if ("Admin".equalsIgnoreCase(acc.getRole())) {
+
+                        response.sendRedirect("AdminDashboardController");
+
+                    } else {
+
+                        response.sendRedirect("CustomerDashboardController");
+                    }
+
+                } else {
+
+                    request.setAttribute("ERROR",
+                            "Account is inactive");
+
+                    request.getRequestDispatcher("login.jsp")
+                            .forward(request, response);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

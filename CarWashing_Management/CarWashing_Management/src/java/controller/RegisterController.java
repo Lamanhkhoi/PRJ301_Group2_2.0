@@ -4,6 +4,8 @@
  */
 package controller;
 
+import dao.AccountDAO;
+import dto.AccountDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -36,7 +38,7 @@ public class RegisterController extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet RegisterController</title>");            
+            out.println("<title>Servlet RegisterController</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet RegisterController at " + request.getContextPath() + "</h1>");
@@ -45,33 +47,64 @@ public class RegisterController extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+
+        try {
+
+            String fullname = request.getParameter("txtFullname");
+            String username = request.getParameter("txtUsername");
+            String email = request.getParameter("txtEmail");
+            String password = request.getParameter("txtPassword");
+
+            AccountDAO dao = new AccountDAO();
+
+            AccountDTO found = dao.getAccountByEmail(email);
+
+            if (found == null) {
+
+                AccountDTO acc = new AccountDTO();
+
+                acc.setFullname(fullname);
+                acc.setUsername(username);
+                acc.setEmail(email);
+                acc.setPasswordHash(password);
+
+                int result = dao.registerAccount(acc);
+
+                if (result > 0) {
+
+                    response.sendRedirect("login.jsp");
+
+                } else {
+
+                    request.setAttribute("ERROR",
+                            "Register failed");
+
+                    request.getRequestDispatcher("register.jsp")
+                            .forward(request, response);
+                }
+
+            } else {
+
+                request.setAttribute("ERROR",
+                        "Email already exists");
+
+                request.getRequestDispatcher("register.jsp")
+                        .forward(request, response);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

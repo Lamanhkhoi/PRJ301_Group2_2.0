@@ -51,7 +51,7 @@ public class RegisterController extends HttpServlet {
                 request.setAttribute("ERROR",
                         "Please fill in all required fields.");
 
-                request.getRequestDispatcher("register.jsp")
+                request.getRequestDispatcher("register_view.jsp")
                         .forward(request, response);
                 return;
             }
@@ -62,7 +62,7 @@ public class RegisterController extends HttpServlet {
                 request.setAttribute("ERROR",
                         "Password confirmation does not match.");
 
-                request.getRequestDispatcher("register.jsp")
+                request.getRequestDispatcher("register_view.jsp")
                         .forward(request, response);
                 return;
             }
@@ -77,7 +77,7 @@ public class RegisterController extends HttpServlet {
                 request.setAttribute("ERROR",
                         "Email already exists.");
 
-                request.getRequestDispatcher("register.jsp")
+                request.getRequestDispatcher("register_view.jsp")
                         .forward(request, response);
                 return;
             }
@@ -106,14 +106,14 @@ public class RegisterController extends HttpServlet {
                 // Hiện tại phone chưa được lưu
                 // vì CustomerDAO chưa có method xử lý
 
-                response.sendRedirect("login.jsp");
+                response.sendRedirect("login_view.jsp");
 
             } else {
 
                 request.setAttribute("ERROR",
                         "Register failed.");
 
-                request.getRequestDispatcher("register.jsp")
+                request.getRequestDispatcher("register_view.jsp")
                         .forward(request, response);
             }
 
@@ -124,7 +124,7 @@ public class RegisterController extends HttpServlet {
             request.setAttribute("ERROR",
                     "System error occurred.");
 
-            request.getRequestDispatcher("register.jsp")
+            request.getRequestDispatcher("register_view.jsp")
                     .forward(request, response);
         }
     }

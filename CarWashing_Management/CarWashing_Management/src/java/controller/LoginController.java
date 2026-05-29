@@ -68,7 +68,7 @@ public class LoginController extends HttpServlet {
                     request.setAttribute("ERROR",
                             "Account is inactive");
 
-                    request.getRequestDispatcher("login.jsp")
+                    request.getRequestDispatcher("login_view.jsp")
                             .forward(request, response);
                 }
             }

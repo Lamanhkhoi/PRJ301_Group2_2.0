@@ -1,55 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
+
 package controller;
 
 import dao.AccountDAO;
-import dto.AccountDTO;
+import dto.Account;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author Truc
- */
 @WebServlet(name = "RegisterController", urlPatterns = {"/RegisterController"})
 public class RegisterController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+    protected void processRequest(HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RegisterController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RegisterController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
+
+        response.sendRedirect("index.jsp");
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
+
         processRequest(request, response);
     }
 
@@ -60,61 +35,103 @@ public class RegisterController extends HttpServlet {
 
         try {
 
-            String fullname = request.getParameter("txtFullname");
-            String username = request.getParameter("txtUsername");
-            String email = request.getParameter("txtEmail");
-            String password = request.getParameter("txtPassword");
+            // Lấy dữ liệu từ form register_view.jsp
+            String fullname = request.getParameter("reg_fullname");
+            String email = request.getParameter("reg_email");
+            String phone = request.getParameter("reg_phoneNumber");
+            String password = request.getParameter("reg_password");
+            String rePassword = request.getParameter("reg_RE_password");
+
+            // Kiểm tra dữ liệu rỗng
+            if (fullname == null || fullname.trim().isEmpty()
+                    || email == null || email.trim().isEmpty()
+                    || password == null || password.trim().isEmpty()
+                    || rePassword == null || rePassword.trim().isEmpty()) {
+
+                request.setAttribute("ERROR",
+                        "Please fill in all required fields.");
+
+                request.getRequestDispatcher("register.jsp")
+                        .forward(request, response);
+                return;
+            }
+
+            // Kiểm tra xác nhận mật khẩu
+            if (!password.equals(rePassword)) {
+
+                request.setAttribute("ERROR",
+                        "Password confirmation does not match.");
+
+                request.getRequestDispatcher("register.jsp")
+                        .forward(request, response);
+                return;
+            }
 
             AccountDAO dao = new AccountDAO();
 
-            AccountDTO found = dao.getAccountByEmail(email);
+            // Kiểm tra email đã tồn tại chưa
+            Account found = dao.getAccountByEmail(email);
 
-            if (found == null) {
+            if (found != null) {
 
-                AccountDTO acc = new AccountDTO();
+                request.setAttribute("ERROR",
+                        "Email already exists.");
 
-                acc.setFullname(fullname);
-                acc.setUsername(username);
-                acc.setEmail(email);
-                acc.setPasswordHash(password);
+                request.getRequestDispatcher("register.jsp")
+                        .forward(request, response);
+                return;
+            }
 
-                int result = dao.registerAccount(acc);
+            // Tự tạo username từ email
+            String username;
 
-                if (result > 0) {
+            if (email.contains("@")) {
+                username = email.substring(0, email.indexOf("@"));
+            } else {
+                username = email;
+            }
 
-                    response.sendRedirect("login.jsp");
+            // Tạo Account
+            Account acc = new Account();
 
-                } else {
+            acc.setFullname(fullname);
+            acc.setUsername(username);
+            acc.setEmail(email);
+            acc.setPasswordHash(password);
 
-                    request.setAttribute("ERROR",
-                            "Register failed");
+            int result = dao.registerAccount(acc);
 
-                    request.getRequestDispatcher("register.jsp")
-                            .forward(request, response);
-                }
+            if (result > 0) {
+
+                // Hiện tại phone chưa được lưu
+                // vì CustomerDAO chưa có method xử lý
+
+                response.sendRedirect("login.jsp");
 
             } else {
 
                 request.setAttribute("ERROR",
-                        "Email already exists");
+                        "Register failed.");
 
                 request.getRequestDispatcher("register.jsp")
                         .forward(request, response);
             }
 
         } catch (Exception e) {
+
             e.printStackTrace();
+
+            request.setAttribute("ERROR",
+                    "System error occurred.");
+
+            request.getRequestDispatcher("register.jsp")
+                    .forward(request, response);
         }
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Register Controller";
+    }
 }
+

@@ -1,7 +1,7 @@
 package dao;
 
 import dbutils.DBContext;
-import dto.AccountDTO;
+import dto.Account;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,9 +12,9 @@ public class AccountDAO {
     PreparedStatement pst = null;
     ResultSet rs = null;
 
-    public AccountDTO checkLogin(String login, String password) {
+    public Account checkLogin(String login, String password) {
 
-        AccountDTO acc = null;
+        Account acc = null;
 
         try {
             cn = DBContext.getConnection();
@@ -34,7 +34,7 @@ public class AccountDAO {
 
             if (rs.next()) {
 
-                acc = new AccountDTO();
+                acc = new Account();
 
                 acc.setAccountID(rs.getInt("AccountId"));
                 acc.setUsername(rs.getString("Username"));
@@ -56,9 +56,9 @@ public class AccountDAO {
         return acc;
     }
 
-    public AccountDTO getAccountByEmail(String email) {
+    public Account getAccountByEmail(String email) {
 
-        AccountDTO acc = null;
+        Account acc = null;
 
         try {
 
@@ -74,7 +74,7 @@ public class AccountDAO {
 
             if (rs.next()) {
 
-                acc = new AccountDTO();
+                acc = new Account();
 
                 acc.setAccountID(rs.getInt("AccountId"));
                 acc.setEmail(rs.getString("Email"));
@@ -87,7 +87,7 @@ public class AccountDAO {
         return acc;
     }
 
-    public int registerAccount(AccountDTO acc) {
+    public int registerAccount(Account acc) {
 
         int result = 0;
 

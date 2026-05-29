@@ -4,7 +4,7 @@ package dto;
 
 import java.util.Date;
 
-public class CustomerLoyaltyDTO {
+public class CustomerLoyalty {
     private int custLoyaltyId;
     private int accountId;
     private int curentTierId;
@@ -15,10 +15,10 @@ public class CustomerLoyaltyDTO {
     private int totalWashCount;
     private Date lastTierUpdatedAt;
 
-    public CustomerLoyaltyDTO() {
+    public CustomerLoyalty() {
     }
 
-    public CustomerLoyaltyDTO(int custLoyaltyId, int accountId, int curentTierId, int currentPoints, int earnedPoints, int redeemedPoints, int totalSpent, int totalWashCount, Date lastTierUpdatedAt) {
+    public CustomerLoyalty(int custLoyaltyId, int accountId, int curentTierId, int currentPoints, int earnedPoints, int redeemedPoints, int totalSpent, int totalWashCount, Date lastTierUpdatedAt) {
         this.custLoyaltyId = custLoyaltyId;
         this.accountId = accountId;
         this.curentTierId = curentTierId;

@@ -4,7 +4,7 @@ package dto;
 
 import java.util.Date;
 
-public class RewardDTO {
+public class Reward {
     private int rewardId;
     private String rewardName;
     private String description;
@@ -15,10 +15,10 @@ public class RewardDTO {
     private Boolean isActive;
     private Date createdAt;
 
-    public RewardDTO() {
+    public Reward() {
     }
 
-    public RewardDTO(int rewardId, String rewardName, String description, int requiredPoints, String rewardType, int discount, int freeServiceId, Boolean isActive, Date createdAt) {
+    public Reward(int rewardId, String rewardName, String description, int requiredPoints, String rewardType, int discount, int freeServiceId, Boolean isActive, Date createdAt) {
         this.rewardId = rewardId;
         this.rewardName = rewardName;
         this.description = description;

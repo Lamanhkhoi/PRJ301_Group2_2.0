@@ -19,22 +19,7 @@
 
     <div class="flex h-screen overflow-hidden relative">
         
-        <aside class="w-64 bg-[#1E293B] text-white flex flex-col justify-between z-10">
-            <div>
-                <div class="h-20 flex items-center justify-center border-b border-slate-700">
-                    <img src="<%=request.getContextPath()%>/image/logo-fpt.png" alt="SmartWash" class="h-10">
-                </div>
-                <nav class="mt-6 flex flex-col gap-1 px-3">
-                    <a href="dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors"><i class="fa-solid fa-chart-pie w-5"></i><span>Tổng Quan</span></a>
-                    <a href="booking" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors"><i class="fa-solid fa-calendar-check w-5"></i><span>Đặt Lịch</span></a>
-                    <a href="my-vehicles" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500 text-white font-semibold transition-colors"><i class="fa-solid fa-car w-5"></i><span>Xe Của Tôi</span></a>
-                    <a href="history" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 transition-colors"><i class="fa-solid fa-clock-rotate-left w-5"></i><span>Lịch Sử</span></a>
-                </nav>
-            </div>
-            <div class="px-3 mb-6">
-                <a href="logout" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-colors border-t border-slate-700 mt-4"><i class="fa-solid fa-arrow-right-from-bracket w-5"></i><span>Đăng Xuất</span></a>
-            </div>
-        </aside>
+        <jsp:include page="/includes/sidebar_DashBoard.jsp" />
 
         <main class="flex-1 flex flex-col overflow-hidden">
             <header class="h-20 mesh-gradient-header flex items-center justify-between px-8 shadow-md z-10">
@@ -68,8 +53,16 @@
                                 <div class="flex justify-between"><span class="text-slate-500">Màu sắc:</span><span class="val-color font-semibold text-slate-800">Xanh Dương</span></div>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="openModal('edit', this)" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-emerald-200"><i class="fa-solid fa-pen"></i> Sửa</button>
-                                <button onclick="deleteVehicle(this)" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-red-200"><i class="fa-solid fa-trash-can"></i> Xóa</button>
+                                <button type="button" onclick="openModal('edit', this)" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-emerald-200">
+                                    <i class="fa-solid fa-pen"></i> Sửa
+                                </button>
+                                
+                                <form action="deleteVehicle" method="POST" class="flex-1 m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện này?');">
+                                    <input type="hidden" name="plate" value="51H-123.41">
+                                    <button type="submit" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-red-200">
+                                        <i class="fa-solid fa-trash-can"></i> Xóa
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -86,31 +79,35 @@
                     <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
 
-                <div class="p-6 space-y-4">
-                    <input type="hidden" id="modalMode"> <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe *</label>
-                        <input type="text" id="inpPlate" placeholder="VD: 51H-999.99" class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
+                <form id="vehicleForm" action="addVehicle" method="POST">
+                    <div class="p-6 space-y-4">
+                        <input type="hidden" id="inpOldPlate" name="oldPlate"> 
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe *</label>
+                            <input type="text" id="inpPlate" name="plate" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
+                            <input type="text" id="inpBrand" name="brand" placeholder="VD: Toyota, Mazda..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Dòng xe (Model)</label>
+                            <input type="text" id="inpModel" name="model" placeholder="VD: Vios, CX-5..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Màu sắc</label>
+                            <input type="text" id="inpColor" name="color" placeholder="VD: Đỏ, Đen, Trắng..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
-                        <input type="text" id="inpBrand" placeholder="VD: Toyota, Mazda..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Dòng xe (Model)</label>
-                        <input type="text" id="inpModel" placeholder="VD: Vios, CX-5..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">Màu sắc</label>
-                        <input type="text" id="inpColor" placeholder="VD: Đỏ, Đen, Trắng..." class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
-                    </div>
-                </div>
 
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <button onclick="closeModal()" class="px-5 py-2 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition">Hủy</button>
-                    <button onclick="saveVehicle()" class="px-5 py-2 rounded-lg font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition shadow-sm flex items-center gap-2">
-                        <i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin
-                    </button>
-                </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        <button type="button" onclick="closeModal()" class="px-5 py-2 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition">Hủy</button>
+                        <button type="submit" class="px-5 py-2 rounded-lg font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -118,96 +115,39 @@
 
     <script>
         const modal = document.getElementById('vehicleModal');
-        let currentEditCard = null; // Biến nhớ thẻ xe đang được bấm sửa
+        const form = document.getElementById('vehicleForm');
 
-        // 1. Hàm XÓA XE: Biến mất ngay lập tức
-        function deleteVehicle(btnElement) {
-            const card = btnElement.closest('.vehicle-card'); // Tìm cái thẻ div to nhất bọc cái nút này
-            const plate = card.querySelector('.val-plate').innerText;
-            if(confirm('Bạn có chắc chắn muốn xóa phương tiện [' + plate + '] ngay lập tức?')) {
-                card.remove(); // Lệnh xóa ngay lập tức khỏi màn hình
-            }
-        }
-
-        // 2. Hàm MỞ MODAL (Dùng chung cho cả Thêm và Sửa)
         function openModal(mode, btnElement = null) {
-            document.getElementById('modalMode').value = mode;
             modal.classList.remove('hidden');
 
             if (mode === 'add') {
                 document.getElementById('modalTitle').innerText = 'Thêm Xe Mới';
-                // Làm rỗng các ô input
-                document.getElementById('inpPlate').value = '';
-                document.getElementById('inpBrand').value = '';
-                document.getElementById('inpModel').value = '';
-                document.getElementById('inpColor').value = '';
+                // Trỏ đích đến Servlet thêm xe
+                form.action = 'addVehicle'; 
+                
+                // Reset form trống trơn
+                form.reset(); 
+                document.getElementById('inpOldPlate').value = '';
             } 
             else if (mode === 'edit') {
                 document.getElementById('modalTitle').innerText = 'Sửa Thông Tin Xe';
-                currentEditCard = btnElement.closest('.vehicle-card'); // Lưu lại thẻ đang sửa
+                // Trỏ đích đến Servlet cập nhật xe
+                form.action = 'updateVehicle'; 
                 
-                // Lấy chữ từ thẻ cũ nhét vào Modal
-                document.getElementById('inpPlate').value = currentEditCard.querySelector('.val-plate').innerText;
-                document.getElementById('inpBrand').value = currentEditCard.querySelector('.val-brand').innerText;
-                document.getElementById('inpModel').value = currentEditCard.querySelector('.val-model').innerText;
-                document.getElementById('inpColor').value = currentEditCard.querySelector('.val-color').innerText;
+                const card = btnElement.closest('.vehicle-card');
+                const currentPlate = card.querySelector('.val-plate').innerText;
+                
+                // Móc dữ liệu cũ trên thẻ điền vào Modal cho user đỡ gõ lại (Front-end tiện ích)
+                document.getElementById('inpPlate').value = currentPlate;
+                document.getElementById('inpOldPlate').value = currentPlate; // Cho Backend biết xe nào đang bị sửa
+                document.getElementById('inpBrand').value = card.querySelector('.val-brand').innerText;
+                document.getElementById('inpModel').value = card.querySelector('.val-model').innerText;
+                document.getElementById('inpColor').value = card.querySelector('.val-color').innerText;
             }
         }
 
-        // 3. Hàm ĐÓNG MODAL
         function closeModal() {
             modal.classList.add('hidden');
-            currentEditCard = null;
-        }
-
-        // 4. Hàm LƯU THÔNG TIN (Ảo thuật cập nhật thẻ)
-        function saveVehicle() {
-            const mode = document.getElementById('modalMode').value;
-            
-            // Lấy dữ liệu người dùng vừa gõ
-            const plate = document.getElementById('inpPlate').value.toUpperCase();
-            const brand = document.getElementById('inpBrand').value || 'Chưa cập nhật';
-            const model = document.getElementById('inpModel').value || 'Chưa cập nhật';
-            const color = document.getElementById('inpColor').value || 'Chưa cập nhật';
-
-            if(plate.trim() === '') {
-                alert('Vui lòng nhập Biển số xe!');
-                return;
-            }
-
-            if (mode === 'edit' && currentEditCard) {
-                // SỬA: Đổi dòng chữ ngay trên thẻ cũ
-                currentEditCard.querySelector('.val-plate').innerText = plate;
-                currentEditCard.querySelector('.val-brand').innerText = brand;
-                currentEditCard.querySelector('.val-model').innerText = model;
-                currentEditCard.querySelector('.val-color').innerText = color;
-            } 
-            else if (mode === 'add') {
-                // THÊM: Sinh ra 1 thẻ HTML mới cứng và nhét vào Lưới
-                const newCardHTML = `
-                    <div class="vehicle-card bg-white rounded-2xl shadow-sm border border-emerald-300 overflow-hidden relative">
-                        <div class="p-6">
-                            <div class="flex items-center gap-4 mb-4 border-b border-slate-100 pb-4">
-                                <div class="w-16 h-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center p-2">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/3204/3204005.png" class="w-full h-full object-contain opacity-80">
-                                </div>
-                                <div><h3 class="val-plate font-mono text-2xl font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 inline-block">`+plate+`</h3></div>
-                            </div>
-                            <div class="space-y-2 mb-6 text-sm">
-                                <div class="flex justify-between"><span class="text-slate-500">Hãng xe:</span><span class="val-brand font-semibold text-slate-800">`+brand+`</span></div>
-                                <div class="flex justify-between"><span class="text-slate-500">Dòng xe:</span><span class="val-model font-semibold text-slate-800">`+model+`</span></div>
-                                <div class="flex justify-between"><span class="text-slate-500">Màu sắc:</span><span class="val-color font-semibold text-slate-800">`+color+`</span></div>
-                            </div>
-                            <div class="flex gap-3">
-                                <button onclick="openModal('edit', this)" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-emerald-200"><i class="fa-solid fa-pen"></i> Sửa</button>
-                                <button onclick="deleteVehicle(this)" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2 border border-red-200"><i class="fa-solid fa-trash-can"></i> Xóa</button>
-                            </div>
-                        </div>
-                    </div>`;
-                document.getElementById('vehicle-grid').insertAdjacentHTML('afterbegin', newCardHTML);
-            }
-
-            closeModal(); // Lưu xong thì tắt form
         }
     </script>
 </body>

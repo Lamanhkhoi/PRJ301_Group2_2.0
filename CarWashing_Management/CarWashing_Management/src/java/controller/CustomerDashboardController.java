@@ -4,44 +4,55 @@
  */
 package controller;
 
+import dao.CustomerLoyaltyDAO;
+import dto.Customer;
+import dto.CustomerLoyalty;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-/**
- *
- * @author Truc
- */
+
 @WebServlet(name = "CustomerDashboardController", urlPatterns = {"/CustomerDashboardController"})
 public class CustomerDashboardController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    private CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        try ( PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet CustomerDashboardController</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet CustomerDashboardController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        request.setCharacterEncoding("UTF-8");
+        
+        try {
+            HttpSession session = request.getSession();
+            
+            // Lấy thông tin tài khoản người dùng thực tế từ Session Đăng nhập
+            Customer customer = (Customer) session.getAttribute("USER");
+            
+            // BỔ SUNG: Kiểm tra bảo mật hệ thống khi chạy thật
+            if (customer == null) {
+                // Nếu chưa đăng nhập, bắt buộc chuyển hướng về trang login và dừng xử lý phía sau
+                request.setAttribute("LOGIN_ERROR", "Vui lòng đăng nhập hệ thống để xem thông tin hạng thành viên!");
+                request.getRequestDispatcher("/views/login.jsp").forward(request, response);
+                return; 
+            }
+
+            int accId = customer.getAccountId();
+            
+            // Lấy dữ liệu loyalty thật từ Database thông qua DAO
+            CustomerLoyalty loyaltyProfile = loyaltyDAO.getLoyaltyProfileByAccountId(accId);
+            
+            // Đẩy dữ liệu sang file .jsp của bạn FE hiển thị
+            request.setAttribute("LOYALTY_PROFILE", loyaltyProfile);
+            
+            // Điều hướng sang file JSP hiển thị giao diện chính thức
+            request.getRequestDispatcher("/views/customer_dashboard.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -81,7 +92,7 @@ public class CustomerDashboardController extends HttpServlet {
      */
     @Override
     public String getServletInfo() {
-        return "Short description";
+        return "Controller xử lý hiển thị Hồ sơ hạng thành viên và Lợi ích kế tiếp (Next Reward)";
     }// </editor-fold>
 
 }

@@ -47,7 +47,7 @@ public class LoginController extends HttpServlet {
                 request.setAttribute("ERROR", "Username/Email or Password is invalid, or account is locked!");
 
                 // COMMENT SỬA ĐỔI: Điền trang điều hướng quay về trang login.jsp để hiển thị thông báo lỗi
-                request.getRequestDispatcher("login.jsp").forward(request, response);
+                request.getRequestDispatcher("home.jsp").forward(request, response);
                 return; // Dừng hàm lại, không chạy tiếp xuống dưới
             }
 

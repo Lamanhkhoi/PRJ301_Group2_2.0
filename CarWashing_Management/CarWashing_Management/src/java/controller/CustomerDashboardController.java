@@ -1,10 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import dao.CustomerLoyaltyDAO;
+import dto.Account;
 import dto.Customer;
 import dto.CustomerLoyalty;
 import java.io.IOException;
@@ -29,26 +26,27 @@ public class CustomerDashboardController extends HttpServlet {
         try {
             HttpSession session = request.getSession();
             
-            // Lấy thông tin tài khoản người dùng thực tế từ Session Đăng nhập
-            Customer customer = (Customer) session.getAttribute("USER");
+            // Đọc thông tin thực tế từ Session kiểm tra Login
+            Account acc = (Account) session.getAttribute("USER");
+            Customer cus = (Customer) session.getAttribute("CUSTOMER");
             
-            // BỔ SUNG: Kiểm tra bảo mật hệ thống khi chạy thật
-            if (customer == null) {
-                // Nếu chưa đăng nhập, bắt buộc chuyển hướng về trang login và dừng xử lý phía sau
-                request.setAttribute("LOGIN_ERROR", "Vui lòng đăng nhập hệ thống để xem thông tin hạng thành viên!");
-                request.getRequestDispatcher("/views/login.jsp").forward(request, response);
-                return; 
+            // KIỂM TRA BẢO MẬT: Nếu chưa đăng nhập, đá về trang login ngay lập tức
+            if (acc == null || cus == null) {
+                request.setAttribute("LOGIN_ERROR", "Vui lòng đăng nhập hệ thống để xem hồ sơ thành viên!");
+                request.getRequestDispatcher("home.jsp").forward(request, response);
+                return;
             }
 
-            int accId = customer.getAccountId();
+            // Gọi đúng hàm getAccountID() chữ ID viết hoa theo đúng DTO của bạn
+            int accId = acc.getAccountID();
             
-            // Lấy dữ liệu loyalty thật từ Database thông qua DAO
+            // Thực hiện gọi DAO kết nối DB thật
             CustomerLoyalty loyaltyProfile = loyaltyDAO.getLoyaltyProfileByAccountId(accId);
             
-            // Đẩy dữ liệu sang file .jsp của bạn FE hiển thị
+            // Gửi dữ liệu đồng bộ sang cho file .jsp
             request.setAttribute("LOYALTY_PROFILE", loyaltyProfile);
             
-            // Điều hướng sang file JSP hiển thị giao diện chính thức
+            // Điều hướng sang file hiển thị
             request.getRequestDispatcher("/views/customer_dashboard.jsp").forward(request, response);
             
         } catch (Exception e) {

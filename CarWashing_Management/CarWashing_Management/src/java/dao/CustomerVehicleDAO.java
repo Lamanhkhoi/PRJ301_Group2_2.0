@@ -1,7 +1,6 @@
 package dao;
 
 import dbutils.DBContext;
-import dto.Customer;
 import dto.Vehicle;
 import java.sql.Connection;
 import java.sql.Date;
@@ -33,9 +32,10 @@ public class CustomerVehicleDAO {
                         + "      ,[IsDefault]\n"
                         + "      ,[IsActive]\n"
                         + "      ,[CreatedAt]\n"
-                        + "  FROM [AutoWashProDB].[dbo].[CustomerVehicles]\n"
+                        + "  FROM [CustomerVehicles]\n"
                         + "  WHERE CustomerID = ?";
                 PreparedStatement st = cn.prepareStatement(sql);
+                st.setInt(1, custid);
                 ResultSet table = st.executeQuery();
                 if (table != null) {
                     while (table.next()) {

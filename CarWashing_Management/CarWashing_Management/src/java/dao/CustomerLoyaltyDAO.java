@@ -20,7 +20,7 @@ public class CustomerLoyaltyDAO {
         try {
             conn = DBContext.getConnection();
             if (conn != null) {
-                // LỆNH 1: Lấy chi tiêu thực tế và đặc quyền hạng hiện tại của khách hàng
+                // LỆNH 1: Lấy thông tin tài khoản loyalty thực tế kết hợp đặc quyền Hạng Hiện Tại
                 String sqlCurrent = "SELECT cl.*, t.* FROM CustomerLoyalty cl "
                                   + "JOIN LoyaltyTiers t ON cl.CurrentTierId = t.TierId "
                                   + "WHERE cl.AccountId = ?";
@@ -31,11 +31,15 @@ public class CustomerLoyaltyDAO {
 
                 if (rs1.next()) {
                     loyalty = new CustomerLoyalty();
+                    // Lưu ý: Đặt tên hàm set tương ứng với cấu trúc thuộc tính DTO của bạn
                     loyalty.setAccountId(rs1.getInt("AccountId"));
                     loyalty.setCurrentPoints(rs1.getInt("CurrentPoints"));
-                    loyalty.setTotalSpent(rs1.getDouble("TotalSpent"));
+                    
+                    // Ép kiểu DECIMAL từ Database về int theo yêu cầu của bạn
+                    loyalty.setTotalSpent((int) rs1.getDouble("TotalSpent"));
                     loyalty.setTotalWashCount(rs1.getInt("TotalWashCount"));
 
+                    // Đọc cấu hình chi tiết đặc quyền từ bảng LoyaltyTiers
                     LoyaltyTier currentTier = new LoyaltyTier();
                     currentTier.setTierName(rs1.getString("TierName"));
                     currentTier.setBonusPointRate(rs1.getDouble("BonusPointRate"));
@@ -43,25 +47,25 @@ public class CustomerLoyaltyDAO {
                     currentTier.setHasPriorityQueue(rs1.getBoolean("HasPriorityQueue"));
                     currentTier.setFreeUpgradeMonthly(rs1.getBoolean("FreeUpgradeMonthly"));
                     currentTier.setFreeWashMonthly(rs1.getBoolean("FreeWashMonthly"));
+                    
                     loyalty.setCurrentTierDetails(currentTier);
                 } else {
-                    // BỔ SUNG: Trường hợp tài khoản mới tinh, chưa có bản ghi trong bảng CustomerLoyalty
+                    // Nếu tài khoản mới chưa có bản ghi trong bảng CustomerLoyalty, tự khởi tạo mức cơ bản
                     loyalty = new CustomerLoyalty();
                     loyalty.setAccountId(accountId);
                     loyalty.setCurrentPoints(0);
-                    loyalty.setTotalSpent(0.0);
+                    loyalty.setTotalSpent(0);
                     loyalty.setTotalWashCount(0);
 
-                    // Gán mặc định hạng đầu tiên (Thường là Member)
                     LoyaltyTier defaultTier = new LoyaltyTier();
-                    defaultTier.setTierName("Member");
+                    defaultTier.setTierName("Member"); // Chỉ dùng tiếng Anh theo thống nhất
                     defaultTier.setBonusPointRate(0.0);
-                    defaultTier.setBookingWindowDays(7); // Theo tài liệu SRS của nhóm
+                    defaultTier.setBookingWindowDays(7); 
                     defaultTier.setHasPriorityQueue(false);
                     loyalty.setCurrentTierDetails(defaultTier);
                 }
 
-                // LỆNH 2: Truy vấn Hạng kế tiếp từ DB (Next Reward) dựa trên chi tiêu thực tế
+                // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)
                 if (loyalty != null) {
                     String sqlNext = "SELECT TOP 1 * FROM LoyaltyTiers "
                                    + "WHERE MinTotalSpent > ? OR MinWashCount > ? "
@@ -80,35 +84,22 @@ public class CustomerLoyaltyDAO {
                         nextTier.setHasPriorityQueue(rs2.getBoolean("HasPriorityQueue"));
                         nextTier.setFreeUpgradeMonthly(rs2.getBoolean("FreeUpgradeMonthly"));
                         nextTier.setFreeWashMonthly(rs2.getBoolean("FreeWashMonthly"));
-                        nextTier.setMinTotalSpent(rs2.getDouble("MinTotalSpent"));
+                        
+                        // Lấy mốc điều kiện thăng hạng để gửi ra ngoài Front-End làm phép trừ tính độ lệch
+                        nextTier.setMinTotalSpent((int) rs2.getDouble("MinTotalSpent"));
                         nextTier.setMinWashCount(rs2.getInt("MinWashCount"));
                         
                         loyalty.setNextTierDetails(nextTier);
                     }
-                    // Nếu không có dòng nào (rs2.next() == false), nghĩa là khách đã đạt hạng tối cao (Platinum). 
-                    // Thuộc tính nextTierDetails giữ nguyên là null, FE sẽ dựa vào đó để hiển thị chúc mừng.
+                    // Nếu không tìm thấy rs2.next(), nextTierDetails giữ giá trị null (Nghĩa là hạng MAX - Platinum)
                 }
             }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         } finally {
-            try { 
-                if (rs1 != null) rs1.close(); 
-                if (rs2 != null) rs2.close(); 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try { 
-                if (ps1 != null) ps1.close(); 
-                if (ps2 != null) ps2.close(); } 
-            catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try { 
-                if (conn != null) conn.close(); 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            try { if (rs1 != null) rs1.close(); if (rs2 != null) rs2.close(); } catch (SQLException e) {}
+            try { if (ps1 != null) ps1.close(); if (ps2 != null) ps2.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException e) {}
         }
 
         return loyalty;

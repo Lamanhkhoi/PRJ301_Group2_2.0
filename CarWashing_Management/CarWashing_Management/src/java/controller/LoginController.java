@@ -33,49 +33,40 @@ public class LoginController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
         try {
-            //lay email/username va password(chưa mã hóa ) tu form login
+            // 1. Lấy email/username và password (chưa mã hóa) từ form login
             String login = request.getParameter("username");
             String password = request.getParameter("password");
 
             AccountDAO dao = new AccountDAO();
-
             Account acc = dao.checkLogin(login, password);
 
-            CustomerDAO cdao = new CustomerDAO();
-
-            Customer cus = cdao.getCustomerByAccountId(acc.getAccountID());
-            
+            // COMMENT SỬA ĐỔI: Chuyển khối kiểm tra acc lên trên ĐẦU. 
+            // Phải chắc chắn acc khác null thì mới được phép lấy thông tin Customer và xử lý tiếp!
             if (acc == null) {
+                // COMMENT SỬA ĐỔI: Tài khoản không tồn tại hoặc đã bị khóa/ngừng hoạt động (đã lọc tại DAO)
+                request.setAttribute("ERROR", "Username/Email or Password is invalid, or account is locked!");
 
-                request.setAttribute("ERROR", "Username/Email or Password is invalid");
-                
-                request.getRequestDispatcher("login_view.jsp")
-                        .forward(request, response);
+                // COMMENT SỬA ĐỔI: Điền trang điều hướng quay về trang login.jsp để hiển thị thông báo lỗi
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return; // Dừng hàm lại, không chạy tiếp xuống dưới
+            }
 
+            // COMMENT SỬA ĐỔI: Lúc này chắc chắn acc != null và đang ở trạng thái 'Active'
+            // Tiến hành lấy thông tin cá nhân Customer an toàn từ database
+            CustomerDAO cdao = new CustomerDAO();
+            Customer cus = cdao.getCustomerByAccountId(acc.getAccountID());
+
+            // Lưu thông tin người dùng đăng nhập vào Session hệ thống
+            request.getSession().setAttribute("USER", acc);
+            request.getSession().setAttribute("CUSTOMER", cus);
+
+            // 2. Phân quyền điều hướng (Role-based Authorization)
+            if ("Admin".equalsIgnoreCase(acc.getRole())) {
+                // Chuyển hướng sang trang quản trị của Admin
+                response.sendRedirect("/CarWashing_Management/DashBoard/admin_dashboard.jsp");
             } else {
-
-                if (acc.getStatus()) {
-
-                    request.getSession().setAttribute("USER", acc);
-                    request.getSession().setAttribute("CUSTOMER", cus);
-                    
-                    if ("Admin".equalsIgnoreCase(acc.getRole())) {
-
-                        response.sendRedirect("AdminDashboardController");
-
-                    } else {
-
-                        response.sendRedirect("CustomerDashboardController");
-                    }
-
-                } else {
-
-                    request.setAttribute("ERROR",
-                            "Account is inactive");
-
-                    request.getRequestDispatcher("login_view.jsp")
-                            .forward(request, response);
-                }
+                // Chuyển hướng sang trang tổng quan của Khách hàng
+                response.sendRedirect("/CarWashing_Management/DashBoard/customer_dashboard.jsp");
             }
 
         } catch (Exception e) {

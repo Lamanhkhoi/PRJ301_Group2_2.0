@@ -1,10 +1,31 @@
-<%-- 
-    Document   : customer_dashboard.jsp
-    Created on : May 29, 2026, 3:05:22 PM
-    Author     : Admin
---%>
-
+<%@page import="java.util.List"%>
+<%@page import="dto.Vehicle"%>
+<%@page import="dao.CustomerVehicleDAO"%>
+<%@page import="dto.LoyaltyTier"%>
+<%@page import="dto.CustomerLoyalty"%>
+<%@page import="dao.CustomerLoyaltyDAO"%>
+<%@page import="dto.Customer"%>
+<%@page import="dto.Account"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    // 1. Kiểm tra Session đăng nhập bảo vệ hệ thống
+    Account userAcc = (Account) session.getAttribute("USER");
+    Customer cus = (Customer) session.getAttribute("CUSTOMER");
+    if (userAcc == null || cus == null) {
+        response.sendRedirect(request.getContextPath() + "/home.jsp");
+        return;
+    }
+
+    // 2. Lấy dữ liệu Loyalty (Đã được DAO tính toán sẵn)
+    CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+    CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
+    LoyaltyTier nextTier = loyalty.getNextTierDetails();
+
+    // 3. Lấy danh sách xe thực tế qua ID của khách hàng
+    CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
+    List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
+%>
+
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -37,7 +58,7 @@
                 <header class="h-20 mesh-gradient-header flex items-center justify-between px-8 shadow-md z-10">
                     <div class="flex items-center">
                         <h2 class="text-xl font-bold text-white drop-shadow-md tracking-wide">
-                            Chào mừng, <span class="text-emerald-300">Nguyễn Văn A</span> 👋
+                            Chào mừng, <span class="text-emerald-300"><%= userAcc.getFullname() %></span> 👋
                         </h2>
                     </div>
 
@@ -59,102 +80,19 @@
 
                 <div class="flex-1 overflow-y-auto p-8">
 
-                    <%
-                        // ==========================================================
-                        // TRUNG TÂM ĐIỀU KHIỂN LOGIC (Mock Data từ Backend)
-                        // ==========================================================
-                        String currentRank = "Gold"; 
-                        
-                        Integer points = 0; 
-                        Integer yearlyWashes = 0; 
-                        Integer currentSpent = 0; 
-
-                        boolean hasVehicle = false; 
-                        String priorityPlate = "51H-123.45";
-                        String priorityBrand = "VinFast VF8";
-                        String priorityColor = "Xanh Dương";
-
-                        boolean hasAppointments = false; 
-
-                        // LOGIC ĐỔI MÀU THẺ & NỘI DUNG ĐẶC QUYỀN
-                        String bgClass = "bg-white border-slate-100";
-                        String textClass = "text-slate-800";
-                        String labelClass = "text-slate-500";
-                        String iconColor = "text-slate-400";
-                        String iconClass = "fa-user";
-                        String currentBenefits = ""; // Biến chứa đặc quyền tiếng Việt
-
-                        if (currentRank.equalsIgnoreCase("Member") || currentRank.equalsIgnoreCase("Thành viên")) {
-                            currentBenefits = "1 điểm thưởng = 1.000 VNĐ chi tiêu";
-                        } else if (currentRank.equalsIgnoreCase("Silver") || currentRank.equalsIgnoreCase("Bạc")) {
-                            bgClass = "bg-gradient-to-br from-slate-100 to-gray-200 border-gray-300";
-                            textClass = "text-gray-900";
-                            labelClass = "text-gray-600";
-                            iconColor = "text-gray-500";
-                            iconClass = "fa-shield-halved";
-                            currentBenefits = "Thưởng 10% điểm số • Có slot ưu tiên";
-                        } else if (currentRank.equalsIgnoreCase("Gold") || currentRank.equalsIgnoreCase("Vàng")) {
-                            bgClass = "bg-gradient-to-br from-yellow-50 to-amber-100 border-yellow-200";
-                            textClass = "text-yellow-900";
-                            labelClass = "text-yellow-700";
-                            iconColor = "text-yellow-500";
-                            iconClass = "fa-crown";
-                            currentBenefits = "Thưởng 20% điểm số • Miễn phí nâng cấp/tháng";
-                        } else if (currentRank.equalsIgnoreCase("Platinum") || currentRank.equalsIgnoreCase("Bạch Kim")) {
-                            bgClass = "bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200";
-                            textClass = "text-purple-900";
-                            labelClass = "text-purple-700";
-                            iconColor = "text-purple-500";
-                            iconClass = "fa-gem";
-                            currentBenefits = "Thưởng 30% điểm số • 1 lần rửa miễn phí/tháng";
-                        }
-
-                        // LOGIC TÍNH TOÁN 2 VÒNG TRÒN THĂNG HẠNG
-                        String targetRank = "";
-                        int targetWashes = 1;
-                        int targetSpent = 1;
-
-                        if (currentRank.equalsIgnoreCase("Member") || currentRank.equalsIgnoreCase("Thành viên")) {
-                            targetRank = "Bạc (Silver)";
-                            targetWashes = 5;
-                            targetSpent = 2000000;
-                        } else if (currentRank.equalsIgnoreCase("Silver") || currentRank.equalsIgnoreCase("Bạc")) {
-                            targetRank = "Vàng (Gold)";
-                            targetWashes = 15;
-                            targetSpent = 6000000;
-                        } else if (currentRank.equalsIgnoreCase("Gold") || currentRank.equalsIgnoreCase("Vàng")) {
-                            targetRank = "Bạch Kim (Platinum)";
-                            targetWashes = 30;
-                            targetSpent = 15000000;
-                        } else {
-                            targetRank = "MAX"; 
-                        }
-
-                        int washPercent = 100;
-                        int spentPercent = 100;
-                        if (!targetRank.equals("MAX")) {
-                            washPercent = (int) Math.min(100, ((double) yearlyWashes / targetWashes) * 100);
-                            spentPercent = (int) Math.min(100, ((double) currentSpent / targetSpent) * 100);
-                        }
-
-                        int c = 226; 
-                        int washOffset = c - (c * washPercent) / 100;
-                        int spentOffset = c - (c * spentPercent) / 100;
-                    %>
-
                     <div class="grid grid-cols-4 gap-6 mb-6">
-                        <div class="<%= bgClass%> p-6 rounded-2xl shadow-sm border flex items-center justify-between transition-all duration-300">
-                            <div>
-                                <p class="text-sm font-medium <%= labelClass%>">Hạng hiện tại</p>
-                                <h3 class="text-2xl font-bold <%= textClass%> mt-1"><%= currentRank%></h3>
-                            </div>
-                            <i class="fa-solid <%= iconClass%> text-3xl <%= iconColor%> drop-shadow-sm"></i>
+                        <div class="<%= loyalty.getBgClass() %> p-6 rounded-2xl shadow-sm border flex items-center justify-between transition-all duration-300">
+                        <div>
+                            <p class="text-sm font-medium <%= loyalty.getLabelClass() %>">Hạng hiện tại</p>
+                            <h3 class="text-2xl font-bold <%= loyalty.getTextClass() %> mt-1"><%= (loyalty.getCurrentTierDetails() != null) ? loyalty.getCurrentTierDetails().getTierName() : "Member" %></h3>
                         </div>
+                        <i class="fa-solid <%= loyalty.getIconClass() %> text-3xl <%= loyalty.getIconColor() %> drop-shadow-sm"></i>
+                    </div>
 
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-slate-500">Điểm Tích Lũy</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1"><%= points%> PTS</h3>
+                                <h3 class="text-2xl font-bold text-slate-800 mt-1"><%= loyalty.getCurrentPoints() %> PTS</h3>
                             </div>
                             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fa-solid fa-star"></i></div>
                         </div>
@@ -162,20 +100,20 @@
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-slate-500">Tổng Lần Rửa Trong Năm</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1"><%= yearlyWashes%> Lần</h3>
+                                <h3 class="text-2xl font-bold text-slate-800 mt-1"><%= loyalty.getTotalWashCount() %> Lần</h3>
                             </div>
                             <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-droplet"></i></div>
                         </div>
 
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center relative group transition-all hover:shadow-md hover:border-emerald-200">
-                            <div class="flex justify-between items-start mb-2">
-                                <p class="text-sm font-medium text-slate-500">Đặc quyền hạng <%= currentRank %></p>
-                                <button onclick="openTierInfoModal()" class="text-slate-300 hover:text-[#464BE5] transition" title="Xem chi tiết hệ thống hạng">
+                           <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium text-slate-500">Đặc quyền hạng <%= (loyalty.getCurrentTierDetails() != null) ? loyalty.getCurrentTierDetails().getTierName() : "Member" %></p>
+                                <button onclick="openTierInfoModal()" class="text-slate-300 hover:text-[#464BE5] transition">
                                     <i class="fa-solid fa-circle-exclamation text-lg"></i>
                                 </button>
                             </div>
                             <div class="w-full overflow-hidden">
-                                <p class="font-bold text-[#464BE5] text-[15px] leading-tight truncate"><i class="fa-solid fa-gift mr-1"></i> <%= currentBenefits %></p>
+                                <p class="font-bold text-[#464BE5] text-[15px] leading-tight truncate"><i class="fa-solid fa-gift mr-1"></i> <%= loyalty.getCurrentBenefits() %></p>
                             </div>
                         </div>
                     </div>
@@ -187,22 +125,29 @@
                                 <h3 class="text-lg font-bold text-slate-800">Danh sách xe của tôi</h3>
                                 <a href="customer_vehicles.jsp" class="text-sm text-emerald-500 font-medium hover:underline">Xem tất cả</a>
                             </div>
-                            <div class="flex-1 flex flex-col justify-center">
-                                <% if (hasVehicle) { %>
-                                    <div class="relative bg-slate-50 rounded-xl p-5 border border-slate-100 overflow-hidden">
-                                        <div class="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded-bl-lg"><i class="fa-solid fa-star"></i> Đang ưu tiên</div>
-                                        <div class="flex flex-col items-center text-center">
-                                            <img src="https://cdn-icons-png.flaticon.com/512/3204/3204005.png" alt="Car" class="w-28 drop-shadow-md opacity-90 mb-3">
-                                            <p class="font-mono text-2xl font-bold text-slate-800 bg-white border-2 border-slate-300 px-3 py-1 rounded shadow-sm"><%= priorityPlate %></p>
-                                            <p class="text-slate-600 mt-2 font-semibold"><%= priorityBrand %></p>
-                                            <p class="text-sm text-slate-500 mt-1 flex items-center justify-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-600 border border-slate-200"></span> <%= priorityColor %></p>
+                            <div class="flex-1 overflow-y-auto max-h-[320px] pr-1 space-y-3">
+                                <% if (vehicleList != null && !vehicleList.isEmpty()) { 
+                                    for (Vehicle v : vehicleList) { %>
+                                        <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100 transition">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xl">
+                                                    <i class="fa-solid fa-car"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-800 text-sm tracking-wider"><%= v.getLicensePlate() %></h4>
+                                                    <p class="text-xs text-slate-500"><%= v.getBrand() %> - <%= v.getModel() %> (<%= v.getColor() %>)</p>
+                                                </div>
+                                            </div>
+                                            <% if (v.getIsDefault() != null && v.getIsDefault()) { %>
+                                                <span class="text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full shadow-sm">Mặc định</span>
+                                            <% } %>
                                         </div>
-                                    </div>
-                                <% } else { %>
-                                    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center h-full">
-                                        <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-3 text-3xl"><i class="fa-solid fa-car-side"></i></div>
-                                        <p class="text-slate-500 font-medium mb-4">Bạn chưa có xe hiện tại.</p>
-                                        <a href="customer_vehicles.jsp" class="bg-emerald-100 text-emerald-700 font-semibold px-4 py-2 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm xe ngay</a>
+                                    <% } 
+                                } else { %>
+                                    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center h-full">
+                                        <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-2 text-xl"><i class="fa-solid fa-car-side"></i></div>
+                                        <p class="text-xs text-slate-500 font-medium mb-3">Bạn chưa đăng ký xe nào.</p>
+                                        <a href="customer_vehicles.jsp" class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm ngay</a>
                                     </div>
                                 <% } %>
                             </div>
@@ -213,7 +158,9 @@
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                                 <div class="flex justify-between items-end mb-6">
                                     <div>
-                                        <h3 class="text-lg font-bold text-slate-800">Tiến trình lên hạng <%= targetRank.equals("MAX") ? "Tối Đa" : targetRank %></h3>
+                                        <h3 class="text-lg font-bold text-slate-800">
+                                            Tiến trình lên hạng: <%= (nextTier != null) ? nextTier.getTierName() : "Tối Đa (Platinum)" %>
+                                        </h3>
                                         <p class="text-sm text-slate-500 mt-1">Hoàn thành 1 trong 2 điều kiện dưới đây để thăng hạng.</p>
                                     </div>
                                 </div>
@@ -222,13 +169,13 @@
                                         <div class="relative w-28 h-28">
                                             <svg class="w-full h-full transform -rotate-90">
                                                 <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200" />
-                                                <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-emerald-500 transition-all duration-1000" stroke-dasharray="276" stroke-dashoffset="<%= washOffset %>" stroke-linecap="round" />
+                                                <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-emerald-500 transition-all duration-1000" stroke-dasharray="276" stroke-dashoffset="<%= loyalty.getWashOffset() %>" stroke-linecap="round" />
                                             </svg>
-                                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold text-slate-800"><%= washPercent %>%</span></div>
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold text-slate-800"><%= loyalty.getWashPercent() %>%</span></div>
                                         </div>
                                         <div class="text-center mt-3">
                                             <p class="font-bold text-slate-700"><i class="fa-solid fa-droplet text-blue-500 mr-1"></i> Số lần rửa</p>
-                                            <p class="text-sm text-slate-500"><%= yearlyWashes %> / <%= targetRank.equals("MAX") ? "-" : targetWashes %> lần</p>
+                                            <p class="text-sm text-slate-500"><%= loyalty.getTotalWashCount() %> / <%= (nextTier != null) ? nextTier.getMinWashCount() : "-" %> lần</p>
                                         </div>
                                     </div>
                                     <div class="text-slate-400 font-bold bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">HOẶC</div>
@@ -236,39 +183,27 @@
                                         <div class="relative w-28 h-28">
                                             <svg class="w-full h-full transform -rotate-90">
                                                 <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200" />
-                                                <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-orange-500 transition-all duration-1000" stroke-dasharray="276" stroke-dashoffset="<%= spentOffset %>" stroke-linecap="round" />
+                                                <circle cx="56" cy="56" r="44" stroke="currentColor" stroke-width="8" fill="transparent" class="text-orange-500 transition-all duration-1000" stroke-dasharray="276" stroke-dashoffset="<%= loyalty.getSpentOffset() %>" stroke-linecap="round" />
                                             </svg>
-                                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold text-slate-800"><%= spentPercent %>%</span></div>
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-2xl font-bold text-slate-800"><%= loyalty.getSpentPercent() %>%</span></div>
                                         </div>
                                         <div class="text-center mt-3">
                                             <p class="font-bold text-slate-700"><i class="fa-solid fa-coins text-orange-500 mr-1"></i> Chi tiêu</p>
-                                            <p class="text-sm text-slate-500"><%= String.format("%,d", currentSpent) %> / <%= targetRank.equals("MAX") ? "-" : String.format("%,d", targetSpent) %> VNĐ</p>
+                                            <p class="text-sm text-slate-500"><%= String.format("%,d", (int)loyalty.getTotalSpent()) %> / <%= (nextTier != null) ? String.format("%,d", (int)nextTier.getMinTotalSpent()) : "-" %> VNĐ</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold text-slate-800">Lịch hẹn sắp tới</h3>
-                                    <% if (hasAppointments) { %><a href="booking" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"><i class="fa-solid fa-plus"></i> Đặt thêm</a><% } %>
-                                </div>
                                 <div class="flex-1 overflow-y-auto pr-2 space-y-4 max-h-[220px]">
-                                    <% if (hasAppointments) { %>
-                                        <div class="flex items-center justify-between border-l-4 border-emerald-500 bg-emerald-50/50 p-4 rounded-r-lg">
-                                            <div>
-                                                <p class="font-bold text-slate-800">Rửa xe tự động - Gói Siêu Tốc</p>
-                                                <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1 text-emerald-600"></i> Hôm nay, 15:30 PM - Xe: 51H-123.45</p>
-                                            </div>
-                                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">Đã xác nhận</span>
-                                        </div>
-                                    <% } else { %>
-                                        <div class="flex flex-col items-center justify-center h-full py-4">
-                                            <img src="https://cdn-icons-png.flaticon.com/512/7470/7470876.png" alt="No Appointment" class="w-20 opacity-60 mb-3">
-                                            <p class="text-slate-500 mb-4 font-medium">Bạn chưa có lịch hẹn nào sắp tới.</p>
-                                            <a href="booking" class="bg-[#464BE5] hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2"><i class="fa-regular fa-calendar-plus"></i> Đặt lịch rửa xe ngay</a>
-                                        </div>
-                                    <% } %>
+                                    <div class="flex flex-col items-center justify-center h-full py-4">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/7470/7470876.png" alt="No Appointment" class="w-16 opacity-50 mb-2">
+                                        <p class="text-slate-500 text-sm font-medium mb-3">Bạn chưa có lịch hẹn nào sắp tới.</p>
+                                        <a href="booking?action=create" class="bg-[#464BE5] hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-colors flex items-center gap-2">
+                                            <i class="fa-regular fa-calendar-plus"></i> Đặt lịch rửa xe ngay
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

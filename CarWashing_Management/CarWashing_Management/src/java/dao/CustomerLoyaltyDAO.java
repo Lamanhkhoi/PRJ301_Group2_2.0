@@ -92,6 +92,7 @@ public class CustomerLoyaltyDAO {
                         loyalty.setNextTierDetails(nextTier);
                     }
                     // Nếu không tìm thấy rs2.next(), nextTierDetails giữ giá trị null (Nghĩa là hạng MAX - Platinum)
+                    
                 }
             }
         } catch (ClassNotFoundException | SQLException e) {
@@ -101,7 +102,59 @@ public class CustomerLoyaltyDAO {
             try { if (ps1 != null) ps1.close(); if (ps2 != null) ps2.close(); } catch (SQLException e) {}
             try { if (conn != null) conn.close(); } catch (SQLException e) {}
         }
+        
+        if (loyalty != null) {
+            LoyaltyTier currentTier = loyalty.getCurrentTierDetails();
+            LoyaltyTier nextTier = loyalty.getNextTierDetails();
+            String currentRank = (currentTier != null) ? currentTier.getTierName() : "Member";
 
+            // 1. Cấu hình màu sắc thẻ theo Hạng thành viên
+            loyalty.setBgClass("bg-white border-slate-100");
+            loyalty.setTextClass("text-slate-800");
+            loyalty.setLabelClass("text-slate-500");
+            loyalty.setIconColor("text-slate-400");
+            loyalty.setIconClass("fa-user");
+            loyalty.setCurrentBenefits("1 điểm thưởng = 1.000 VNĐ chi tiêu");
+
+            if ("Silver".equalsIgnoreCase(currentRank)) {
+                loyalty.setBgClass("bg-gradient-to-br from-slate-100 to-gray-200 border-gray-300");
+                loyalty.setTextClass("text-gray-900");
+                loyalty.setLabelClass("text-gray-600");
+                loyalty.setIconColor("text-gray-500");
+                loyalty.setIconClass("fa-shield-halved");
+                loyalty.setCurrentBenefits("Thưởng " + (int)(currentTier.getBonusPointRate()) + "%");
+            } else if ("Gold".equalsIgnoreCase(currentRank)) {
+                loyalty.setBgClass("bg-gradient-to-br from-yellow-50 to-amber-100 border-yellow-200");
+                loyalty.setTextClass("text-yellow-900");
+                loyalty.setLabelClass("text-yellow-700");
+                loyalty.setIconColor("text-yellow-500");
+                loyalty.setIconClass("fa-crown");
+                loyalty.setCurrentBenefits("Thưởng " + (int)(currentTier.getBonusPointRate()) + "%");
+            } else if ("Platinum".equalsIgnoreCase(currentRank)) {
+                loyalty.setBgClass("bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200");
+                loyalty.setTextClass("text-purple-900");
+                loyalty.setLabelClass("text-purple-700");
+                loyalty.setIconColor("text-purple-500");
+                loyalty.setIconClass("fa-gem");
+                loyalty.setCurrentBenefits("Thưởng " + (int)(currentTier.getBonusPointRate()) + "%");
+            }
+
+            // 2. Tính toán phần trăm tiến trình lên hạng
+            int wPercent = 100;
+            int sPercent = 100;
+            if (nextTier != null) {
+                wPercent = (int) Math.min(100, ((double) loyalty.getTotalWashCount() / nextTier.getMinWashCount()) * 100);
+                sPercent = (int) Math.min(100, (loyalty.getTotalSpent() / nextTier.getMinTotalSpent()) * 100);
+            }
+            loyalty.setWashPercent(wPercent);
+            loyalty.setSpentPercent(sPercent);
+
+            // 3. Tính toán độ lệch SVG (Chu vi vòng tròn là 226)
+            int c = 226;
+            loyalty.setWashOffset(c - (c * wPercent) / 100);
+            loyalty.setSpentOffset(c - (c * sPercent) / 100);
+        }
+        
         return loyalty;
     }
 }

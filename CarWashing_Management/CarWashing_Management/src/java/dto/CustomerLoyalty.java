@@ -11,6 +11,18 @@ public class CustomerLoyalty implements Serializable {
     private int totalWashCount;
     private LoyaltyTier currentTierDetails; // Hai đối tượng chứa toàn bộ thông tin 
     private LoyaltyTier nextTierDetails;    // đặc quyền của Hạng Hiện Tại và Hạng Kế Tiếp (Next Reward)
+    
+    // Thêm các thuộc tính bổ trợ giao diện (Không map với DB nhưng dùng để truyền dữ liệu ra JSP)
+    private String bgClass;
+    private String textClass;
+    private String labelClass;
+    private String iconColor;
+    private String iconClass;
+    private String currentBenefits;
+    private int washPercent;
+    private int spentPercent;
+    private int washOffset;
+    private int spentOffset;
 
     public CustomerLoyalty() {
     }
@@ -79,5 +91,33 @@ public class CustomerLoyalty implements Serializable {
         this.nextTierDetails = nextTierDetails;
     }
 
-    
+    public String getBgClass() { return bgClass; }
+    public void setBgClass(String bgClass) { this.bgClass = bgClass; }
+
+    public String getTextClass() { return textClass; }
+    public void setTextClass(String textClass) { this.textClass = textClass; }
+
+    public String getLabelClass() { return labelClass; }
+    public void setLabelClass(String labelClass) { this.labelClass = labelClass; }
+
+    public String getIconColor() { return iconColor; }
+    public void setIconColor(String iconColor) { this.iconColor = iconColor; }
+
+    public String getIconClass() { return iconClass; }
+    public void setIconClass(String iconClass) { this.iconClass = iconClass; }
+
+    public String getCurrentBenefits() { return currentBenefits; }
+    public void setCurrentBenefits(String currentBenefits) { this.currentBenefits = currentBenefits; }
+
+    public int getWashPercent() { return washPercent; }
+    public void setWashPercent(int washPercent) { this.washPercent = washPercent; }
+
+    public int getSpentPercent() { return spentPercent; }
+    public void setSpentPercent(int spentPercent) { this.spentPercent = spentPercent; }
+
+    public int getWashOffset() { return washOffset; }
+    public void setWashOffset(int washOffset) { this.washOffset = washOffset; }
+
+    public int getSpentOffset() { return spentOffset; }
+    public void setSpentOffset(int spentOffset) { this.spentOffset = spentOffset; }
 }

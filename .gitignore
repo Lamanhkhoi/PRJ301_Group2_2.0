@@ -8,3 +8,7 @@ CarWashing_Management/CarWashing_Management/nbproject/genfiles.properties
 CarWashing_Management/CarWashing_Management/nbproject/private/private.xml
 
 CarWashing_Management/CarWashing_Management/nbproject/build-impl.xml
+
+nbproject/private/
+nbproject/build-impl.xml
+nbproject/genfiles.properties

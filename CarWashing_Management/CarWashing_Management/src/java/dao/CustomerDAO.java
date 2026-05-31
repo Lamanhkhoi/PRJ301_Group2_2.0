@@ -69,7 +69,6 @@ public class CustomerDAO {
 
         int result = 0;
 
-
         try {
 
             cn = DBContext.getConnection();
@@ -107,4 +106,50 @@ public class CustomerDAO {
 
         return result;
     }
+
+    public boolean isPhoneExists(String phone) {
+
+        boolean exists = false;
+
+        try {
+
+            cn = DBContext.getConnection();
+
+            String sql
+                    = "SELECT CustomerID FROM Customers WHERE PhoneNumber = ?";
+
+            pst = cn.prepareStatement(sql);
+            pst.setString(1, phone);
+
+            rs = pst.executeQuery();
+
+            exists = rs.next();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        return exists;
+    }
+    
 }

@@ -16,7 +16,7 @@
 
     <div id="loginErrorMsg" class="hidden bg-red-100 text-red-600 text-sm text-center py-2 rounded-lg mb-4 font-medium">
     </div>
-
+    
     <form action="LoginController" method="POST" class="space-y-4">
         <div>
             <input type="text" name="username" placeholder="Tên Người Dùng/Email" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] border-transparent focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">

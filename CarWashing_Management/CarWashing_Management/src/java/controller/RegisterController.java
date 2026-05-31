@@ -49,7 +49,7 @@ public class RegisterController extends HttpServlet {
                 return;
             }
 
-            // 3. KIỂM TRA EMAIL TỒN TẠI
+            // 3. KIỂM TRA EMAIL và PHONE TỒN TẠI
             AccountDAO dao = new AccountDAO();
 
             Account found = dao.getAccountByEmail(email);
@@ -64,6 +64,20 @@ public class RegisterController extends HttpServlet {
                 request.setAttribute("SHOW_REGISTER", true);
 
                 request.getRequestDispatcher("/home.jsp").forward(request, response);
+
+                return;
+            }
+            CustomerDAO cdao = new CustomerDAO();
+
+            if (cdao.isPhoneExists(phone)) {
+
+                request.setAttribute("errorMessage",
+                        "Phone number already exists.");
+
+                request.setAttribute("SHOW_REGISTER", true);
+
+                request.getRequestDispatcher("/home.jsp")
+                        .forward(request, response);
 
                 return;
             }
@@ -85,7 +99,6 @@ public class RegisterController extends HttpServlet {
             int accountId = dao.registerAccount(acc);
 
             // 7. KIỂM TRA KẾT QUẢ
-            CustomerDAO cdao = new CustomerDAO();
 
             int customerResult
                     = cdao.insertCustomer(

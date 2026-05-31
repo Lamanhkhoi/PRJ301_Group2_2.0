@@ -1,3 +1,4 @@
+<%@ include file="/includes/auth-check.jsp" %>
 <%@page import="java.util.List"%>
 <%@page import="dto.Vehicle"%>
 <%@page import="dao.CustomerVehicleDAO"%>
@@ -8,20 +9,13 @@
 <%@page import="dto.Account"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
-    // 1. Kiểm tra Session đăng nhập bảo vệ hệ thống
-    Account userAcc = (Account) session.getAttribute("USER");
-    Customer cus = (Customer) session.getAttribute("CUSTOMER");
-    if (userAcc == null || cus == null) {
-        response.sendRedirect(request.getContextPath() + "/home.jsp");
-        return;
-    }
 
-    // 2. Lấy dữ liệu Loyalty (Đã được DAO tính toán sẵn)
+    // 1. Lấy dữ liệu Loyalty (Đã được DAO tính toán sẵn)
     CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
     CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
     LoyaltyTier nextTier = loyalty.getNextTierDetails();
 
-    // 3. Lấy danh sách xe thực tế qua ID của khách hàng
+    // 2. Lấy danh sách xe thực tế qua ID của khách hàng
     CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
     List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
 %>

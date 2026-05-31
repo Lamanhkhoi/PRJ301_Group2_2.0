@@ -39,7 +39,7 @@
             String alertMsg = (String) request.getAttribute("ALERT_MSG");
         %>
 
-        <%-- 1. HỆ THỐNG TOAST ALERT (Từ File 1) --%>
+        <%-- 1. HỆ THỐNG TOAST ALERT --%>
         <% if (alertMsg != null) { %>
         <div id="toastBox" class="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100">
             <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= "success".equals(alertType) ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600" %>">
@@ -76,12 +76,12 @@
             
             <main class="flex-1 flex flex-col overflow-hidden relative">
                 
-                <%-- 2. THANH TIÊU ĐỀ TOPBAR (Từ File 2) --%>
+                <%-- 2. THANH TIÊU ĐỀ TOPBAR --%>
                 <jsp:include page="/includes/topbar.jsp"/>
 
                 <div class="flex-1 overflow-y-auto p-8">
                     
-                    <%-- THANH ĐIỀU HƯỚNG CHỨC NĂNG (Gộp nút tìm kiếm nâng cao File 2 & Thêm xe File 1) --%>
+                    <%-- THANH ĐIỀU HƯỚNG CHỨC NĂNG --%>
                     <div class="flex justify-between items-center mb-8">
                         <div class="flex items-center gap-4">
                             <button onclick="openAdvancedFilter()" class="w-12 h-12 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-[#464BE5] hover:border-[#464BE5] shadow-sm flex items-center justify-center transition-all group" title="Tìm kiếm & Lọc xe">
@@ -94,7 +94,7 @@
                         </button>
                     </div>
 
-                    <%-- 3. GRID DANH SÁCH XE DỮ LIỆU THỰC TẾ (Tích hợp vòng lặp File 1 + CSS Hover File 2) --%>
+                    <%-- 3. GRID DANH SÁCH XE DỮ LIỆU THỰC TẾ --%>
                     <div id="vehicle-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <% 
                             if (vehicleList != null && !vehicleList.isEmpty()) {
@@ -141,7 +141,7 @@
                 </div>
             </main>
 
-            <%-- MODAL BỘ LỌC TÌM KIẾM NÂNG CAO (Từ File 2) --%>
+            <%-- MODAL BỘ LỌC TÌM KIẾM NÂNG CAO (ĐÃ ĐỔI THÀNH INPUT TEXT) --%>
             <div id="advancedFilterModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-[#111827]/60 backdrop-blur-sm transition-all duration-300 opacity-0">
                 <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 relative overflow-hidden transform scale-95 transition-transform duration-300" id="filterModalContent">
                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
@@ -151,7 +151,7 @@
 
                     <form action="customer_vehicles.jsp" method="GET" class="p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe</label>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe / Từ khóa</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
@@ -163,19 +163,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
-                                <select name="filterBrand" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition cursor-pointer text-slate-700">
-                                    <option value="">-- Tất cả --</option>
-                                    <option value="VinFast">VinFast</option>
-                                    <option value="Toyota">Toyota</option>
-                                    <option value="Mazda">Mazda</option>
-                                    <option value="Honda">Honda</option>
-                                    <option value="Hyundai">Hyundai</option>
-                                    <option value="Ford">Ford</option>
-                                    <option value="Kia">Kia</option>
-                                    <option value="Mercedes">Mercedes</option>
-                                    <option value="BMW">BMW</option>
-                                    <option value="Khác">Hãng khác...</option>
-                                </select>
+                                <input type="text" name="filterBrand" placeholder="VD: VinFast, Mazda..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Dòng xe</label>
@@ -185,19 +173,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Màu sắc (Vehicle Color)</label>
-                            <select name="filterColor" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition cursor-pointer text-slate-700">
-                                <option value="">-- Tất cả màu --</option>
-                                <option value="Trắng">Trắng (White)</option>
-                                <option value="Đen">Đen (Black)</option>
-                                <option value="Bạc">Bạc (Silver)</option>
-                                <option value="Xám">Xám (Grey)</option>
-                                <option value="Đỏ">Đỏ (Red)</option>
-                                <option value="Xanh dương">Xanh dương (Blue)</option>
-                                <option value="Xanh lá">Xanh lá (Green)</option>
-                                <option value="Nâu">Nâu (Brown)</option>
-                                <option value="Vàng">Vàng (Yellow)</option>
-                                <option value="Khác">Màu khác...</option>
-                            </select>
+                            <input type="text" name="filterColor" placeholder="VD: Đỏ, Trắng..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
                         </div>
 
                         <div class="pt-2 flex gap-3">
@@ -208,7 +184,7 @@
                 </div>
             </div>
 
-            <%-- MODAL THÊM / SỬA THÔNG TIN XE (Đồng bộ chuẩn luồng Backend File 1) --%>
+            <%-- MODAL THÊM / SỬA THÔNG TIN XE --%>
             <div id="vehicleModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden relative">
 
@@ -257,7 +233,7 @@
             const form = document.getElementById('vehicleForm');
             const toast = document.getElementById('toastBox');
 
-            // XỬ LÝ HOẠT ẢNH TRƯỢT VÀO VÀ TỰ BIẾN MẤT CỦA TOAST ALERT (Từ File 1)
+            // XỬ LÝ HOẠT ẢNH TRƯỢT VÀO VÀ TỰ BIẾN MẤT CỦA TOAST ALERT
             if (toast) {
                 setTimeout(function() {
                     toast.classList.add('show');
@@ -277,7 +253,7 @@
                 }
             }
 
-            // ĐIỀU KHIỂN OPEN/CLOSE MODAL THÊM, SỬA (Theo luồng VehicleController)
+            // ĐIỀU KHIỂN OPEN/CLOSE MODAL THÊM, SỬA
             function openModal(mode, btnElement = null) {
                 modal.classList.remove('hidden');
 
@@ -310,7 +286,7 @@
                 modal.classList.add('hidden');
             }
 
-            // ĐIỀU KHIỂN OPEN/CLOSE MODAL BỘ LỌC TÌM KIẾM (Từ File 2)
+            // ĐIỀU KHIỂN OPEN/CLOSE MODAL BỘ LỌC TÌM KIẾM
             const filterModal = document.getElementById('advancedFilterModal');
             const filterContent = document.getElementById('filterModalContent');
 
@@ -333,7 +309,7 @@
             }
         </script>
         
-        <%-- BẬT LẠI MODAL NẾU FORM BỊ LỖI SERVER TRẢ VỀ (Từ File 1) --%>
+        <%-- BẬT LẠI MODAL NẾU FORM BỊ LỖI SERVER TRẢ VỀ --%>
         <%
             String mode = (String) request.getAttribute("MODE");
             if (mode != null) {

@@ -40,7 +40,17 @@
         </nav>
     </div>
     
-    <div class="px-4 mb-6">
+    <%-- Khu vực Chân trang Sidebar --%>
+    <div class="px-4 mb-6 mt-auto">
+        <%-- NÚT THÔNG TIN CÁ NHÂN (MỚI THÊM) --%>
+        <a href="customer_profile.jsp" data-tab="thongtincanhan" 
+           class="sidebar-item flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                  <%= "thongtincanhan".equals(activeTab) ? "bg-emerald-500 text-white font-semibold shadow-md shadow-emerald-500/20" : "text-slate-300 hover:bg-slate-700/50 hover:text-white" %>">
+            <i class="fa-solid fa-user-gear w-5 text-lg <%= "thongtincanhan".equals(activeTab) ? "" : "group-hover:scale-110" %> transition-transform"></i> 
+            <span>Thông tin cá nhân</span>
+        </a>
+
+        <%-- Nút Đăng Xuất --%>
         <a href="${pageContext.request.contextPath}/LogoutController" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border-t border-slate-700/50 mt-4">
             <i class="fa-solid fa-arrow-right-from-bracket w-5 text-lg"></i> <span>Đăng Xuất</span>
         </a>

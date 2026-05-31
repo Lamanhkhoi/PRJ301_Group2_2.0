@@ -21,7 +21,7 @@
                 roleDisplay = "Quản trị viên";
                 roleColorClass = "text-red-400 font-bold";
             } else {
-                roleDisplay = "Thành viên Bạc"; 
+                roleDisplay = "Thành viên"; 
             }
         }
         

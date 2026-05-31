@@ -40,12 +40,12 @@
             </label>
 
             <label class="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" name="receive_promos" class="mt-0.5 w-4 h-4 rounded-full border-gray-300 text-[#464BE5] focus:ring-[#464BE5] cursor-pointer accent-[#464BE5]">
+                <input type="checkbox" name="receive_promos" required class="mt-0.5 w-4 h-4 rounded-full border-gray-300 text-[#464BE5] focus:ring-[#464BE5] cursor-pointer accent-[#464BE5]">
                 <span class="leading-tight">Tôi muốn nhận thông tin về các chương trình khuyến mãi và ưu đãi thành viên.</span>
             </label>
 
             <label class="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" name="love_teacher" value="10_diem" class="mt-0.5 w-4 h-4 rounded-full border-gray-300 text-[#464BE5] focus:ring-[#464BE5] cursor-pointer accent-[#464BE5]">
+                <input type="checkbox" name="love_teacher" value="10_diem" required class="mt-0.5 w-4 h-4 rounded-full border-gray-300 text-[#464BE5] focus:ring-[#464BE5] cursor-pointer accent-[#464BE5]">
                 <span class="leading-tight text-[#111827] font-medium">Em yêu cô!!! Cô cho em 10 điểm nha</span>
             </label>
         </div>

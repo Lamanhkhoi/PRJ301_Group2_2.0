@@ -19,7 +19,7 @@
                 Integer promoCount = (Integer) request.getAttribute("promoCount");
             %>
 
-            <a href="customer_dashboard.jsp" data-tab="tongquan" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "tongquan".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_dashboard.jsp" data-tab="tongquan" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "tongquan".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
                 <i class="fa-solid fa-chart-pie w-5"></i> <span>Tổng Quan</span>
             </a>
             
@@ -27,7 +27,7 @@
                 <i class="fa-solid fa-calendar-check w-5"></i> <span>Đặt Lịch</span>
             </a>
             
-            <a href="customer_vehicles.jsp" data-tab="xecuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "xecuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_vehicles.jsp" data-tab="xecuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "xecuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
                 <i class="fa-solid fa-car w-5"></i> <span>Xe Của Tôi</span>
             </a>
             

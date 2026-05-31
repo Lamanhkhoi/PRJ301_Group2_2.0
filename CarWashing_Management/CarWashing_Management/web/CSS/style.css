@@ -48,7 +48,6 @@ body { margin: 0; padding: 0; }
 
 .user-dropdown { position: relative; display: inline-block; }
 .user-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500;}
-.avatar { width: 40px; height: 40px; background-color: #9CA3AF; border-radius: 50%; }
 
 .dropdown-menu {
     display: none; 

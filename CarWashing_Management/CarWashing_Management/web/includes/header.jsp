@@ -45,7 +45,6 @@
                 // ==========================================
         %>
             <div onclick="openAuthModal()" class="flex items-center gap-2 cursor-pointer bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition">
-                <div class="avatar"></div>
                 <span class="user-name text-sm font-semibold">Đăng Nhập</span>
             </div>
             

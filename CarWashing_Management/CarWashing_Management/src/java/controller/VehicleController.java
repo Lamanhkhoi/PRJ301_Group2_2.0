@@ -68,6 +68,7 @@ public class VehicleController extends HttpServlet {
                             //mo lai trang index.html
                             request.setAttribute("ALERT_TYPE", "success");
                             request.setAttribute("ALERT_MSG", "Vehicle added successfully.");
+                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                             request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                         } else {
                             response.getWriter().print("coming soon");
@@ -79,7 +80,8 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
                         request.setAttribute("MODE", "add");
-
+                        request.setAttribute("ACTIVE_TAB", "cus_vehicle");
+                        
                         //mo file customer_vehicles.jsp de xuat msg
                         request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     }
@@ -100,6 +102,7 @@ public class VehicleController extends HttpServlet {
                             //mo lai trang customer_vehicles.jsp
                             request.setAttribute("ALERT_TYPE", "success");
                             request.setAttribute("ALERT_MSG", "Vehicle updated successfully.");
+                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                             request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                         } else {
                             response.getWriter().print("coming soon");
@@ -117,6 +120,7 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("model", model);
                         request.setAttribute("color", color);
                         //mo file customer_vehicles.jsp de xuat msg
+                        request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                         request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
 
                     }
@@ -137,7 +141,8 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Delete vehicle failed.");
                     }
-
+                    
+                    request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                     request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     break;
             }

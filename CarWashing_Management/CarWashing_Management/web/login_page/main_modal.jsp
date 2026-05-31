@@ -68,3 +68,20 @@
         errorDiv.classList.remove('hidden');
     }
 </script>
+<script>
+    window.addEventListener("load", function () {
+
+        const errorMsg = "${requestScope.errorMessage}";
+        const showRegister = "${requestScope.SHOW_REGISTER}";
+
+        if (showRegister === "true") {
+            openAuthModal();
+            toggleAuthView('register');
+        }
+
+        if (errorMsg && errorMsg.trim() !== "") {
+            openAuthModal();
+            toggleAuthView('register');
+        }
+    });
+</script>

@@ -37,7 +37,7 @@
     }
 %>
 
-<header class="h-20 mesh-gradient-header flex items-center justify-between px-8 shadow-md z-10 relative">
+<header class="h-20 bg-gradient-to-r from-[#1E293B] via-[#1E293B] to-[#2e1065] flex items-center justify-between px-8 shadow-md z-10 relative">
     
     <div class="flex items-center">
         <h2 class="text-xl font-bold text-white drop-shadow-md tracking-wide"><%= pageTitle %></h2>
@@ -46,7 +46,7 @@
     <div class="flex items-center gap-6 relative">
         <button class="relative text-white/80 hover:text-white transition">
             <i class="fa-regular fa-bell text-xl"></i>
-            <span class="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3 border-2 border-slate-900"></span>
+            <span class="absolute -top-1 -right-1 bg-red-500 rounded-full w-3 h-3 border-2 border-[#2e1065]"></span>
         </button>
         
         <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition group">

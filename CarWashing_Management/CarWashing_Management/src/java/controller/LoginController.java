@@ -33,7 +33,7 @@ public class LoginController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // 1. Lấy email/username và password (chưa mã hóa) từ form login
+            // 1. Lấy email/username và password từ form login
             String login = request.getParameter("username");
             String password = request.getParameter("password");
 

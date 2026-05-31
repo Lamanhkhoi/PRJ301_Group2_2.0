@@ -71,7 +71,12 @@ public class VehicleController extends HttpServlet {
                             request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                             request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                         } else {
-                            response.getWriter().print("coming soon");
+                            request.setAttribute("ALERT_TYPE", "error");
+                            request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
+                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
+
+                            //mo file customer_vehicles.jsp de xuat msg
+                            request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                         }
                     } else {
 //                        String msg = "duplicate License Plate";

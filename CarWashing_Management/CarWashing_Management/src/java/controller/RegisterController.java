@@ -1,6 +1,7 @@
 package controller;
 
 import dao.AccountDAO;
+import dao.CustomerDAO;
 import dto.Account;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -112,34 +113,37 @@ public class RegisterController extends HttpServlet {
             // Role = Customer
             // AccountStatus = Active
             // =========================
+            // =========================
             // 6. LƯU DATABASE
             // =========================
-            int result = dao.registerAccount(acc);
+            int accountId = dao.registerAccount(acc);
 
             // =========================
             // 7. KIỂM TRA KẾT QUẢ
             // =========================
-            if (result > 0) {
+            CustomerDAO cdao = new CustomerDAO();
+
+            int customerResult
+                    = cdao.insertCustomer(
+                            accountId,
+                            phone);
+            if (accountId > 0
+                    && customerResult > 0) {
 
                 System.out.println("REGISTER SUCCESS");
 
-                System.out.println("Fullname: " + fullname);
-                System.out.println("Email: " + email);
-                System.out.println("Phone: " + phone);
-
-                // Hiện tại PhoneNumber chưa được lưu
-                // Vì CustomerDAO chưa có insertCustomer()
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/login_page/login_view.jsp");
+                        + "/home");
 
             } else {
 
-                request.setAttribute("ERROR",
+                request.setAttribute(
+                        "ERROR",
                         "Register failed.");
 
                 request.getRequestDispatcher(
-                        "login_page/register_view.jsp")
+                        "/login_page/register_view.jsp")
                         .forward(request, response);
             }
 
@@ -150,9 +154,8 @@ public class RegisterController extends HttpServlet {
             request.setAttribute("ERROR",
                     "System error occurred.");
 
-            request.getRequestDispatcher(
-                    "login_page/register_view.jsp")
-                    .forward(request, response);
+            response.sendRedirect(
+                    request.getContextPath() + "/home");
         }
     }
 

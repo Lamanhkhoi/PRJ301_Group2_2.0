@@ -48,7 +48,7 @@
     
     <%-- Khu vực Đăng Xuất chân trang --%>
     <div class="px-4 mb-6">
-        <a href="../LogOutController" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border-t border-slate-700/50 mt-4">
+        <a href="../LogoutController" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border-t border-slate-700/50 mt-4">
             <i class="fa-solid fa-arrow-right-from-bracket w-5 text-lg"></i> <span>Đăng Xuất</span>
         </a>
     </div>

@@ -7,13 +7,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 // Hàm checkLogin(), registerAccount()
+
 public class AccountDAO {
 
     // XÓA BỎ hoàn toàn việc khai báo biến Connection, PreparedStatement, ResultSet ở đây!
-
     /**
-     * Hàm kiểm tra Đăng nhập
-     * Đã chặn trực tiếp nếu trạng thái tài khoản không phải 'Active'
+     * Hàm kiểm tra Đăng nhập Đã chặn trực tiếp nếu trạng thái tài khoản không
+     * phải 'Active'
      */
     public Account checkLogin(String login, String password) throws SQLException {
         Account acc = null;
@@ -26,9 +26,9 @@ public class AccountDAO {
             if (cn != null) {
                 // Bổ sung điều kiện kiểm tra AccountStatus trực tiếp trong câu lệnh SQL
                 String sql = "SELECT * FROM Accounts "
-                           + "WHERE (Email=? OR Username=?) "
-                           + "AND PasswordHash=? "
-                           + "AND AccountStatus = 'Active'";
+                        + "WHERE (Email=? OR Username=?) "
+                        + "AND PasswordHash=? "
+                        + "AND AccountStatus = 'Active'";
 
                 pst = cn.prepareStatement(sql);
                 pst.setString(1, login);
@@ -53,9 +53,24 @@ public class AccountDAO {
             e.printStackTrace();
         } finally {
             // Đảm bảo đóng kết nối an toàn cho mọi luồng (Thread-safe)
-            try { if (rs != null) rs.close(); } catch (SQLException e) {}
-            try { if (pst != null) pst.close(); } catch (SQLException e) {}
-            try { if (cn != null) cn.close(); } catch (SQLException e) {}
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (SQLException e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (SQLException e) {
+            }
         }
 
         return acc;
@@ -87,7 +102,7 @@ public class AccountDAO {
                     acc.setFullname(rs.getString("FullName"));
                     acc.setAvaUrl(rs.getString("AvatarUrl"));
                     acc.setRole(rs.getString("Role"));
-                    
+
                     String status = rs.getString("AccountStatus");
                     acc.setStatus(status.equalsIgnoreCase("Active"));
                 }
@@ -95,9 +110,24 @@ public class AccountDAO {
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) {}
-            try { if (pst != null) pst.close(); } catch (SQLException e) {}
-            try { if (cn != null) cn.close(); } catch (SQLException e) {}
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (SQLException e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (SQLException e) {
+            }
         }
 
         return acc;
@@ -107,35 +137,67 @@ public class AccountDAO {
      * Hàm đăng ký tài khoản khách hàng mới
      */
     public int registerAccount(Account acc) {
-        int result = 0;
+
+        int accountId = -1;
+
         Connection cn = null;
         PreparedStatement pst = null;
+        ResultSet rs = null;
 
         try {
+
             cn = DBContext.getConnection();
-            if (cn != null) {
-                String sql = "INSERT INTO Accounts "
-                           + "(Username, Email, PasswordHash, FullName, Role, AccountStatus) "
-                           + "VALUES (?, ?, ?, ?, ?, ?)";
 
-                pst = cn.prepareStatement(sql);
-                pst.setString(1, acc.getUsername());
-                pst.setString(2, acc.getEmail());
-                pst.setString(3, acc.getPasswordHash()); // Lưu plain text
-                pst.setString(4, acc.getFullname());
-                pst.setString(5, "Customer"); // Mặc định phân quyền Khách hàng
-                pst.setString(6, "Active");   // Mặc định kích hoạt trạng thái hoạt động
+            String sql
+                    = "INSERT INTO Accounts "
+                    + "(Username, Email, PasswordHash, FullName, Role, AccountStatus) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)";
 
-                result = pst.executeUpdate();
+            pst = cn.prepareStatement(
+                    sql,
+                    PreparedStatement.RETURN_GENERATED_KEYS);
+
+            pst.setString(1, acc.getUsername());
+            pst.setString(2, acc.getEmail());
+            pst.setString(3, acc.getPasswordHash());
+            pst.setString(4, acc.getFullname());
+            pst.setString(5, "Customer");
+            pst.setString(6, "Active");
+
+            pst.executeUpdate();
+
+            rs = pst.getGeneratedKeys();
+
+            if (rs.next()) {
+                accountId = rs.getInt(1);
             }
-        } catch (ClassNotFoundException | SQLException e) {
-            System.err.println(">>> DAO ERROR tại AccountDAO.registerAccount!");
+
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try { if (pst != null) pst.close(); } catch (SQLException e) {}
-            try { if (cn != null) cn.close(); } catch (SQLException e) {}
+
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+            }
+
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+            }
+
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+            }
         }
 
-        return result;
+        return accountId;
     }
 }

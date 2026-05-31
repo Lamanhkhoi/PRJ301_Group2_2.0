@@ -1,9 +1,3 @@
-<%-- 
-    Document   : sidebar_DashBoard.jsp
-    Created on : May 29, 2026, 10:24:27 PM
-    Author     : Admin
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
 <aside class="w-64 bg-[#1E293B] text-white flex flex-col justify-between z-10">
@@ -14,8 +8,8 @@
         <nav class="mt-6 flex flex-col gap-1 px-3" id="mainSidebar">
             
             <% 
-                String activeTab = (String) request.getAttribute("activeTab"); 
-                // Biến giả lập đếm số ưu đãi từ DB (Nếu null hoặc = 0 thì không hiện thông báo)
+                // 1. ĐỔI TÊN BIẾN LẤY TỪ CONTROLLER TẠI ĐÂY
+                String activeTab = (String) request.getAttribute("ACTIVE_TAB"); 
                 Integer promoCount = (Integer) request.getAttribute("promoCount");
             %>
 
@@ -27,7 +21,7 @@
                 <i class="fa-solid fa-calendar-check w-5"></i> <span>Đặt Lịch</span>
             </a>
             
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_vehicles.jsp" data-tab="xecuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "xecuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_vehicles.jsp" data-tab="cus_vehicle" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "cus_vehicle".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700" %>">
                 <i class="fa-solid fa-car w-5"></i> <span>Xe Của Tôi</span>
             </a>
             
@@ -46,9 +40,8 @@
         </nav>
     </div>
     
-    <%-- Khu vực Đăng Xuất chân trang --%>
     <div class="px-4 mb-6">
-        <a href="../LogoutController" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border-t border-slate-700/50 mt-4">
+        <a href="${pageContext.request.contextPath}/LogoutController" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border-t border-slate-700/50 mt-4">
             <i class="fa-solid fa-arrow-right-from-bracket w-5 text-lg"></i> <span>Đăng Xuất</span>
         </a>
     </div>
@@ -59,17 +52,35 @@
         const currentPath = window.location.pathname;
         const allItems = document.querySelectorAll('#mainSidebar .sidebar-item');
         
-        allItems.forEach(item => {
-            item.classList.remove('bg-emerald-500', 'text-white', 'font-semibold');
-            item.classList.add('text-slate-300', 'hover:bg-slate-700');
-        });
+        // Lấy giá trị từ biến Java activeTab ở trên (đã đổi sang đọc ACTIVE_TAB)
+        const serverActiveTab = "<%= activeTab != null ? activeTab : "" %>";
 
-        allItems.forEach(item => {
-            const href = item.getAttribute('href');
-            if (href && currentPath.includes(href)) {
-                item.classList.remove('text-slate-300', 'hover:bg-slate-700');
-                item.classList.add('bg-emerald-500', 'text-white', 'font-semibold');
-            }
-        });
+        let matchedItem = null;
+
+        // Ưu tiên 1: Tìm theo định danh tab từ Server gửi xuống
+        if (serverActiveTab !== "") {
+            matchedItem = document.querySelector(`#mainSidebar .sidebar-item[data-tab="${serverActiveTab}"]`);
+        }
+
+        // Ưu tiên 2: Nếu không thấy (hoặc click trực tiếp), tìm theo URL
+        if (!matchedItem) {
+            allItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href && currentPath.includes(href)) {
+                    matchedItem = item;
+                }
+            });
+        }
+
+        // Thực hiện xóa màu cũ và tô màu xanh cho tab đúng
+        if (matchedItem) {
+            allItems.forEach(item => {
+                item.classList.remove('bg-emerald-500', 'text-white', 'font-semibold');
+                item.classList.add('text-slate-300', 'hover:bg-slate-700');
+            });
+
+            matchedItem.classList.remove('text-slate-300', 'hover:bg-slate-700');
+            matchedItem.classList.add('bg-emerald-500', 'text-white', 'font-semibold');
+        }
     });
 </script>

@@ -1,3 +1,4 @@
+<%@ include file="/includes/auth-check.jsp" %>
 <%@page import="java.util.List"%>
 <%@page import="dto.Vehicle"%>
 <%@page import="dao.CustomerVehicleDAO"%>

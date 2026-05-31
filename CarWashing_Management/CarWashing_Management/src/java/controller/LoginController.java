@@ -33,7 +33,7 @@ public class LoginController extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
         try {
-            // 1. Lấy email/username và password (chưa mã hóa) từ form login
+            // 1. Lấy email/username và password từ form login
             String login = request.getParameter("username");
             String password = request.getParameter("password");
 
@@ -44,7 +44,10 @@ public class LoginController extends HttpServlet {
             // Phải chắc chắn acc khác null thì mới được phép lấy thông tin Customer và xử lý tiếp!
             if (acc == null) {
                 // COMMENT SỬA ĐỔI: Tài khoản không tồn tại hoặc đã bị khóa/ngừng hoạt động (đã lọc tại DAO)
-                request.setAttribute("ERROR", "Username/Email or Password is invalid, or account is locked!");
+                request.setAttribute(
+                        "errorMessage",
+                        "Username/Email or Password is invalid..."
+                );
 
                 // COMMENT SỬA ĐỔI: Điền trang điều hướng quay về trang login.jsp để hiển thị thông báo lỗi
                 request.getRequestDispatcher("home.jsp").forward(request, response);

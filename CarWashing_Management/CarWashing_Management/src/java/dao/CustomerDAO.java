@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 // Hàm getCustomerByAccountId(), updatePhoneNumber()
+
 public class CustomerDAO {
 
     Connection cn = null;
@@ -20,8 +21,8 @@ public class CustomerDAO {
 
             cn = DBContext.getConnection();
 
-            String sql =
-                    "SELECT * "
+            String sql
+                    = "SELECT * "
                     + "FROM Customers "
                     + "WHERE AccountId = ?";
 
@@ -62,5 +63,48 @@ public class CustomerDAO {
         }
 
         return cus;
+    }
+
+    public int insertCustomer(int accountId, String phoneNumber) {
+
+        int result = 0;
+
+
+        try {
+
+            cn = DBContext.getConnection();
+
+            String sql
+                    = "INSERT INTO Customers "
+                    + "(AccountId, PhoneNumber) "
+                    + "VALUES (?, ?)";
+
+            pst = cn.prepareStatement(sql);
+
+            pst.setInt(1, accountId);
+            pst.setString(2, phoneNumber);
+
+            result = pst.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+            }
+
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        return result;
     }
 }

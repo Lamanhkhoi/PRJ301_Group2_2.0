@@ -7,33 +7,35 @@
     String avatarChar = "K";
     String roleDisplay = "Thành viên";
     String roleColorClass = "text-emerald-300";
+    boolean hasTopBarAvatar = false;
+    Account acc = null;
 
     try {
         Customer cus = (Customer) session.getAttribute("CUSTOMER");
-        Account acc = (Account) session.getAttribute("USER");
-
-        if (cus != null) {
-            fullName = acc.getFullname();
-
-        }
+        acc = (Account) session.getAttribute("USER");
 
         if (acc != null) {
+            fullName = acc.getFullname() != null ? acc.getFullname() : "Khách Vãng Lai";
+
             if ("Admin".equalsIgnoreCase(acc.getRole())) {
                 roleDisplay = "Quản trị viên";
                 roleColorClass = "text-red-400 font-bold";
             } else {
                 roleDisplay = "Thành viên";
             }
+
+            // Kiểm tra trạng thái ảnh đại diện của tài khoản
+            hasTopBarAvatar = (acc.getAvaUrl() != null && !acc.getAvaUrl().trim().isEmpty());
         }
 
-        if (acc.getAvaUrl() != null) {
-            avatarChar = acc.getAvaUrl();
-        } else {
-            String[] nameParts = fullName.trim().split(" ");
+        if (!hasTopBarAvatar) {
+            String nameDisplay = fullName.trim().isEmpty() ? "K" : fullName.trim();
+            String[] nameParts = nameDisplay.split(" ");
             avatarChar = nameParts[nameParts.length - 1].substring(0, 1).toUpperCase();
         }
 
     } catch (Exception e) {
+        // Tránh chết trang khi có lỗi ép kiểu hoặc session null rỗng
     }
 
     String pageTitle = request.getParameter("title");
@@ -59,8 +61,14 @@
                 <p class="text-sm font-bold text-white leading-tight"><%= fullName%></p>
                 <p class="text-xs <%= roleColorClass%> font-medium"><%= roleDisplay%></p>
             </div>
-            <div class="w-10 h-10 rounded-full <%= "Admin".equals(roleDisplay) ? "bg-red-500" : "bg-emerald-500"%> flex items-center justify-center font-bold text-white border-2 border-white/20 shadow-sm group-hover:scale-105 transition-transform">
+
+            <%-- Vùng tròn hiển thị Avatar --%>
+            <div class="w-10 h-10 rounded-full <%= "Quản trị viên".equals(roleDisplay) ? "bg-red-500" : "bg-emerald-500"%> flex items-center justify-center font-bold text-white border-2 border-white/20 shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+                <% if (hasTopBarAvatar) {%>
+                <img src="${pageContext.request.contextPath}/<%= acc.getAvaUrl()%>?v=<%= System.currentTimeMillis()%>" alt="Avatar" class="w-full h-full object-cover">
+                <% } else {%>
                 <%= avatarChar%>
+                <% }%>
             </div>
         </div>
     </div>

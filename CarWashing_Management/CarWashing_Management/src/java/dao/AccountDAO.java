@@ -200,4 +200,101 @@ public class AccountDAO {
 
         return accountId;
     }
+
+    public boolean updateProfileInfo(int accountId, String fullName, String email, String avaUrl) {
+        Connection cn = null;
+        PreparedStatement pst = null;
+        boolean result = false;
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                String sql = "UPDATE Accounts SET FullName = ?, Email = ?, AvatarUrl = ?, UpdatedAt = GETDATE() WHERE AccountId = ?";
+                pst = cn.prepareStatement(sql);
+                pst.setString(1, fullName);
+                pst.setString(2, email);
+                pst.setString(3, avaUrl);
+                pst.setInt(4, accountId);
+
+                int row = pst.executeUpdate();
+                if (row > 0) {
+                    result = true;
+                }
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (SQLException e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (SQLException e) {
+            }
+        }
+        return result;
+    }
+
+    public boolean changePassword(int accountId, String oldPassword, String newPassword) {
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        boolean success = false;
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                // 1. Kiểm tra xem mật khẩu cũ nhập vào có đúng với mật khẩu trong DB không
+                String checkSql = "SELECT PasswordHash FROM Accounts WHERE AccountId = ?";
+                pst = cn.prepareStatement(checkSql);
+                pst.setInt(1, accountId);
+                rs = pst.executeQuery();
+
+                if (rs.next()) {
+                    String currentDbPassword = rs.getString("PasswordHash");
+
+                    // Vì bạn đang dùng Plain Text nên so sánh chuỗi trực tiếp bằng equals
+                    if (currentDbPassword != null && currentDbPassword.equals(oldPassword)) {
+
+                        // 2. Nếu đúng mật khẩu cũ, tiến hành cập nhật mật khẩu mới
+                        String updateSql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountId = ?";
+                        PreparedStatement pstUpdate = cn.prepareStatement(updateSql);
+                        pstUpdate.setString(1, newPassword);
+                        pstUpdate.setInt(2, accountId);
+
+                        int row = pstUpdate.executeUpdate();
+                        if (row > 0) {
+                            success = true;
+                        }
+                        pstUpdate.close();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+        return success;
+    }
 }

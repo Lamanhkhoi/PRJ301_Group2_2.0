@@ -62,14 +62,6 @@
             <jsp:include page="/includes/sidebar_DashBoard.jsp" />
             
             <%
-                // Kiểm tra Session đăng nhập bảo vệ hệ thống
-                Account userAcc = (Account) session.getAttribute("USER");
-                Customer cus = (Customer) session.getAttribute("CUSTOMER");
-                if (userAcc == null || cus == null) {
-                    response.sendRedirect(request.getContextPath() + "/home.jsp");
-                    return;
-                }
-
                 // Lấy danh sách xe thực tế qua ID của khách hàng
                 CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
                 List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());

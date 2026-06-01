@@ -32,9 +32,12 @@ public class RegisterController extends HttpServlet {
                     || password == null || password.trim().isEmpty()
                     || rePassword == null || rePassword.trim().isEmpty()) {
 
-                request.setAttribute("ERROR", "Please fill in all required fields.");
+                request.setAttribute("errorMessage",
+                        "Please fill in all required fields.");
 
-                request.getRequestDispatcher("login_page/register_view.jsp")
+                request.setAttribute("SHOW_REGISTER", true);
+
+                request.getRequestDispatcher("/home.jsp")
                         .forward(request, response);
                 return;
             }
@@ -42,9 +45,12 @@ public class RegisterController extends HttpServlet {
             // Kiểm tra mật khẩu xác nhận
             if (!password.equals(rePassword)) {
 
-                request.setAttribute("ERROR", "Password confirmation does not match.");
+                request.setAttribute("errorMessage",
+                        "Password confirmation does not match.");
 
-                request.getRequestDispatcher("login_page/register_view.jsp")
+                request.setAttribute("SHOW_REGISTER", true);
+
+                request.getRequestDispatcher("/home.jsp")
                         .forward(request, response);
                 return;
             }
@@ -99,7 +105,6 @@ public class RegisterController extends HttpServlet {
             int accountId = dao.registerAccount(acc);
 
             // 7. KIỂM TRA KẾT QUẢ
-
             int customerResult
                     = cdao.insertCustomer(
                             accountId,
@@ -113,10 +118,14 @@ public class RegisterController extends HttpServlet {
 
             } else {
 
-                request.setAttribute("ERROR", "Register failed.");
+                request.setAttribute("errorMessage",
+                        "Register failed.");
 
-                request.getRequestDispatcher("/login_page/register_view.jsp")
+                request.setAttribute("SHOW_REGISTER", true);
+
+                request.getRequestDispatcher("/home.jsp")
                         .forward(request, response);
+                return;
             }
 
         } catch (Exception e) {

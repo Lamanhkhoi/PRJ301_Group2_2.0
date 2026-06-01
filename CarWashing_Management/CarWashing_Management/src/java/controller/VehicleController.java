@@ -9,6 +9,7 @@ import dto.Customer;
 import dto.Vehicle;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -47,11 +48,42 @@ public class VehicleController extends HttpServlet {
             }
             CustomerVehicleDAO d = new CustomerVehicleDAO();
             switch (action) {
+                case "view":
+
+                    String liplate = request.getParameter("filterPlate");
+                    String brand = request.getParameter("filterBrand");
+                    String model = request.getParameter("filterModel");
+                    String color = request.getParameter("filterColor");
+
+                    List<Vehicle> vehicleList;
+
+                    // Không nhập gì => lấy toàn bộ
+                    if ((liplate == null || liplate.trim().isEmpty())
+                            && (brand == null || brand.trim().isEmpty())
+                            && (model == null || model.trim().isEmpty())
+                            && (color == null || color.trim().isEmpty())) {
+
+                        vehicleList = d.getAllVehicles(cus.getCustomerId());
+                        request.setAttribute("IS_SEARCH", false);
+                    } else {
+
+                        vehicleList = d.searchVehicles(cus.getCustomerId(),
+                                liplate, brand, model, color);
+                        request.setAttribute("IS_SEARCH", true);
+                    }
+                    
+                    request.setAttribute("VEHICLE_LIST", vehicleList);
+
+                    request.getRequestDispatcher(
+                            "/DashBoard/customer_vehicles.jsp"
+                    ).forward(request, response);
+
+                    break;
                 case "add":
-                    String liplate = request.getParameter("plate");
-                    String brand = request.getParameter("brand");
-                    String model = request.getParameter("model");
-                    String color = request.getParameter("color");
+                    liplate = request.getParameter("plate");
+                    brand = request.getParameter("brand");
+                    model = request.getParameter("model");
+                    color = request.getParameter("color");
                     Vehicle vehicle = new Vehicle();
                     vehicle.setCustomerId(cus.getCustomerId());
                     vehicle.setLicensePlate(liplate);
@@ -86,7 +118,7 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
                         request.setAttribute("MODE", "add");
                         request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-                        
+
                         //mo file customer_vehicles.jsp de xuat msg
                         request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     }
@@ -146,7 +178,7 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Delete vehicle failed.");
                     }
-                    
+
                     request.setAttribute("ACTIVE_TAB", "cus_vehicle");
                     request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     break;

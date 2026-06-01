@@ -21,7 +21,7 @@
                 background-color: #0f172a;
                 background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
             }
-            
+
             /* CSS ĐIỀU KHIỂN HIỆU ỨNG TRƯỢT CỦA TOAST ALERT */
             #toastBox {
                 transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;
@@ -35,20 +35,19 @@
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
-        <%
-            String alertType = (String) request.getAttribute("ALERT_TYPE");
+        <%            String alertType = (String) request.getAttribute("ALERT_TYPE");
             String alertMsg = (String) request.getAttribute("ALERT_MSG");
         %>
 
         <%-- 1. HỆ THỐNG TOAST ALERT --%>
-        <% if (alertMsg != null) { %>
+        <% if (alertMsg != null) {%>
         <div id="toastBox" class="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= "success".equals(alertType) ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600" %>">
-                <i class="<%= "success".equals(alertType) ? "fa-solid fa-circle-check" : "fa-solid fa-circle-exclamation" %>"></i>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= "success".equals(alertType) ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"%>">
+                <i class="<%= "success".equals(alertType) ? "fa-solid fa-circle-check" : "fa-solid fa-circle-exclamation"%>"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-bold text-slate-800 text-sm"><%= "success".equals(alertType) ? "Thành công" : "Thông báo lỗi" %></h4>
-                <p class="text-slate-500 text-xs mt-0.5"><%= alertMsg %></p>
+                <h4 class="font-bold text-slate-800 text-sm"><%= "success".equals(alertType) ? "Thành công" : "Thông báo lỗi"%></h4>
+                <p class="text-slate-500 text-xs mt-0.5"><%= alertMsg%></p>
             </div>
             <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2">
                 <i class="fa-solid fa-xmark text-sm"></i>
@@ -60,20 +59,23 @@
 
             <%-- SIDEBAR DASHBOARD --%>
             <jsp:include page="/includes/sidebar_DashBoard.jsp" />
-            
+
             <%
                 // Lấy danh sách xe thực tế qua ID của khách hàng
                 CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
-                List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
+                List<Vehicle> vehicleList = (List) request.getAttribute("VEHICLE_LIST");
+                if (vehicleList == null) {
+                    vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
+                }
             %>
-            
+
             <main class="flex-1 flex flex-col overflow-hidden relative">
-                
+
                 <%-- 2. THANH TIÊU ĐỀ TOPBAR --%>
                 <jsp:include page="/includes/topbar.jsp"/>
 
                 <div class="flex-1 overflow-y-auto p-8">
-                    
+
                     <%-- THANH ĐIỀU HƯỚNG CHỨC NĂNG --%>
                     <div class="flex justify-between items-center mb-8">
                         <div class="flex items-center gap-4">
@@ -81,7 +83,7 @@
                                 <i class="fa-solid fa-magnifying-glass text-lg group-hover:scale-110 transition-transform"></i>
                             </button>
                         </div>
-                        
+
                         <button onclick="openModal('add')" class="bg-[#464BE5] hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl shadow-md transition-colors flex items-center gap-2">
                             <i class="fa-solid fa-plus"></i> Thêm Xe Mới
                         </button>
@@ -89,7 +91,7 @@
 
                     <%-- 3. GRID DANH SÁCH XE DỮ LIỆU THỰC TẾ --%>
                     <div id="vehicle-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <% 
+                        <%
                             if (vehicleList != null && !vehicleList.isEmpty()) {
                                 for (Vehicle v : vehicleList) {
                                     if (v.getIsActive()) {
@@ -114,7 +116,7 @@
                                         <i class="fa-solid fa-pen"></i> Sửa
                                     </button>
 
-                                    <form action="<%= request.getContextPath() %>/VehicleController" method="POST" class="flex-1 m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện này?');">
+                                    <form action="<%= request.getContextPath()%>/VehicleController" method="POST" class="flex-1 m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện này?');">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="vehicleId" value="<%= v.getVehicleId()%>">
                                         <button type="submit" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-red-200">
@@ -125,11 +127,23 @@
                             </div>
                         </div>
                         <%          }
-                                }
-                            } else { 
+                            }
+                        } else {
+                            Boolean isSearch = (Boolean) request.getAttribute("IS_SEARCH");
+
+                            if (Boolean.TRUE.equals(isSearch)) {
                         %>
-                            <div class="col-span-full text-center py-12 text-slate-400 font-medium">Bạn chưa đăng ký phương tiện nào.</div>
-                        <%  } %>
+                        <div class="col-span-full text-center py-12 text-slate-400 font-medium">
+                            Không tìm thấy phương tiện phù hợp.
+                        </div>
+                        <%
+                        } else {
+                        %>
+                        <div class="col-span-full text-center py-12 text-slate-400 font-medium">
+                            Bạn chưa đăng ký phương tiện nào.
+                        </div>
+                        <%}%>
+                        <%}%>
                     </div>
                 </div>
             </main>
@@ -142,14 +156,15 @@
                         <button onclick="closeAdvancedFilter()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                     </div>
 
-                    <form action="customer_vehicles.jsp" method="GET" class="p-6 space-y-4">
+                    <form action="<%=request.getContextPath()%>/VehicleController" method="POST" class="p-6 space-y-4">
+                        <input type="hidden" name="action" value="view">
                         <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe / Từ khóa</label>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                                 </div>
-                                <input type="text" name="searchQuery" placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
+                                <input type="text" name="filterPlate" placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
                             </div>
                         </div>
 
@@ -186,7 +201,7 @@
                         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
                     </div>
 
-                    <form id="vehicleForm" action="<%= request.getContextPath() %>/VehicleController" method="POST">
+                    <form id="vehicleForm" action="<%= request.getContextPath()%>/VehicleController" method="POST">
                         <input type="hidden" id="action" name="action">
                         <div class="p-6 space-y-4">
                             <input type="hidden" id="inpVehicleId" name="vehicleId">
@@ -228,11 +243,11 @@
 
             // XỬ LÝ HOẠT ẢNH TRƯỢT VÀO VÀ TỰ BIẾN MẤT CỦA TOAST ALERT
             if (toast) {
-                setTimeout(function() {
+                setTimeout(function () {
                     toast.classList.add('show');
                 }, 100);
 
-                setTimeout(function() {
+                setTimeout(function () {
                     closeToast();
                 }, 3100);
             }
@@ -240,7 +255,7 @@
             function closeToast() {
                 if (toast) {
                     toast.classList.remove('show');
-                    setTimeout(function() {
+                    setTimeout(function () {
                         toast.remove();
                     }, 400);
                 }
@@ -262,17 +277,17 @@
                 } else if (mode === 'edit') {
                     document.getElementById('modalTitle').innerText = 'Sửa Thông Tin Xe';
                     document.getElementById("action").value = "update";
-                    
+
                     const card = btnElement.closest('.vehicle-card');
                     const currentPlate = card.querySelector('.val-plate').innerText;
 
                     document.getElementById('inpVehicleId').value = card.dataset.id;
                     document.getElementById('inpPlate').value = currentPlate;
-                    document.getElementById('inpOldPlate').value = currentPlate; 
+                    document.getElementById('inpOldPlate').value = currentPlate;
                     document.getElementById('inpBrand').value = card.querySelector('.val-brand').innerText;
                     document.getElementById('inpModel').value = card.querySelector('.val-model').innerText;
                     document.getElementById('inpColor').value = card.querySelector('.val-color').innerText;
-                }
+            }
             }
 
             function closeModal() {
@@ -301,7 +316,7 @@
                 }, 300);
             }
         </script>
-        
+
         <%-- BẬT LẠI MODAL NẾU FORM BỊ LỖI SERVER TRẢ VỀ --%>
         <%
             String mode = (String) request.getAttribute("MODE");
@@ -309,7 +324,7 @@
         %>
         <script>
             window.onload = function () {
-                openModal('<%= mode.toLowerCase() %>');
+                openModal('<%= mode.toLowerCase()%>');
             };
         </script>
         <%}%>

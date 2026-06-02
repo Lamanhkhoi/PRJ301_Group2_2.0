@@ -1,4 +1,4 @@
-<%@ include file="/includes/auth-check.jsp" %>
+<%@ include file="../includes/auth-check.jsp" %>
 <%@page import="java.text.SimpleDateFormat"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -120,7 +120,7 @@
                         </div>
 
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                            <form id="formUpdateProfile" action="<%= request.getContextPath()%>/UserProfileController?action=updateProfile" method="POST" enctype="multipart/form-data" class="p-8">
+                            <form id="formUpdateProfile" action="<%= request.getContextPath()%>/MainController?action=updateProfile" method="POST" enctype="multipart/form-data" class="p-8">
                                 <input type="hidden" name="isDeleteAvatar" id="isDeleteAvatar" value="false">
                                 
                                 <div class="flex flex-col md:flex-row gap-10">
@@ -205,7 +205,7 @@
                             <div class="px-8 py-5 border-b border-slate-100">
                                 <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-shield-halved text-emerald-500 mr-2"></i>Bảo mật tài khoản</h3>
                             </div>
-                            <form id="formChangePassword" action="<%= request.getContextPath()%>/UserProfileController?action=changePassword" method="POST" onsubmit="return validatePasswordForm()" class="p-8">
+                            <form id="formChangePassword" action="<%= request.getContextPath()%>/MainController?action=changePassword" method="POST" onsubmit="return validatePasswordForm()" class="p-8">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
                                     <div>
                                         <label class="block text-sm font-medium text-slate-600 mb-1">Mật khẩu hiện tại</label>

@@ -22,9 +22,9 @@ import javax.servlet.http.Part;
 
 @WebServlet(name = "UserProfileController", urlPatterns = {"/UserProfileController"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
-        maxFileSize = 1024 * 1024 * 2, // Tối đa 2 MB cho 1 ảnh đại diện
-        maxRequestSize = 1024 * 1024 * 10 // Tối đa 10 MB cho gói dữ liệu Form
+        fileSizeThreshold = 1024 * 1024 * 1,
+        maxFileSize = 1024 * 1024 * 2,
+        maxRequestSize = 1024 * 1024 * 10
 )
 public class UserProfileController extends HttpServlet {
 
@@ -37,7 +37,6 @@ public class UserProfileController extends HttpServlet {
         Customer cus = (Customer) session.getAttribute("CUSTOMER");
 
         try {
-            // ĐỌC THAM SỐ ACTION ĐỂ PHÂN BIỆT FORM
             String action = request.getParameter("action");
 
             if ("changePassword".equals(action)) {
@@ -50,26 +49,22 @@ public class UserProfileController extends HttpServlet {
 
                 if (isChanged) {
                     userAcc.setPasswordHash(newPassword);
-                    session.setAttribute("userAcc", userAcc);
+                    session.setAttribute("USER", userAcc);
                     request.setAttribute("ALERT_TYPE", "success");
-                    request.setAttribute("ALERT_MSG", "Thay đổi mật khẩu tài khăn thành công!");
+                    request.setAttribute("ALERT_MSG", "Thay đổi mật khẩu tài khoản thành công!");
                 } else {
                     request.setAttribute("ALERT_TYPE", "error");
                     request.setAttribute("ALERT_MSG", "Mật khẩu hiện tại không chính xác!");
                 }
 
-                // Chuyển hướng về trang JSP
-                request.getRequestDispatcher("/DashBoard/customer_profile.jsp").forward(request, response);
-                return;
-            } else {
+            } else if ("updateProfile".equals(action)) {
+                // --- LUỒNG CẬP NHẬT THÔNG TIN ---
                 String fullName = request.getParameter("fullName");
                 String email = request.getParameter("email");
                 String phone = request.getParameter("phoneNumber");
                 String dobString = request.getParameter("dateOfBirth");
                 String gender = request.getParameter("gender");
                 String address = request.getParameter("address");
-
-                // Đọc trạng thái xóa ảnh ẩn từ Form gửi lên
                 String isDeleteAvatar = request.getParameter("isDeleteAvatar");
 
                 Date dob = null;
@@ -77,7 +72,6 @@ public class UserProfileController extends HttpServlet {
                     dob = new SimpleDateFormat("yyyy-MM-dd").parse(dobString);
                 }
 
-                // --- THIẾT LẬP ĐƯỜNG DẪN KÉP ĐẾN THƯ MỤC UPLOADS ---
                 String appPath = request.getServletContext().getRealPath("");
                 if (appPath.endsWith(File.separator)) {
                     appPath = appPath.substring(0, appPath.length() - 1);
@@ -103,68 +97,41 @@ public class UserProfileController extends HttpServlet {
                 }
 
                 String relativeAvatarPath = userAcc.getAvaUrl();
-
-                // 1. LẤY TRẠNG THÁI XÓA TỪ FORM GỬI LÊN
                 Part filePart = request.getPart("avatarFile");
 
-                // 2. TIẾN HÀNH QUÉT VÀ XÓA FILE CŨ TRÊN Ổ CỨNG NẾU CÓ YÊU CẦU XÓA HOẶC UP ẢNH MỚI
                 if ("true".equals(isDeleteAvatar) || (filePart != null && filePart.getSize() > 0)) {
-
-                    // Giải phóng bộ nhớ kết nối tập tin để tránh lỗi khóa file trên Windows
                     System.gc();
-
-                    // Quét tìm tận gốc các file ảnh có tên "avatar_[AccountId].*" để xóa sạch
                     String[] extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp"};
                     for (String ext : extensions) {
                         String checkFileName = "avatar_" + userAcc.getAccountID() + ext;
-
-                        File fileInBuild = new File(savePathBuild + File.separator + checkFileName);
-                        if (fileInBuild.exists()) {
-                            fileInBuild.delete();
-                        }
-
-                        File fileInSource = new File(savePathSource + File.separator + checkFileName);
-                        if (fileInSource.exists()) {
-                            fileInSource.delete();
-                        }
+                        new File(savePathBuild + File.separator + checkFileName).delete();
+                        new File(savePathSource + File.separator + checkFileName).delete();
                     }
-                    System.out.println(">>> [SmartWash Log] Da xoa sach file anh cu tren he thong.");
-
-                    // Nếu người dùng thực sự bấm nút xóa ảnh, gán giá trị truyền vào DB là null
                     if ("true".equals(isDeleteAvatar)) {
                         relativeAvatarPath = null;
                     }
                 }
 
-                // 3. TRƯỜNG HỢP UP ẢNH MỚI (Lấy thứ tự ưu tiên đè lên hành động xóa)
                 if (filePart != null && filePart.getSize() > 0) {
                     String submittedFileName = filePart.getSubmittedFileName();
                     String fileExtension = "";
-
                     int i = submittedFileName.lastIndexOf('.');
                     if (i > 0) {
                         fileExtension = submittedFileName.substring(i);
                     }
 
                     String newFileName = "avatar_" + userAcc.getAccountID() + fileExtension;
-                    String filePathBuild = savePathBuild + File.separator + newFileName;
-                    String filePathSource = savePathSource + File.separator + newFileName;
+                    filePart.write(savePathBuild + File.separator + newFileName);
 
-                    // Ghi file mới vào Server
-                    filePart.write(filePathBuild);
-
-                    // Ghi file mới vào mã nguồn gốc Web Pages bằng Stream an toàn
                     try ( InputStream input = filePart.getInputStream()) {
-                        File sourceFile = new File(filePathSource);
+                        File sourceFile = new File(savePathSource + File.separator + newFileName);
                         Files.copy(input, sourceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                     relativeAvatarPath = "image/uploads/" + newFileName;
                 }
 
-                // --- THỰC THI GHI DỮ LIỆU XUỐNG DATABASE VÀ ĐỒNG BỘ SESSION ---
                 AccountDAO accDAO = new AccountDAO();
                 CustomerDAO cusDAO = new CustomerDAO();
 
@@ -172,11 +139,9 @@ public class UserProfileController extends HttpServlet {
                 boolean updateCustomer = cusDAO.updateCustomerInfo(userAcc.getAccountID(), phone, dob, gender, address);
 
                 if (updateAccount && updateCustomer) {
-                    // Cập nhật lại Session tức thì để Topbar và UserProfile hiển thị chính xác dữ liệu mới
                     userAcc.setFullname(fullName);
                     userAcc.setEmail(email);
                     userAcc.setAvaUrl(relativeAvatarPath);
-
                     cus.setPhone(phone);
                     cus.setDob(dob);
                     cus.setGender(gender);
@@ -195,11 +160,9 @@ public class UserProfileController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("ALERT_TYPE", "error");
-            request.setAttribute("ALERT_MSG", "Hệ thống xảy ra lỗi xử lý: " + e.getMessage());
+            request.setAttribute("ALERT_MSG", "Hệ thống xảy ra lỗi: " + e.getMessage());
         }
-
-        // Trả luồng về giao diện hiển thị
-        request.getRequestDispatcher("/DashBoard/customer_profile.jsp").forward(request, response);
+        request.getRequestDispatcher("MainController?action=customerProfile").forward(request, response);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

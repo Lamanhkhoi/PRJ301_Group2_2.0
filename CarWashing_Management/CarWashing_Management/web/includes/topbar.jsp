@@ -1,7 +1,13 @@
 <%@page import="dto.Customer"%>
 <%@page import="dto.Account"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-
+<%
+    if (request.getAttribute("javax.servlet.include.request_uri") == null) {
+        request.getSession().invalidate();
+        response.sendRedirect(request.getContextPath() + "/MainController?action=home");
+        return;
+    }
+%>
 <%
     String fullName = "Khách Vãng Lai";
     String avatarChar = "K";

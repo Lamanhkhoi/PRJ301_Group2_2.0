@@ -1,4 +1,4 @@
-<%@ include file="/includes/auth-check.jsp" %>
+<%@ include file="../includes/auth-check.jsp" %>
 <%@page import="java.util.List"%>
 <%@page import="dto.Vehicle"%>
 <%@page import="dao.CustomerVehicleDAO"%>
@@ -35,8 +35,22 @@
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
-        <%            String alertType = (String) request.getAttribute("ALERT_TYPE");
+        <%
+            // 1. Kiểm tra trong request trước
+            String alertType = (String) request.getAttribute("ALERT_TYPE");
             String alertMsg = (String) request.getAttribute("ALERT_MSG");
+
+            // 2. Nếu request không có, kiểm tra tiếp trong session
+            if (alertMsg == null) {
+                alertType = (String) session.getAttribute("ALERT_TYPE");
+                alertMsg = (String) session.getAttribute("ALERT_MSG");
+
+                // 3. XÓA NGAY trong session sau khi đã lấy ra để tránh F5 bị lặp lại thông báo
+                if (alertMsg != null) {
+                    session.removeAttribute("ALERT_TYPE");
+                    session.removeAttribute("ALERT_MSG");
+                }
+            }
         %>
 
         <%-- 1. HỆ THỐNG TOAST ALERT --%>
@@ -116,7 +130,7 @@
                                         <i class="fa-solid fa-pen"></i> Sửa
                                     </button>
 
-                                    <form action="<%= request.getContextPath()%>/VehicleController" method="POST" class="flex-1 m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện này?');">
+                                    <form action="<%= request.getContextPath()%>/MainController?action=deleteVehicle" method="POST" class="flex-1 m-0" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phương tiện này?');">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="vehicleId" value="<%= v.getVehicleId()%>">
                                         <button type="submit" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2 border border-red-200">
@@ -156,7 +170,7 @@
                         <button onclick="closeAdvancedFilter()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                     </div>
 
-                    <form action="<%=request.getContextPath()%>/VehicleController" method="POST" class="p-6 space-y-4">
+                    <form action="<%= request.getContextPath()%>/MainController?action=viewVehicle" method="POST" class="p-6 space-y-4">
                         <input type="hidden" name="action" value="view">
                         <div>
                             <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe</label>
@@ -201,7 +215,7 @@
                         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
                     </div>
 
-                    <form id="vehicleForm" action="<%= request.getContextPath()%>/VehicleController" method="POST">
+                    <form id="vehicleForm" action="<%= request.getContextPath()%>/MainController" method="POST">
                         <input type="hidden" id="action" name="action">
                         <div class="p-6 space-y-4">
                             <input type="hidden" id="inpVehicleId" name="vehicleId">
@@ -265,18 +279,22 @@
             function openModal(mode, btnElement = null) {
                 modal.classList.remove('hidden');
 
+                // Lấy đối tượng form ra để cấu hình dynamic action
+                const vehicleForm = document.getElementById('vehicleForm');
+
                 if (mode === 'add') {
                     document.getElementById('modalTitle').innerText = 'Thêm Xe Mới';
-                    document.getElementById("action").value = "add";
+                    document.getElementById("action").value = "addVehicle"; // Thay đổi value input ẩn thành addVehicle
 
                     if (!document.getElementById("inpPlate").value) {
                         form.reset();
                     }
                     document.getElementById('inpVehicleId').value = '';
                     document.getElementById('inpOldPlate').value = '';
+
                 } else if (mode === 'edit') {
                     document.getElementById('modalTitle').innerText = 'Sửa Thông Tin Xe';
-                    document.getElementById("action").value = "update";
+                    document.getElementById("action").value = "updateVehicle"; // Thay đổi value input ẩn thành updateVehicle
 
                     const card = btnElement.closest('.vehicle-card');
                     const currentPlate = card.querySelector('.val-plate').innerText;

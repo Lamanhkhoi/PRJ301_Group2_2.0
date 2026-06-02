@@ -1,10 +1,11 @@
-<%-- 
-    Document   : login_view.jsp
-    Created on : May 29, 2026, 12:29:08 AM
-    Author     : Admin
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    if (request.getRequestURI().contains("login_view.jsp")) {
+        request.getSession().invalidate(); // Hủy session
+        response.sendRedirect(request.getContextPath() + "/MainController?action=home");
+        return;
+    }
+%>
 
 <div class="p-10">
     <div class="text-center mb-8">
@@ -14,15 +15,19 @@
         <h2 class="text-2xl font-bold text-[#111827]">Đăng Nhập Tài Khoản</h2>
     </div>
 
-    <div id="loginErrorMsg" class="hidden bg-red-100 text-red-600 text-sm text-center py-2 rounded-lg mb-4 font-medium">
+    <%
+        String error = (String) request.getAttribute("errorMessage");
+    %>
+    <div id="loginErrorMsg" class="<%= (error != null) ? "" : "hidden"%> bg-red-100 text-red-600 text-sm text-center py-2 rounded-lg mb-4 font-medium">
+        <%= (error != null) ? error : ""%>
     </div>
-    
-    <form action="LoginController" method="POST" class="space-y-4">
+
+    <form action="MainController" method="POST" class="space-y-4">
         <div>
-            <input type="text" name="username" placeholder="Tên Người Dùng/Email" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] border-transparent focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
+            <input type="text" name="username" placeholder="Tên Người Dùng/Email" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] border-transparent focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition" required>
         </div>
         <div>
-            <input type="password" name="password" placeholder="Mật Khẩu" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] border-transparent focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
+            <input type="password" name="password" placeholder="Mật Khẩu" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] border-transparent focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition" required>
         </div>
 
         <button type="submit" name="action" value="login" class="w-full py-3 bg-[#111827] text-white font-bold rounded-xl hover:bg-gray-800 transition mt-2">

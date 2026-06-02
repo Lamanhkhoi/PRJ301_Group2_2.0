@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import dao.AccountDAO;
@@ -15,22 +11,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- * @author Truc
- */
 @WebServlet(name = "LoginController", urlPatterns = {"/LoginController"})
 public class LoginController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
         try {
             // 1. Lấy email/username và password từ form login
@@ -63,13 +46,13 @@ public class LoginController extends HttpServlet {
             request.getSession().setAttribute("USER", acc);
             request.getSession().setAttribute("CUSTOMER", cus);
 
-            // 2. Phân quyền điều hướng (Role-based Authorization)
+            // 2. Phân quyền điều hướng thông qua MainController
             if ("Admin".equalsIgnoreCase(acc.getRole())) {
                 // Chuyển hướng sang trang quản trị của Admin
-                response.sendRedirect("/CarWashing_Management/DashBoard/admin_dashboard.jsp");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=adminDashboard");
             } else {
-                // Chuyển hướng sang trang tổng quan của Khách hàng
-                response.sendRedirect("/CarWashing_Management/DashBoard/customer_dashboard.jsp");
+                // Chuyển hướng sang MainController
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerPage");
             }
 
         } catch (Exception e) {

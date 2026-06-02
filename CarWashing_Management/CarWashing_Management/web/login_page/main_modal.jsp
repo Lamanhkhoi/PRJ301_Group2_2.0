@@ -1,13 +1,12 @@
-<%-- 
-    Document   : login_modal.jsp
-    Created on : May 28, 2026, 5:27:48 PM
-    Author     : Admin
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    if (request.getAttribute("javax.servlet.include.request_uri") == null) {
+        response.sendRedirect(request.getContextPath() + "/MainController?action=home");
+        return;
+    }
+%>
 
 <div id="authModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-[#111827]/60 backdrop-blur-md transition-all duration-300 opacity-0">
-
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 relative overflow-hidden transform scale-95 transition-transform duration-300" id="modalContent">
 
         <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition z-10">
@@ -60,28 +59,31 @@
         }
     }
 
-    const serverError = "${requestScope.errorMessage}";
-    if (serverError && serverError.trim() !== "") {
-        openAuthModal();
-        const errorDiv = document.getElementById('loginErrorMsg');
-        errorDiv.innerText = serverError;
-        errorDiv.classList.remove('hidden');
-    }
-</script>
-<script>
+    // Xử lý hiển thị thông báo lỗi tự động khi Load trang
     window.addEventListener("load", function () {
-
-        const errorMsg = "${requestScope.errorMessage}";
+        const serverError = "${requestScope.errorMessage}";
         const showRegister = "${requestScope.SHOW_REGISTER}";
 
-        if (showRegister === "true") {
+        if (serverError && serverError.trim() !== "") {
             openAuthModal();
-            toggleAuthView('register');
-        }
-
-        if (errorMsg && errorMsg.trim() !== "") {
-            openAuthModal();
-            toggleAuthView('register');
+            
+            if (showRegister === "true") {
+                // Nếu lỗi từ việc Đăng ký
+                toggleAuthView('register');
+                const regErrorDiv = document.getElementById('registerErrorMsg');
+                if (regErrorDiv) {
+                    regErrorDiv.innerText = serverError;
+                    regErrorDiv.classList.remove('hidden');
+                }
+            } else {
+                // Nếu lỗi từ việc Đăng nhập
+                toggleAuthView('login');
+                const loginErrorDiv = document.getElementById('loginErrorMsg');
+                if (loginErrorDiv) {
+                    loginErrorDiv.innerText = serverError;
+                    loginErrorDiv.classList.remove('hidden');
+                }
+            }
         }
     });
 </script>

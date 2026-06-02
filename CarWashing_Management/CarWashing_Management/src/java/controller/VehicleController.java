@@ -1,14 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import dao.CustomerVehicleDAO;
 import dto.Customer;
 import dto.Vehicle;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,22 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- *
- * @author LENOVO
- */
 @WebServlet(name = "VehicleController", urlPatterns = {"/VehicleController"})
 public class VehicleController extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
@@ -41,15 +23,17 @@ public class VehicleController extends HttpServlet {
         try {
             String action = request.getParameter("action");
             HttpSession session = request.getSession();
+
+            // Đồng bộ đồng loạt sử dụng KEY viết hoa "CUSTOMER"
             Customer cus = (Customer) session.getAttribute("CUSTOMER");
             if (cus == null) {
-                response.sendRedirect("home.jsp");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=home");
                 return;
             }
+
             CustomerVehicleDAO d = new CustomerVehicleDAO();
             switch (action) {
-                case "view":
-
+                case "viewVehicle":
                     String liplate = request.getParameter("filterPlate");
                     String brand = request.getParameter("filterBrand");
                     String model = request.getParameter("filterModel");
@@ -57,7 +41,6 @@ public class VehicleController extends HttpServlet {
 
                     List<Vehicle> vehicleList;
 
-                    // Không nhập gì => lấy toàn bộ
                     if ((liplate == null || liplate.trim().isEmpty())
                             && (brand == null || brand.trim().isEmpty())
                             && (model == null || model.trim().isEmpty())
@@ -66,24 +49,19 @@ public class VehicleController extends HttpServlet {
                         vehicleList = d.getAllVehicles(cus.getCustomerId());
                         request.setAttribute("IS_SEARCH", false);
                     } else {
-
-                        vehicleList = d.searchVehicles(cus.getCustomerId(),
-                                liplate, brand, model, color);
+                        vehicleList = d.searchVehicles(cus.getCustomerId(), liplate, brand, model, color);
                         request.setAttribute("IS_SEARCH", true);
                     }
-                    
                     request.setAttribute("VEHICLE_LIST", vehicleList);
-
-                    request.getRequestDispatcher(
-                            "/DashBoard/customer_vehicles.jsp"
-                    ).forward(request, response);
-
+                    request.getRequestDispatcher("MainController?action=customerVehicle").forward(request, response);
                     break;
-                case "add":
+
+                case "addVehicle":
                     liplate = request.getParameter("plate");
                     brand = request.getParameter("brand");
                     model = request.getParameter("model");
                     color = request.getParameter("color");
+
                     Vehicle vehicle = new Vehicle();
                     vehicle.setCustomerId(cus.getCustomerId());
                     vehicle.setLicensePlate(liplate);
@@ -96,95 +74,65 @@ public class VehicleController extends HttpServlet {
                         int result = d.addVehicle(vehicle);
 
                         if (result >= 1) {
-                            //chen thanh cong
-                            //mo lai trang index.html
-                            request.setAttribute("ALERT_TYPE", "success");
-                            request.setAttribute("ALERT_MSG", "Vehicle added successfully.");
-                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-                            request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
+                            // Thành công -> Lưu msg vào session để chuyển hướng Redirect không bị mất
+                            session.setAttribute("ALERT_TYPE", "success");
+                            session.setAttribute("ALERT_MSG", "Thêm phương tiện mới thành công!");
                         } else {
                             request.setAttribute("ALERT_TYPE", "error");
-                            request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
-                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-
-                            //mo file customer_vehicles.jsp de xuat msg
-                            request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
+                            request.setAttribute("ALERT_MSG", "Lỗi: Không thể thêm phương tiện vào hệ thống.");
                         }
                     } else {
-//                        String msg = "duplicate License Plate";
-//                        request.setAttribute("ERROR", msg);
-//                        request.setAttribute("MODE", "add");
                         request.setAttribute("ALERT_TYPE", "error");
-                        request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
+                        request.setAttribute("ALERT_MSG", "Biển số xe này đã tồn tại trên hệ thống!");
                         request.setAttribute("MODE", "add");
-                        request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-
-                        //mo file customer_vehicles.jsp de xuat msg
-                        request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     }
                     break;
 
-                case "update":
+                case "updateVehicle":
                     liplate = request.getParameter("plate");
                     brand = request.getParameter("brand");
                     model = request.getParameter("model");
                     color = request.getParameter("color");
                     int vehicleId = Integer.parseInt(request.getParameter("vehicleId"));
                     found = d.getVehicle(liplate);
+
                     if (found == null || found.getVehicleId() == vehicleId) {
                         int result = d.updateVehicle(vehicleId, liplate, brand, model, color);
-
                         if (result >= 1) {
-                            //update thanh cong
-                            //mo lai trang customer_vehicles.jsp
-                            request.setAttribute("ALERT_TYPE", "success");
-                            request.setAttribute("ALERT_MSG", "Vehicle updated successfully.");
-                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-                            request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
+                            session.setAttribute("ALERT_TYPE", "success");
+                            session.setAttribute("ALERT_MSG", "Cập nhật thông tin xe thành công!");
                         } else {
-                            response.getWriter().print("coming soon");
+                            response.getWriter().print("Hệ thống bảo trì chức năng cập nhật!");
                         }
                     } else {
-//                        String msg = "duplicate License Plate";
-//                        request.setAttribute("ERROR", msg);
-//                        request.setAttribute("MODE", "edit");
                         request.setAttribute("ALERT_TYPE", "error");
-                        request.setAttribute("ALERT_MSG", "Duplicate License Plate.");
+                        request.setAttribute("ALERT_MSG", "Biển số chỉnh sửa đã được dùng cho xe khác!");
                         request.setAttribute("MODE", "edit");
                         request.setAttribute("vehicleId", vehicleId);
                         request.setAttribute("plate", liplate);
                         request.setAttribute("brand", brand);
                         request.setAttribute("model", model);
                         request.setAttribute("color", color);
-                        //mo file customer_vehicles.jsp de xuat msg
-                        request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-                        request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
-
                     }
                     break;
 
-                case "delete":
+                case "deleteVehicle":
                     vehicleId = Integer.parseInt(request.getParameter("vehicleId"));
-
                     int result = d.removeVehicle(vehicleId);
 
                     if (result > 0) {
-                        //delete thanh cong
-                        request.setAttribute("ALERT_TYPE", "success");
-                        request.setAttribute("ALERT_MSG", "Vehicle deleted successfully.");
-
+                        session.setAttribute("ALERT_TYPE", "success");
+                        session.setAttribute("ALERT_MSG", "Xóa phương tiện thành công!");
                     } else {
-                        //that bai
-                        request.setAttribute("ALERT_TYPE", "error");
-                        request.setAttribute("ALERT_MSG", "Delete vehicle failed.");
+                        session.setAttribute("ALERT_TYPE", "error");
+                        session.setAttribute("ALERT_MSG", "Xóa phương tiện thất bại.");
                     }
-
-                    request.setAttribute("ACTIVE_TAB", "cus_vehicle");
-                    request.getRequestDispatcher("DashBoard/customer_vehicles.jsp").forward(request, response);
                     break;
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            request.getRequestDispatcher("MainController?action=customerVehicle").forward(request, response);
         }
     }
 

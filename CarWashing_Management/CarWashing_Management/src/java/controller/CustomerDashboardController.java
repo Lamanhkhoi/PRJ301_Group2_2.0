@@ -47,7 +47,7 @@ public class CustomerDashboardController extends HttpServlet {
             request.setAttribute("LOYALTY_PROFILE", loyaltyProfile);
             
             // Điều hướng sang file hiển thị
-            request.getRequestDispatcher("/views/customer_dashboard.jsp").forward(request, response);
+            request.getRequestDispatcher("/DashBoard/customer_dashboard.jsp").forward(request, response);
             
         } catch (Exception e) {
             e.printStackTrace();

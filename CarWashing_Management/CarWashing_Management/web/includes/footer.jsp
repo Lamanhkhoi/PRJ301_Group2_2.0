@@ -1,10 +1,12 @@
-<%-- 
-    Document   : footer.jsp
-    Created on : May 28, 2026, 3:13:03 PM
-    Author     : Admin
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    if (request.getAttribute("javax.servlet.include.request_uri") == null) {
+        request.getSession().invalidate();
+        response.sendRedirect(request.getContextPath() + "/MainController?action=home");
+        return;
+    }
+%>
+
 <footer class="bg-[#1F2937] border-t border-gray-700 py-8">
     <div class="max-w-6xl mx-auto px-10 flex flex-col md:flex-row justify-between items-center gap-6">
         

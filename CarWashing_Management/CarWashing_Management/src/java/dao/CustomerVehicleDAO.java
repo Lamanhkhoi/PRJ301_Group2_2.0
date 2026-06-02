@@ -1,7 +1,6 @@
 package dao;
 
 import dbutils.DBContext;
-import dto.Customer;
 import dto.Vehicle;
 import java.sql.Connection;
 import java.sql.Date;

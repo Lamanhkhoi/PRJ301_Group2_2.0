@@ -114,7 +114,7 @@ public class RegisterController extends HttpServlet {
 
                 System.out.println("REGISTER SUCCESS");
 
-                response.sendRedirect(request.getContextPath() + "/home");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=home");
 
             } else {
 

@@ -1,9 +1,3 @@
-<%-- 
-    Document   : home
-    Created on : May 28, 2026
-    Author     : Admin
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -121,7 +115,7 @@
                             <li>✓ Miễn phí hút bụi</li>
                             <li>✗ Ưu tiên đặt lịch</li>
                         </ul>
-                        <button class="w-full py-3 border-2 border-[#111827] text-[#111827] font-bold rounded-lg hover:bg-[#111827] hover:text-white transition">Đăng Ký Ngay</button>
+                        <a href="MainController?action=register" class="block w-full py-3 text-center border-2 border-[#111827] text-[#111827] font-bold rounded-lg hover:bg-[#111827] hover:text-white transition">Đăng Ký Ngay</a>
                     </div>
 
                     <div class="bg-gradient-to-b from-[#464BE5] to-blue-800 p-8 rounded-2xl shadow-2xl text-center transform scale-105 border-2 border-[#10B981] reveal">
@@ -132,18 +126,18 @@
                             <li>✓ Miễn phí hút bụi & khử mùi</li>
                             <li>✓ Ưu tiên đặt lịch không xếp hàng</li>
                         </ul>
-                        <button class="w-full py-3 bg-[#10B981] text-white font-bold rounded-lg hover:bg-green-600 transition">Nâng Hạng Vàng</button>
+                        <a href="MainController?action=upgrade" class="block w-full py-3 text-center bg-[#10B981] text-white font-bold rounded-lg hover:bg-green-600 transition">Nâng Hạng Vàng</a>
                     </div>
 
                     <div class="bg-white p-8 rounded-2xl shadow-lg text-center reveal">
-                        <h3 class="text-xl font-bold text-[#111827] mb-4">MEMBER KIM CƯƠNG</h3>
+                        <h3 class="text-xl font-bold text-[#111827] mb-4">MEMBER BẠCH KIM</h3>
                         <div class="text-4xl font-heading text-[#111827] mb-6">Miễn Phí</div>
                         <ul class="text-left text-[#9CA3AF] space-y-3 mb-8">
                             <li>✓ Rửa xe 1 lần/tháng miễn phí</li>
                             <li>✓ Full dịch vụ chăm sóc VIP</li>
                             <li>✓ Phòng chờ máy lạnh, cafe</li>
                         </ul>
-                        <button class="w-full py-3 border-2 border-[#111827] text-[#111827] font-bold rounded-lg hover:bg-[#111827] hover:text-white transition">Trở Thành VIP</button>
+                        <a href="MainController?action=vip" class="block w-full py-3 text-center border-2 border-[#111827] text-[#111827] font-bold rounded-lg hover:bg-[#111827] hover:text-white transition">Trở Thành VIP</a>
                     </div>
                 </div>
             </div>
@@ -166,22 +160,18 @@
             });
         </script>
     </body>
+
     <div id="authModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-[#111827]/80 backdrop-blur-sm transition-all duration-300 opacity-0">
-
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 relative overflow-hidden transform scale-95 transition-transform duration-300" id="authModalContent">
-
             <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition z-50">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-
             <div id="loginView">
                 <jsp:include page="login_page/login_view.jsp" />
             </div>
-
             <div id="registerView" class="hidden">
                 <jsp:include page="login_page/register_view.jsp" />
             </div>
-
         </div>
     </div>
 
@@ -191,7 +181,6 @@
         const loginView = document.getElementById('loginView');
         const registerView = document.getElementById('registerView');
 
-        // Hàm mở Pop-up
         function openAuthModal(viewType) {
             authModal.classList.remove('hidden');
             setTimeout(() => {
@@ -199,11 +188,9 @@
                 authContent.classList.remove('scale-95');
                 authContent.classList.add('scale-100');
             }, 10);
-
-            toggleAuthView(viewType); // Chọn form muốn hiện (login hoặc register)
+            toggleAuthView(viewType);
         }
 
-        // Hàm đóng Pop-up
         function closeAuthModal() {
             authModal.classList.add('opacity-0');
             authContent.classList.remove('scale-100');
@@ -213,7 +200,6 @@
             }, 300);
         }
 
-        // Hàm chuyển đổi qua lại giữa Đăng nhập và Đăng ký
         function toggleAuthView(viewType) {
             if (viewType === 'login') {
                 loginView.classList.remove('hidden');
@@ -224,11 +210,20 @@
             }
         }
 
-        // Bấm ra vùng nền đen bên ngoài cũng sẽ tự đóng Modal
         authModal.addEventListener('click', function (event) {
             if (event.target === authModal) {
                 closeAuthModal();
             }
         });
+
+        <%
+            String errorMsg = (String) request.getAttribute("errorMessage");
+            if (errorMsg != null) {
+        %>
+        // Nếu phát hiện có thông báo lỗi từ LoginController gửi về, tự động kích hoạt hiển thị Modal
+        openAuthModal('login');
+        <%
+            }
+        %>
     </script>
 </html>

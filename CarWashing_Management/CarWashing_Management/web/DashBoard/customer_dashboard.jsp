@@ -1,4 +1,3 @@
-<%@ include file="/includes/auth-check.jsp" %>
 <%@page import="java.util.List"%>
 <%@page import="dto.Vehicle"%>
 <%@page import="dao.CustomerVehicleDAO"%>
@@ -8,14 +7,13 @@
 <%@page import="dto.Customer"%>
 <%@page import="dto.Account"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%
+<%@ include file="../includes/auth-check.jsp" %>
 
-    // 1. Lấy dữ liệu Loyalty (Đã được DAO tính toán sẵn)
+<%
     CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
     CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
     LoyaltyTier nextTier = loyalty.getNextTierDetails();
 
-    // 2. Lấy danh sách xe thực tế qua ID của khách hàng
     CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
     List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
 %>
@@ -52,7 +50,7 @@
 
         <div class="flex h-screen overflow-hidden relative">
 
-            <jsp:include page="/includes/sidebar_DashBoard.jsp" />
+            <jsp:include page="../includes/sidebar_DashBoard.jsp" />
 
             <main class="flex-1 flex flex-col overflow-hidden relative">
 
@@ -104,7 +102,7 @@
                         <div class="col-span-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold text-slate-800">Danh sách xe của tôi</h3>
-                                <a href="customer_vehicles.jsp" class="text-sm text-emerald-500 font-medium hover:underline">Xem tất cả</a>
+                                <a href="<%= request.getContextPath() %>/MainController?action=customerVehicle" class="text-sm text-emerald-500 font-medium hover:underline">Xem tất cả</a>
                             </div>
                             <div class="flex-1 overflow-y-auto max-h-[320px] pr-1 space-y-3">
                                 <% if (vehicleList != null && !vehicleList.isEmpty()) {
@@ -128,7 +126,7 @@
                                 <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center h-full">
                                     <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-2 text-xl"><i class="fa-solid fa-car-side"></i></div>
                                     <p class="text-xs text-slate-500 font-medium mb-3">Bạn chưa đăng ký xe nào.</p>
-                                    <a href="customer_vehicles.jsp" class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm ngay</a>
+                                    <a href="<%= request.getContextPath() %>/MainController?action=customerVehicle" class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm ngay</a>
                                 </div>
                                 <% }%>
                             </div>

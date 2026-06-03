@@ -12,13 +12,13 @@
         <h2 class="text-2xl font-bold text-[#111827]">Tạo Tài Khoản Mới</h2>
         <p class="text-[#9CA3AF] text-sm mt-2">Trở thành Member để nhận ưu đãi</p>
     </div>
-    
+
     <div id="registerErrorMsg" class="hidden bg-red-100 text-red-600 text-sm text-center py-2 rounded-lg mb-4 font-medium">
     </div>
 
     <form action="MainController" method="POST" class="space-y-4">
         <input type="text" name="reg_fullname" placeholder="Họ và Tên" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
-        <input type="email" name="reg_email" placeholder="Email" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
+        <input type="email" name="reg_email" placeholder="Ví dụ: nva@gmail.com" pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$" title="Vui lòng nhập đúng định dạng Gmail (ví dụ: bando@gmail.com)" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
         <input type="tel" name="reg_phoneNumber" placeholder="Nhập số điện thoại" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
         <input type="password" name="reg_password" placeholder="Mật Khẩu" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>
         <input type="password" name="reg_RE_password" placeholder="Nhập lại mật Khẩu" class="w-full px-5 py-3 rounded-xl bg-[#F4F7F6] focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none" required>

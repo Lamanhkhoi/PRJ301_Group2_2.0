@@ -41,6 +41,16 @@ public class RegisterController extends HttpServlet {
                         .forward(request, response);
                 return;
             }
+            
+            if (email == null || !email.matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+                request.setAttribute("errorMessage",
+                        "Invalid email.");
+                request.setAttribute("SHOW_REGISTER", true);
+
+                request.getRequestDispatcher("/home.jsp")
+                        .forward(request, response);
+                return;
+            }
 
             // Kiểm tra mật khẩu xác nhận
             if (!password.equals(rePassword)) {

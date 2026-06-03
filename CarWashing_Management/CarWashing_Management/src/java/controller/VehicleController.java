@@ -102,7 +102,9 @@ public class VehicleController extends HttpServlet {
                             session.setAttribute("ALERT_TYPE", "success");
                             session.setAttribute("ALERT_MSG", "Cập nhật thông tin xe thành công!");
                         } else {
-                            response.getWriter().print("Hệ thống bảo trì chức năng cập nhật!");
+//                            response.getWriter().print("Hệ thống bảo trì chức năng cập nhật!");
+                            session.setAttribute("ALERT_TYPE", "fail");
+                            session.setAttribute("ALERT_MSG", "Cập nhật thông tin xe thất bại!");
                         }
                     } else {
                         request.setAttribute("ALERT_TYPE", "error");

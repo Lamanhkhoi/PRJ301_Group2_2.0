@@ -35,22 +35,22 @@
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
-        <%
-            // 1. Kiểm tra trong request trước
-            String alertType = (String) request.getAttribute("ALERT_TYPE");
-            String alertMsg = (String) request.getAttribute("ALERT_MSG");
+        <%  
+                // 1. Kiểm tra trong request trước
+                String alertType = (String) request.getAttribute("ALERT_TYPE");
+                String alertMsg = (String) request.getAttribute("ALERT_MSG");
 
-            // 2. Nếu request không có, kiểm tra tiếp trong session
-            if (alertMsg == null) {
-                alertType = (String) session.getAttribute("ALERT_TYPE");
-                alertMsg = (String) session.getAttribute("ALERT_MSG");
+                // 2. Nếu request không có, kiểm tra tiếp trong session
+                if (alertMsg == null) {
+                    alertType = (String) session.getAttribute("ALERT_TYPE");
+                    alertMsg = (String) session.getAttribute("ALERT_MSG");
 
-                // 3. XÓA NGAY trong session sau khi đã lấy ra để tránh F5 bị lặp lại thông báo
-                if (alertMsg != null) {
-                    session.removeAttribute("ALERT_TYPE");
-                    session.removeAttribute("ALERT_MSG");
+                    // 3. XÓA NGAY trong session sau khi đã lấy ra để tránh F5 bị lặp lại thông báo
+                    if (alertMsg != null) {
+                        session.removeAttribute("ALERT_TYPE");
+                        session.removeAttribute("ALERT_MSG");
+                    }
                 }
-            }
         %>
 
         <%-- 1. HỆ THỐNG TOAST ALERT --%>
@@ -178,7 +178,7 @@
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                                 </div>
-                                <input type="text" name="filterPlate" placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
+                                <input type="text" name="filterPlate" pattern="^\\d{2}[A-Z]-\\d{3}\\.\\d{2}$" placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
                             </div>
                         </div>
 

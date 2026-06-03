@@ -20,6 +20,9 @@ public class VehicleController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
+
+        String url = "MainController?action=customerVehicle";
+        boolean isRedirect = false;
         try {
             String action = request.getParameter("action");
             HttpSession session = request.getSession();
@@ -53,7 +56,7 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("IS_SEARCH", true);
                     }
                     request.setAttribute("VEHICLE_LIST", vehicleList);
-                    request.getRequestDispatcher("MainController?action=customerVehicle").forward(request, response);
+                    isRedirect = false;
                     break;
 
                 case "addVehicle":
@@ -77,14 +80,17 @@ public class VehicleController extends HttpServlet {
                             // Thành công -> Lưu msg vào session để chuyển hướng Redirect không bị mất
                             session.setAttribute("ALERT_TYPE", "success");
                             session.setAttribute("ALERT_MSG", "Thêm phương tiện mới thành công!");
+                            isRedirect = true;
                         } else {
                             request.setAttribute("ALERT_TYPE", "error");
                             request.setAttribute("ALERT_MSG", "Lỗi: Không thể thêm phương tiện vào hệ thống.");
+                            isRedirect = false;
                         }
                     } else {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Biển số xe này đã tồn tại trên hệ thống!");
                         request.setAttribute("MODE", "add");
+                        isRedirect = false;
                     }
                     break;
 
@@ -101,10 +107,12 @@ public class VehicleController extends HttpServlet {
                         if (result >= 1) {
                             session.setAttribute("ALERT_TYPE", "success");
                             session.setAttribute("ALERT_MSG", "Cập nhật thông tin xe thành công!");
+                            isRedirect = true;
                         } else {
 //                            response.getWriter().print("Hệ thống bảo trì chức năng cập nhật!");
                             session.setAttribute("ALERT_TYPE", "fail");
                             session.setAttribute("ALERT_MSG", "Cập nhật thông tin xe thất bại!");
+                            isRedirect = true;
                         }
                     } else {
                         request.setAttribute("ALERT_TYPE", "error");
@@ -115,6 +123,7 @@ public class VehicleController extends HttpServlet {
                         request.setAttribute("brand", brand);
                         request.setAttribute("model", model);
                         request.setAttribute("color", color);
+                        isRedirect = false;
                     }
                     break;
 
@@ -129,12 +138,17 @@ public class VehicleController extends HttpServlet {
                         session.setAttribute("ALERT_TYPE", "error");
                         session.setAttribute("ALERT_MSG", "Xóa phương tiện thất bại.");
                     }
+                    isRedirect = true;
                     break;
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            request.getRequestDispatcher("MainController?action=customerVehicle").forward(request, response);
+            if (isRedirect) {
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerVehicle");
+            } else {
+                request.getRequestDispatcher(url).forward(request, response);
+            }
         }
     }
 

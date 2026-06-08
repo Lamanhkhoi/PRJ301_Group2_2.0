@@ -178,7 +178,7 @@
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
                                 </div>
-                                <input type="text" name="filterPlate" pattern="^\\d{2}[A-Z]-\\d{3}\\.\\d{2}$" placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
+                                <input type="text" name="filterPlate"  placeholder="VD: 51H-123.45..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#464BE5] focus:ring-2 focus:ring-[#464BE5]/20 outline-none transition">
                             </div>
                         </div>
 
@@ -223,7 +223,7 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe *</label>
-                                <input type="text" id="inpPlate" name="plate" value="${plate}" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
+                                <input type="text" id="inpPlate" name="plate" pattern="[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}" value="${plate}" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
@@ -336,7 +336,7 @@
         </script>
 
         <%-- BẬT LẠI MODAL NẾU FORM BỊ LỖI SERVER TRẢ VỀ --%>
-        <%
+        <%-- <%
             String mode = (String) request.getAttribute("MODE");
             if (mode != null) {
         %>
@@ -345,6 +345,6 @@
                 openModal('<%= mode.toLowerCase()%>');
             };
         </script>
-        <%}%>
+        <%}%> --%>
     </body>
 </html>

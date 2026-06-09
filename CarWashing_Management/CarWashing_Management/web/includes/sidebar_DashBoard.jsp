@@ -17,22 +17,33 @@
                 // 1. ĐỔI TÊN BIẾN LẤY TỪ CONTROLLER TẠI ĐÂY
                 String activeTab = (String) request.getAttribute("ACTIVE_TAB");
                 Integer promoCount = (Integer) request.getAttribute("promoCount");
+                // Giả lập biến đếm số lượng "Lịch đã hẹn" (Backend sẽ gửi biến này qua request)
+                Integer activeBookingCount = (Integer) request.getAttribute("ACTIVE_BOOKING_COUNT");
             %>
 
             <a href="<%=request.getContextPath()%>/MainController?action=customerPage" data-tab="tongquan" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "tongquan".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-chart-pie w-5"></i> <span>Tổng Quan</span>
             </a>
 
-            <a href="DashBoard/customer_booking.jsp" data-tab="datlich" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "datlich".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_booking.jsp" data-tab="datlich" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "datlich".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-calendar-check w-5"></i> <span>Đặt Lịch</span>
+            </a>
+
+            <a href="<%=request.getContextPath()%>/MainController?action=upcomingAppointments" data-tab="lichdahen" class="sidebar-item flex items-center justify-between px-4 py-3 rounded-lg transition-colors <%= "lichdahen".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-stopwatch w-5"></i> <span>Lịch đã hẹn</span>
+                </div>
+                <% if (activeBookingCount != null && activeBookingCount > 0) {%>
+                    <span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm"><%= activeBookingCount %></span>
+                <% } %>
+            </a>  
+
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_history.jsp" data-tab="lichsu" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "lichsu".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+                <i class="fa-solid fa-clock-rotate-left w-5"></i> <span>Lịch Sử</span>
             </a>
 
             <a href="<%=request.getContextPath()%>/MainController?action=customerVehicle" data-tab="cus_vehicle" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "cus_vehicle".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-car w-5"></i> <span>Xe Của Tôi</span>
-            </a>
-
-            <a href="history" data-tab="lichsu" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "lichsu".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
-                <i class="fa-solid fa-clock-rotate-left w-5"></i> <span>Lịch Sử</span>
             </a>
 
             <a href="promotions" data-tab="uudai" class="sidebar-item flex items-center justify-between px-4 py-3 rounded-lg transition-colors <%= "uudai".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">

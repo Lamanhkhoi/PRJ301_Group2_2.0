@@ -34,10 +34,6 @@
                 <span class="leading-tight">Tôi muốn nhận thông tin về các chương trình khuyến mãi và ưu đãi thành viên.</span>
             </label>
 
-            <label class="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" name="love_teacher" value="10_diem" required class="mt-0.5 w-4 h-4 rounded-full border-gray-300 text-[#464BE5] focus:ring-[#464BE5] cursor-pointer accent-[#464BE5]">
-                <span class="leading-tight text-[#111827] font-medium">Em yêu cô!!! Cô cho em 10 điểm nha</span>
-            </label>
         </div>
 
         <button type="submit" name="action" value="register" class="w-full py-3 bg-[#464BE5] text-white font-bold rounded-xl hover:bg-blue-700 transition mt-2">

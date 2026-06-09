@@ -23,7 +23,7 @@
                 <i class="fa-solid fa-chart-pie w-5"></i> <span>Tổng Quan</span>
             </a>
 
-            <a href="booking" data-tab="datlich" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "datlich".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="DashBoard/customer_booking.jsp" data-tab="datlich" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "datlich".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-calendar-check w-5"></i> <span>Đặt Lịch</span>
             </a>
 

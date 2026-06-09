@@ -29,7 +29,7 @@
                 <i class="fa-solid fa-calendar-check w-5"></i> <span>Đặt Lịch</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/MainController?action=upcomingAppointments" data-tab="lichdahen" class="sidebar-item flex items-center justify-between px-4 py-3 rounded-lg transition-colors <%= "lichdahen".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/DashBoard/customer_upcoming.jsp" data-tab="lichdahen" class="sidebar-item flex items-center justify-between px-4 py-3 rounded-lg transition-colors <%= "lichdahen".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-stopwatch w-5"></i> <span>Lịch đã hẹn</span>
                 </div>

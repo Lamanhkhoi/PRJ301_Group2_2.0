@@ -14,50 +14,7 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            body { font-family: 'Inter', sans-serif; }
-            
-            /* --- CSS BỌT NƯỚC RỬA XE VUI NHỘN --- */
-            .soap-water-container {
-                position: relative;
-                overflow: hidden;
-                background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%);
-            }
-            .bubble {
-                position: absolute;
-                background: rgba(255, 255, 255, 0.7);
-                border-radius: 50%;
-                animation: floatUp infinite ease-in;
-            }
-            .bubble-1 { width: 25px; height: 25px; left: 15%; bottom: -30px; animation-duration: 2.5s; }
-            .bubble-2 { width: 15px; height: 15px; left: 40%; bottom: -20px; animation-duration: 3s; animation-delay: 0.5s; }
-            .bubble-3 { width: 35px; height: 35px; left: 70%; bottom: -40px; animation-duration: 4s; animation-delay: 1s; }
-            .bubble-4 { width: 10px; height: 10px; left: 85%; bottom: -15px; animation-duration: 2s; animation-delay: 0.2s; }
-            
-            @keyframes floatUp {
-                0% { transform: translateY(0) translateX(0) scale(1); opacity: 1; }
-                50% { transform: translateY(-40px) translateX(10px) scale(1.1); }
-                100% { transform: translateY(-80px) translateX(-10px) scale(1.3); opacity: 0; }
-            }
-
-            /* --- HIỆU ỨNG NÚT BỎ CHẠY --- */
-            .runaway-btn {
-                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); /* Nảy nhẹ khi di chuyển */
-                z-index: 10;
-            }
-
-            /* --- KHUNG PHÁT SÁNG CHO PRIORITY QUEUE --- */
-            .glowing-frame {
-                border: 2px solid #FBBF24 !important;
-                box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 10px rgba(251, 191, 36, 0.1);
-                animation: pulseGlow 2s infinite;
-            }
-            @keyframes pulseGlow {
-                0% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
-                50% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.6); }
-                100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
-            }
-        </style>
+        <style>body { font-family: 'Inter', sans-serif; }</style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
@@ -79,15 +36,11 @@
                         <div class="flex flex-col gap-6">
                             
                             <% 
-                                // [MOCK DATA] 3 Kịch bản để test 3 tính năng của bạn:
-                                // 1: PENDING, còn hơn 1 ngày (>24h) -> Hủy bình thường.
-                                // 2: PENDING, sát giờ (<24h) -> Nút hủy trêu ngươi + bọt nước.
-                                // 3: WAITING -> Có khung phát sáng đặc biệt (Priority Queue).
-                                
+                                // [MOCK DATA] Đã thay đổi data mồi cho phù hợp với UI tối giản
                                 String[][] mockActive = {
-                                    {"14/06/2026", "09:00", "51H-123.45", "Honda Civic", "Combo Phủ Sáp", "PENDING", "true"},  // true = Hủy bình thường
-                                    {"10/06/2026", "14:30", "51G-987.65", "Mazda 3", "Rửa tiêu chuẩn", "PENDING", "false"}, // false = Dưới 24h, Nút bỏ chạy
-                                    {"09/06/2026", "10:00", "51A-555.55", "Toyota Camry", "Rửa VIP", "WAITING", "false"}    // Đang chờ xếp lốt
+                                    {"14/06/2026", "09:00", "51H-123.45", "Honda Civic", "Combo Phủ Sáp", "PENDING", "true"},
+                                    {"10/06/2026", "14:30", "51G-987.65", "Mazda 3", "Rửa tiêu chuẩn", "PENDING", "false"},
+                                    {"09/06/2026", "10:00", "51A-555.55", "Toyota Camry", "Rửa VIP", "WAITING", "false"}
                                 };
 
                                 for(int idx = 0; idx < mockActive.length; idx++) {
@@ -97,22 +50,15 @@
                                     String service = item[4]; String status = item[5];
                                     boolean canCancel = Boolean.parseBoolean(item[6]);
 
-                                    // Thiết lập bước hiện tại cho Thanh Tiến Trình (Mini Stepper)
                                     int currentStep = 1;
                                     if(status.equals("CHECKED_IN")) currentStep = 2;
                                     if(status.equals("WAITING")) currentStep = 3;
                                     if(status.equals("WASHING")) currentStep = 4;
                             %>
 
-                            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative <%= status.equals("WAITING") ? "glowing-frame" : "" %>">
-                                
-                                <% if(status.equals("WAITING")) { %>
-                                    <div class="absolute -top-3 right-6 bg-amber-500 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-md animate-bounce">
-                                        <i class="fa-solid fa-star mr-1"></i> Ưu tiên cao
-                                    </div>
-                                <% } %>
-
+                            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative">
                                 <div class="flex flex-col md:flex-row gap-6">
+                                    
                                     <div class="md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 pr-6 pb-4 md:pb-0">
                                         <div class="flex items-center gap-3 mb-4">
                                             <div class="w-12 py-2 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-200">
@@ -133,26 +79,28 @@
 
                                     <div class="md:w-2/3 flex flex-col justify-between">
                                         
-                                        <div class="relative pt-2 mb-6">
-                                            <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full z-0"></div>
-                                            <div class="absolute top-1/2 left-0 h-1 bg-[#464BE5] -translate-y-1/2 rounded-full z-0 transition-all duration-500" style="width: <%= (currentStep-1)*33.33 %>%"></div>
+                                        <div class="relative mb-6">
+                                            <div class="absolute top-5 left-8 right-8 -translate-y-1/2 z-0">
+                                                <div class="absolute left-0 top-0 w-full h-1 bg-slate-100 rounded-full"></div>
+                                                <div class="absolute left-0 top-0 h-1 bg-[#464BE5] rounded-full transition-all duration-500" style="width: <%= (currentStep-1)*33.33 %>%"></div>
+                                            </div>
                                             
-                                            <div class="relative z-10 flex justify-between">
-                                                <div class="flex flex-col items-center">
-                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 1 ? "bg-[#464BE5] text-white ring-4 ring-blue-50" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-calendar-check"></i></div>
-                                                    <span class="text-[10px] font-bold mt-2 <%= currentStep >= 1 ? "text-[#464BE5]" : "text-slate-400" %>">CHỜ XÁC NHẬN</span>
+                                            <div class="relative z-10 flex justify-between pt-2">
+                                                <div class="flex flex-col items-center w-16">
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 1 ? "bg-[#464BE5] text-white" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-calendar-check"></i></div>
+                                                    <span class="text-[10px] font-bold mt-2 text-center <%= currentStep >= 1 ? "text-[#464BE5]" : "text-slate-400" %>">CHỜ<br>XÁC NHẬN</span>
                                                 </div>
-                                                <div class="flex flex-col items-center">
-                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 2 ? "bg-[#464BE5] text-white ring-4 ring-blue-50" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-clipboard-user"></i></div>
-                                                    <span class="text-[10px] font-bold mt-2 <%= currentStep >= 2 ? "text-[#464BE5]" : "text-slate-400" %>">ĐÃ ĐẾN TIỆM</span>
+                                                <div class="flex flex-col items-center w-16">
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 2 ? "bg-[#464BE5] text-white" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-clipboard-user"></i></div>
+                                                    <span class="text-[10px] font-bold mt-2 text-center <%= currentStep >= 2 ? "text-[#464BE5]" : "text-slate-400" %>">ĐÃ ĐẾN<br>TIỆM</span>
                                                 </div>
-                                                <div class="flex flex-col items-center">
-                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 3 ? "bg-amber-500 text-white ring-4 ring-amber-50" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-hourglass-half"></i></div>
-                                                    <span class="text-[10px] font-bold mt-2 <%= currentStep >= 3 ? "text-amber-600" : "text-slate-400" %>">CHỜ XẾP LỐT</span>
+                                                <div class="flex flex-col items-center w-16">
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 3 ? "bg-amber-500 text-white" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-hourglass-half"></i></div>
+                                                    <span class="text-[10px] font-bold mt-2 text-center <%= currentStep >= 3 ? "text-amber-600" : "text-slate-400" %>">CHỜ TỚI<br>LƯỢT</span>
                                                 </div>
-                                                <div class="flex flex-col items-center">
-                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 4 ? "bg-purple-500 text-white ring-4 ring-purple-50" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-shower"></i></div>
-                                                    <span class="text-[10px] font-bold mt-2 <%= currentStep >= 4 ? "text-purple-600" : "text-slate-400" %>">ĐANG RỬA</span>
+                                                <div class="flex flex-col items-center w-16">
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold <%= currentStep >= 4 ? "bg-purple-500 text-white" : "bg-slate-200 text-slate-400" %>"><i class="fa-solid fa-shower"></i></div>
+                                                    <span class="text-[10px] font-bold mt-2 text-center <%= currentStep >= 4 ? "text-purple-600" : "text-slate-400" %>">ĐANG<br>RỬA</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -160,29 +108,21 @@
                                         <% if(status.equals("PENDING")) { %>
                                             <% if(canCancel) { %>
                                                 <div class="flex justify-end">
-                                                    <button onclick="openConfirmModal('<%= date %> <%= time %>')" class="px-5 py-2 rounded-xl text-sm font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors border border-red-100">
+                                                    <button onclick="openConfirmModal('<%= date %> <%= time %>')" class="px-5 py-2.5 rounded-xl text-sm font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors border border-red-100 shadow-sm">
                                                         <i class="fa-solid fa-trash-can mr-1"></i> Hủy lịch hẹn
                                                     </button>
                                                 </div>
                                             <% } else { %>
-                                                <div class="soap-water-container h-14 rounded-xl border border-sky-200 flex items-center justify-center shadow-inner group">
-                                                    <div class="bubble bubble-1"></div>
-                                                    <div class="bubble bubble-2"></div>
-                                                    <div class="bubble bubble-3"></div>
-                                                    <div class="bubble bubble-4"></div>
-                                                    
-                                                    <span class="absolute text-[11px] font-semibold text-sky-800 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                        Không thể hủy lịch do còn dưới 24h!
-                                                    </span>
-
-                                                    <button onmouseover="runAwayButton(this)" class="runaway-btn absolute px-5 py-1.5 rounded-lg text-sm font-bold bg-slate-400 text-white shadow cursor-not-allowed">
-                                                        <i class="fa-solid fa-xmark mr-1"></i> Hủy lịch
+                                                <div class="flex justify-end items-center gap-3">
+                                                    <span class="text-[11px] font-semibold text-red-500"><i class="fa-solid fa-circle-info mr-1"></i>Không thể hủy do < 24h</span>
+                                                    <button disabled class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed">
+                                                        <i class="fa-solid fa-trash-can mr-1"></i> Hủy lịch hẹn
                                                     </button>
                                                 </div>
                                             <% } %>
                                         <% } else { %>
                                             <div class="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
-                                                <p class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Xe đang trong tiến trình xử lý, không thể hủy lịch lúc này.</p>
+                                                <p class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Xe đang trong tiến trình xử lý, không thể thao tác.</p>
                                             </div>
                                         <% } %>
 
@@ -218,21 +158,6 @@
         </div>
 
         <script>
-            // 1. LOGIC NÚT BỎ CHẠY TRONG BỌT NƯỚC VUI NHỘN
-            function runAwayButton(btn) {
-                // Kích thước của vùng nước chứa nút
-                const containerWidth = 250; // Ước chừng theo UI
-                const containerHeight = 40; 
-                
-                // Random tọa độ X, Y trong một khoảng ngắn để nút nảy tưng tưng
-                const randomX = (Math.random() - 0.5) * 180; // Dịch trái phải
-                const randomY = (Math.random() - 0.5) * 20;  // Dịch lên xuống
-
-                // Áp dụng CSS transform để nút bay đi chỗ khác
-                btn.style.transform = `translate(${randomX}px, ${randomY}px)`;
-            }
-
-            // 2. LOGIC MODAL XÁC NHẬN HỦY BÌNH THƯỜNG
             function openConfirmModal(timeTarget) {
                 document.getElementById('cancelTimeTarget').innerText = timeTarget;
                 

@@ -14,15 +14,28 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        
+
         <style>
-            body { font-family: 'Inter', sans-serif; }
+            body {
+                font-family: 'Inter', sans-serif;
+            }
             /* Custom Scrollbar cho các danh sách dài */
-            .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-            .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-            
+            .custom-scrollbar::-webkit-scrollbar {
+                height: 6px;
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+
             /* Hiệu ứng chuyển bước mượt mà */
             .step-content {
                 transition: all 0.4s ease-in-out;
@@ -46,19 +59,23 @@
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
-        <%
-            // =========================================================
+        <%            // =========================================================
             // [BACKEND TODO]: KHU VỰC BƠM DỮ LIỆU (DATA BINDING)
             // =========================================================
-            
             // 1. Lấy hạng thành viên để tính số ngày được đặt trước
             String currentTier = "Gold"; // Thay bằng: session.getAttribute("TIER_NAME")
             int maxDaysAhead = 7; // Mặc định Member
             boolean isPriority = false;
 
-            if ("Silver".equalsIgnoreCase(currentTier)) maxDaysAhead = 10;
-            else if ("Gold".equalsIgnoreCase(currentTier)) { maxDaysAhead = 12; isPriority = true; }
-            else if ("Platinum".equalsIgnoreCase(currentTier)) { maxDaysAhead = 14; isPriority = true; }
+            if ("Silver".equalsIgnoreCase(currentTier)) {
+                maxDaysAhead = 10;
+            } else if ("Gold".equalsIgnoreCase(currentTier)) {
+                maxDaysAhead = 12;
+                isPriority = true;
+            } else if ("Platinum".equalsIgnoreCase(currentTier)) {
+                maxDaysAhead = 14;
+                isPriority = true;
+            }
 
             // 2. Dữ liệu mồi (Mock data) cho xe và dịch vụ
             // Tương lai thay bằng vòng lặp <c:forEach items="${VEHICLE_LIST}">
@@ -67,7 +84,7 @@
         %>
 
         <div class="flex h-screen overflow-hidden relative">
-            <% request.setAttribute("activeTab", "datlich"); %>
+            <% request.setAttribute("activeTab", "datlich");%>
             <jsp:include page="/includes/sidebar_DashBoard.jsp" />
 
             <main class="flex-1 flex flex-col overflow-hidden relative">
@@ -75,7 +92,7 @@
 
                 <div class="flex-1 overflow-y-auto p-8">
                     <div class="max-w-4xl mx-auto">
-                        
+
                         <div class="mb-8">
                             <h2 class="text-2xl font-bold text-slate-800">Đặt Lịch Rửa Xe</h2>
                             <p class="text-sm text-slate-500 mt-1">Hoàn thành các bước dưới đây để giữ chỗ nhanh chóng.</p>
@@ -83,9 +100,10 @@
 
                         <div class="mb-10">
                             <div class="flex items-center justify-between relative">
-                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full z-0"></div>
-                                <div id="progress-line" class="absolute left-0 top-1/2 -translate-y-1/2 w-0 h-1 bg-[#464BE5] rounded-full z-0 transition-all duration-500"></div>
-                                
+                                <div class="absolute top-5 left-5 right-5 -translate-y-1/2 z-0">
+                                    <div class="absolute left-0 top-0 w-full h-1 bg-slate-200 rounded-full"></div>
+                                    <div id="progress-line" class="absolute left-0 top-0 w-0 h-1 bg-[#464BE5] rounded-full transition-all duration-500"></div>
+                                </div>
                                 <div class="relative z-10 flex flex-col items-center">
                                     <div id="icon-step-1" class="w-10 h-10 rounded-full bg-[#464BE5] text-white flex items-center justify-center font-bold shadow-md transition-colors duration-300">1</div>
                                     <span class="text-xs font-semibold text-[#464BE5] mt-2">Chọn xe</span>
@@ -106,13 +124,13 @@
                         </div>
 
                         <form id="bookingForm" action="<%= request.getContextPath()%>/MainController?action=processBooking" method="POST" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 min-h-[400px] relative">
-                            
+
                             <div id="step-1" class="step-content active">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6"><i class="fa-solid fa-car text-[#464BE5] mr-2"></i>Chọn xe bạn muốn rửa</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <% for (int i = 0; i < mockVehicles.length; i++) { %>
+                                    <% for (int i = 0; i < mockVehicles.length; i++) {%>
                                     <label class="relative block cursor-pointer">
-                                        <input type="radio" name="vehicleId" value="<%= i %>" class="peer sr-only" <%= i==0 ? "checked" : "" %>>
+                                        <input type="radio" name="vehicleId" value="<%= i%>" class="peer sr-only" <%= i == 0 ? "checked" : ""%>>
                                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#464BE5]/50 peer-checked:border-[#464BE5] peer-checked:bg-blue-50/30 transition-all">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex items-center gap-4">
@@ -120,8 +138,8 @@
                                                         <i class="fa-solid fa-car-side text-xl"></i>
                                                     </div>
                                                     <div>
-                                                        <h4 class="font-bold text-slate-800"><%= mockVehicles[i].split(" - ")[0] %></h4>
-                                                        <p class="text-sm text-slate-500"><%= mockVehicles[i].split(" - ")[1] %></p>
+                                                        <h4 class="font-bold text-slate-800"><%= mockVehicles[i].split(" - ")[0]%></h4>
+                                                        <p class="text-sm text-slate-500"><%= mockVehicles[i].split(" - ")[1]%></p>
                                                     </div>
                                                 </div>
                                                 <i class="fa-solid fa-circle-check text-2xl text-[#464BE5] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
@@ -138,14 +156,14 @@
                             <div id="step-2" class="step-content">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6"><i class="fa-solid fa-hands-bubbles text-[#464BE5] mr-2"></i>Chọn gói dịch vụ</h3>
                                 <div class="space-y-4">
-                                    <% for (int i = 0; i < mockServices.length; i++) { %>
+                                    <% for (int i = 0; i < mockServices.length; i++) {%>
                                     <label class="relative block cursor-pointer">
-                                        <input type="radio" name="serviceId" value="<%= i %>" class="peer sr-only" <%= i==0 ? "checked" : "" %>>
+                                        <input type="radio" name="serviceId" value="<%= i%>" class="peer sr-only" <%= i == 0 ? "checked" : ""%>>
                                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#464BE5]/50 peer-checked:border-[#464BE5] peer-checked:bg-blue-50/30 transition-all">
                                             <div class="flex items-center justify-between">
                                                 <div>
-                                                    <h4 class="font-bold text-slate-800"><%= mockServices[i] %></h4>
-                                                    <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= (i+1)*30 %> phút</p>
+                                                    <h4 class="font-bold text-slate-800"><%= mockServices[i]%></h4>
+                                                    <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= (i + 1) * 30%> phút</p>
                                                 </div>
                                                 <div class="h-6 w-6 rounded-full border-2 border-slate-300 peer-checked:border-[6px] peer-checked:border-[#464BE5] transition-all"></div>
                                             </div>
@@ -161,17 +179,17 @@
 
                             <div id="step-3" class="step-content">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2"><i class="fa-regular fa-calendar text-[#464BE5] mr-2"></i>Chọn ngày và khung giờ</h3>
-                                
-                                <% if (isPriority) { %>
+
+                                <% if (isPriority) {%>
                                 <div class="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
                                     <i class="fa-solid fa-crown text-amber-500 mt-1 text-lg"></i>
                                     <div>
-                                        <p class="font-bold text-amber-800 text-sm">Đặc quyền hạng <%= currentTier %></p>
-                                        <p class="text-amber-700 text-xs mt-0.5">Bạn được phép đặt lịch trước tối đa <%= maxDaysAhead %> ngày và được ưu tiên xếp khoang rửa nhanh nhất!</p>
+                                        <p class="font-bold text-amber-800 text-sm">Đặc quyền hạng <%= currentTier%></p>
+                                        <p class="text-amber-700 text-xs mt-0.5">Bạn được phép đặt lịch trước tối đa <%= maxDaysAhead%> ngày và được ưu tiên xếp khoang rửa nhanh nhất!</p>
                                     </div>
                                 </div>
-                                <% } else { %>
-                                <p class="text-sm text-slate-500 mb-6">Bạn đang ở hạng <%= currentTier %>. Có thể đặt trước tối đa <%= maxDaysAhead %> ngày.</p>
+                                <% } else {%>
+                                <p class="text-sm text-slate-500 mb-6">Bạn đang ở hạng <%= currentTier%>. Có thể đặt trước tối đa <%= maxDaysAhead%> ngày.</p>
                                 <% } %>
 
                                 <div class="mb-6">
@@ -181,18 +199,18 @@
 
                                 <label class="block text-sm font-bold text-slate-700 mb-3">Khung giờ (Mỗi slot 30 phút)</label>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-2">
-                                    
-                                    <% 
+
+                                    <%
                                         // Mock Data cho Slots (Giả lập Backend gửi xuống danh sách slot: Còn trống, Đã đầy)
                                         String[] slots = {"08:00 - 08:30", "08:30 - 09:00", "09:00 - 09:30", "09:30 - 10:00", "10:00 - 10:30", "10:30 - 11:00"};
                                         boolean[] isFullList = {false, true, false, false, true, false}; // true = Slot đó đã có >= 3 xe
-                                        
-                                        for (int i = 0; i < slots.length; i++) { 
+
+                                        for (int i = 0; i < slots.length; i++) {
                                             boolean isFull = isFullList[i];
                                             // Xử lý logic hiển thị
                                             String labelClass = "relative block ";
                                             String boxClass = "p-3 rounded-xl border text-center transition-all ";
-                                            
+
                                             if (isFull) {
                                                 // Slot bị kín: Màu đỏ dịu, tắt tương tác
                                                 labelClass += "cursor-not-allowed opacity-70";
@@ -200,27 +218,27 @@
                                             } else {
                                                 labelClass += "cursor-pointer group";
                                                 boxClass += "bg-white border-slate-200 text-slate-600 hover:border-[#464BE5] peer-checked:bg-[#464BE5] peer-checked:border-[#464BE5] peer-checked:text-white";
-                                                
-                                                if(isPriority && i == 0) {
+
+                                                if (isPriority && i == 0) {
                                                     // Giả lập UI Slot ưu tiên cho hạng cao
                                                     boxClass = "p-3 rounded-xl text-center transition-all cursor-pointer peer-checked:bg-amber-500 peer-checked:text-white priority-slot text-amber-700 font-bold";
                                                 }
                                             }
                                     %>
-                                    <label class="<%= labelClass %>">
-                                        <input type="radio" name="timeSlot" value="<%= slots[i] %>" class="peer sr-only" <%= isFull ? "disabled" : "" %>>
-                                        <div class="<%= boxClass %>">
-                                            <span class="text-sm font-semibold"><%= slots[i] %></span>
+                                    <label class="<%= labelClass%>">
+                                        <input type="radio" name="timeSlot" value="<%= slots[i]%>" class="peer sr-only" <%= isFull ? "disabled" : ""%>>
+                                        <div class="<%= boxClass%>">
+                                            <span class="text-sm font-semibold"><%= slots[i]%></span>
                                             <% if (isFull) { %>
-                                                <div class="text-[10px] uppercase font-bold mt-1">Đã kín (3/3)</div>
+                                            <div class="text-[10px] uppercase font-bold mt-1">Đã kín (3/3)</div>
                                             <% } else if (isPriority && i == 0) { %>
-                                                <div class="text-[10px] uppercase font-bold mt-1"><i class="fa-solid fa-star text-amber-500 peer-checked:text-white"></i> Ưu tiên</div>
+                                            <div class="text-[10px] uppercase font-bold mt-1"><i class="fa-solid fa-star text-amber-500 peer-checked:text-white"></i> Ưu tiên</div>
                                             <% } else { %>
-                                                <div class="text-[10px] text-slate-400 peer-checked:text-blue-100 mt-1">Còn trống</div>
+                                            <div class="text-[10px] text-slate-400 peer-checked:text-blue-100 mt-1">Còn trống</div>
                                             <% } %>
                                         </div>
                                     </label>
-                                    <% } %>
+                                    <% }%>
                                 </div>
 
                                 <div class="mt-8 flex justify-between">
@@ -284,18 +302,20 @@
                 for (let i = 1; i <= 4; i++) {
                     const icon = document.getElementById('icon-step-' + i);
                     const text = document.getElementById('text-step-' + i);
-                    
+
                     if (i <= step) {
                         icon.className = "w-10 h-10 rounded-full bg-[#464BE5] text-white flex items-center justify-center font-bold shadow-md transition-colors duration-300";
-                        if(text) text.className = "text-xs font-semibold text-[#464BE5] mt-2";
+                        if (text)
+                            text.className = "text-xs font-semibold text-[#464BE5] mt-2";
                     } else {
                         icon.className = "w-10 h-10 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center font-bold transition-colors duration-300";
-                        if(text) text.className = "text-xs font-semibold text-slate-400 mt-2";
+                        if (text)
+                            text.className = "text-xs font-semibold text-slate-400 mt-2";
                     }
                 }
 
                 // Cập nhật thông tin Summary nếu đang ở bước 4
-                if(step === 4) {
+                if (step === 4) {
                     updateSummary();
                 }
 
@@ -304,7 +324,7 @@
                 setTimeout(() => {
                     targetStep.style.display = 'block';
                     // setTimeout lồng nhau để trigger transition sau khi display block
-                    setTimeout(() => targetStep.classList.add('active'), 10); 
+                    setTimeout(() => targetStep.classList.add('active'), 10);
                 }, 300);
             }
 
@@ -318,27 +338,30 @@
 
                 // Lấy text hiển thị. 
                 // Thực tế nên lấy innerText của thẻ label thay vì value, code dưới đây mô phỏng đơn giản.
-                if(selectedVehicle) {
+                if (selectedVehicle) {
                     const label = selectedVehicle.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-vehicle').innerText = label;
                 }
-                if(selectedService) {
+                if (selectedService) {
                     const label = selectedService.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-service').innerText = label;
                 }
-                
+
                 const timeStr = (date ? date + " | " : "") + (timeSlot ? timeSlot.value : "Chưa chọn giờ");
                 document.getElementById('summary-time').innerText = timeStr;
             }
 
             // Xử lý sự kiện Submit Form (NFR-02)
-            document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            document.getElementById('bookingForm').addEventListener('submit', function (e) {
                 // 1. Chặn submit nhiều lần (Loading state)
                 const btnSubmit = document.getElementById('btnSubmit');
                 const loadingIcon = document.getElementById('loadingIcon');
-                
-                if (btnSubmit.disabled) { e.preventDefault(); return; } // Nếu đang submit thì không làm gì cả
-                
+
+                if (btnSubmit.disabled) {
+                    e.preventDefault();
+                    return;
+                } // Nếu đang submit thì không làm gì cả
+
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('opacity-80', 'cursor-not-allowed');
                 loadingIcon.classList.remove('hidden');
@@ -348,11 +371,11 @@
             });
 
             // Gán ngày hiện tại cho date picker và xử lý format
-            window.onload = function() {
+            window.onload = function () {
                 const dateInput = document.getElementById('bookingDate');
                 const today = new Date();
                 const dd = String(today.getDate()).padStart(2, '0');
-                const mm = String(today.getMonth() + 1).padStart(2, '0'); 
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
                 const yyyy = today.getFullYear();
                 dateInput.value = yyyy + '-' + mm + '-' + dd;
                 dateInput.min = yyyy + '-' + mm + '-' + dd;

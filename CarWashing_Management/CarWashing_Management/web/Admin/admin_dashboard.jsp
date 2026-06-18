@@ -1,10 +1,4 @@
-<%-- 
-    Document   : admin_dashboard.jsp
-    Created on : Jun 10, 2026, 12:53:28 PM
-    Author     : Admin
---%>
-
-<%@ include file="../includes/auth-check.jsp" %>
+<%@ include file="../includes/admin-auth-check.jsp" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -20,7 +14,7 @@
 
         <div class="flex h-screen overflow-hidden relative">
             
-            <% request.setAttribute("ACTIVE_TAB", "tongquan"); // Bạn nam/nữ làm phần này nhớ tự đổi tên tab nhé %>
+            <% request.setAttribute("ACTIVE_ADMIN", "tongquan"); %>
             <jsp:include page="/includes/sidebar_admin.jsp" />
 
             <main class="flex-1 flex flex-col overflow-hidden relative">

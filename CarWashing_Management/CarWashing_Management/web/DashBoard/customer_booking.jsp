@@ -98,7 +98,7 @@
             LocalDate today = LocalDate.now(vnZone);
             LocalTime now = LocalTime.now(vnZone);
             
-            // Đọc ngày từ thanh URL (do JS truyền lên)
+            // Đọc ngày từ thanh URL
             String currentSelectedDate = request.getParameter("date");
             if (currentSelectedDate == null || currentSelectedDate.trim().isEmpty()) {
                 currentSelectedDate = today.toString(); 
@@ -218,7 +218,8 @@
                                 </div>
 
                                 <label class="block text-sm font-bold text-slate-700 mb-3">Khung giờ (Mỗi slot 30 phút)</label>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-2">
+                                
+                                <div id="slotsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-2">
                                     <%
                                         List<TimeSlot> slots = (ArrayList<TimeSlot>) request.getAttribute("slots");
                                         if (slots != null && !slots.isEmpty()) {
@@ -232,9 +233,9 @@
                                                     LocalTime slotStartTime = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
                                                     LocalDate parsedBookingDate = LocalDate.parse(currentSelectedDate);
 
-                                                    // [LOGIC KHÓA GIỜ] - Nếu ngày chọn trùng với HÔM NAY thì mới kiểm tra giờ quá khứ
+                                                    // CHUẨN XÁC: Chỉ khóa giờ khi ngày đang chọn trùng với HÔM NAY
                                                     if (parsedBookingDate.isEqual(today)) {
-                                                        if (slotStartTime.isBefore(now.plusMinutes(20))) { // Buffer 20 phút
+                                                        if (slotStartTime.isBefore(now.plusMinutes(20))) { // Buffer lùi 20 phút
                                                             isPastOrTooClose = true;
                                                         }
                                                     }
@@ -244,15 +245,15 @@
                                                 String boxClass = "p-3 rounded-xl border text-center transition-all ";
                                                 String clickHandler = "";
 
-                                                if (isPastOrTooClose) { // Hết hạn do trôi qua giờ
+                                                if (isPastOrTooClose) { 
                                                     labelClass += "cursor-not-allowed opacity-50 select-none";
                                                     boxClass += "bg-slate-100 border-slate-200 text-slate-400 pointers-disabled";
                                                     clickHandler = "onclick=\"return false;\"";
-                                                } else if (isFull) { // Hết hạn do kín slot
+                                                } else if (isFull) { 
                                                     labelClass += "cursor-not-allowed opacity-70 select-none";
                                                     boxClass += "bg-red-50 border-red-200 text-red-500 pointers-disabled";
                                                     clickHandler = "onclick=\"return false;\"";
-                                                } else { // Còn trống
+                                                } else { 
                                                     labelClass += "cursor-pointer group";
                                                     boxClass += "bg-white border-slate-200 text-slate-600 hover:border-[#464BE5] peer-checked:bg-[#464BE5] peer-checked:border-[#464BE5] peer-checked:text-white";
                                                     if (isPriority && t.isIsPriority()) {
@@ -411,25 +412,34 @@
                 loadingIcon.classList.remove('hidden');
             });
 
-            // Gửi request lấy ngày mới đồng thời "nhớ" luôn những xe/dịch vụ đã chọn
+            // TỐI ƯU CỰC MẠNH: Dùng Fetch HTML để bóc tách khung giờ (Không load lại trang nữa)
             function handleDateChange(selectedDate) {
                 if (!selectedDate) return;
 
-                const currentUrl = window.location.origin + window.location.pathname;
-                const urlParams = new URLSearchParams(window.location.search);
+                const container = document.getElementById('slotsContainer');
+                container.innerHTML = '<p class="text-sm text-slate-400 col-span-4 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải khung giờ...</p>';
 
-                urlParams.set('date', selectedDate);
-                
-                // Giữ lại lựa chọn Xe và Dịch vụ đang tick trên màn hình
-                const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
-                if (selectedVehicle) urlParams.set('vId', selectedVehicle.value);
-                
-                const selectedService = document.querySelector('input[name="serviceId"]:checked');
-                if (selectedService) urlParams.set('sId', selectedService.value);
+                // Khởi tạo URL gọi lên chính trang này nhưng với ngày mới
+                const fetchUrl = '<%= request.getContextPath() %>/MainController?action=customerBookingPage&date=' + selectedDate;
 
-                urlParams.set('step', '3'); // Reload xong sẽ nhảy thẳng về bước 3
-
-                window.location.href = `${currentUrl}?${urlParams.toString()}`;
+                fetch(fetchUrl)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Dùng kỹ thuật DOM Parser để bóc duy nhất cái slotsContainer từ Backend trả về
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newSlots = doc.getElementById('slotsContainer');
+                        
+                        if (newSlots) {
+                            container.innerHTML = newSlots.innerHTML;
+                        } else {
+                            container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Lỗi tải dữ liệu khung giờ.</p>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Lỗi:", err);
+                        container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Mất kết nối với máy chủ!</p>';
+                    });
             }
 
             window.onload = function () {
@@ -450,7 +460,6 @@
                 const todayStr = formatDate(today);
                 const maxDateStr = formatDate(maxDate);
 
-                // Quan trọng: Gán giá trị lấy từ Backend (tránh bị JS đè thành ngày hôm nay)
                 dateInput.value = "<%= currentSelectedDate %>";
                 dateInput.min = todayStr;
                 dateInput.max = maxDateStr;
@@ -461,28 +470,6 @@
                         handleDateChange(this.value);
                     }
                 });
-
-                // Logic phục hồi lại dữ liệu sau khi trang vừa bị F5 (reload do chọn ngày)
-                const urlParams = new URLSearchParams(window.location.search);
-                const vId = urlParams.get('vId');
-                const sId = urlParams.get('sId');
-                const step = urlParams.get('step');
-                
-                if (vId) {
-                    const vInput = document.querySelector(`input[name="vehicleId"][value="${vId}"]`);
-                    if (vInput) vInput.checked = true;
-                }
-                
-                if (sId) {
-                    const sInput = document.querySelector(`input[name="serviceId"][value="${sId}"]`);
-                    if (sInput) sInput.checked = true;
-                }
-                
-                if (step) {
-                    setTimeout(() => {
-                        goToStep(parseInt(step));
-                    }, 100); // Đợi giao diện render xong rồi trượt tới bước 3
-                }
             };
         </script>
     </body>

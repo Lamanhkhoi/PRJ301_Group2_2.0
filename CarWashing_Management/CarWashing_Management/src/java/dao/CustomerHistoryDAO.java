@@ -1,0 +1,45 @@
+package dao;
+
+import dbutils.DBContext;
+import dto.BookingHistory;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CustomerHistoryDAO {
+
+    public List<BookingHistory> getHistoryByCustomerId(int customerId) {
+        List<BookingHistory> list = new ArrayList<>();
+
+        String sql = "SELECT b.BookingDate, b.CompletedAt, "
+                   + "cv.LicensePlate, cv.VehicleBrand, cv.VehicleModel, cv.VehicleColor, "
+                   + "ws.ServiceName, b.TotalAmount, b.BookingStatus "
+                   + "FROM Bookings b "
+                   + "JOIN CustomerVehicles cv ON b.VehicleId = cv.VehicleId "
+                   + "JOIN WashServices ws ON b.ServiceId = ws.ServiceId "
+                   + "WHERE b.CustomerId = ? "
+                   + "AND b.BookingStatus IN ('COMPLETED', 'CANCELLED', 'NO_SHOW') "
+                   + "ORDER BY b.BookingDate DESC";
+
+        // CÚ PHÁP TỐI ƯU (Try-with-Resources): Tự động dọn dẹp bộ nhớ
+        try ( Connection cn = DBContext.getConnection();  PreparedStatement pst = cn.prepareStatement(sql)) {
+            // Truyền tham số
+            pst.setInt(1, customerId);
+
+            // Thực thi và bọc ResultSet vào Try để tự động đóng
+            try ( ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) { // Hoặc `if (rs.next())` nếu chỉ lấy 1 dòng
+                    BookingHistory history = new BookingHistory();
+                    history.setBookingDate(rs.getString("BookingDate"));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Lỗi tại hàm get[Tên_Hàm]: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+}

@@ -101,6 +101,11 @@ public class Vehicle {
     public void setCreatedAtt(Date createdAtt) {
         this.createdAtt = createdAtt;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s - %s %s", licensePlate, brand, model);
+    }
     
     
 }

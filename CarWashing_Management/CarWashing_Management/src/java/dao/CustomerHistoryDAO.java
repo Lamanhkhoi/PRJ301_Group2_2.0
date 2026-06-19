@@ -13,14 +13,16 @@ public class CustomerHistoryDAO {
     public List<BookingHistory> getHistoryByCustomerId(int customerId) {
         List<BookingHistory> list = new ArrayList<>();
 
-        String sql = "SELECT b.BookingDate, b.CompletedAt, "
+        String sql = "SELECT "
+                   + "FORMAT(b.BookingDate, 'dd/MM/yyyy') AS FormattedDate, "
+                   + "ISNULL(FORMAT(b.CompletedAt, 'HH:mm'), 'N/A') AS FormattedTime, "
                    + "cv.LicensePlate, cv.VehicleBrand, cv.VehicleModel, cv.VehicleColor, "
                    + "ws.ServiceName, b.TotalAmount, b.BookingStatus "
                    + "FROM Bookings b "
                    + "JOIN CustomerVehicles cv ON b.VehicleId = cv.VehicleId "
                    + "JOIN WashServices ws ON b.ServiceId = ws.ServiceId "
                    + "WHERE b.CustomerId = ? "
-                   + "AND b.BookingStatus IN ('COMPLETED', 'CANCELLED', 'NO_SHOW') "
+                   + "AND b.BookingStatus IN (N'Completed', N'Cancelled', N'NoShow') "
                    + "ORDER BY b.BookingDate DESC";
 
         // CÚ PHÁP TỐI ƯU (Try-with-Resources): Tự động dọn dẹp bộ nhớ

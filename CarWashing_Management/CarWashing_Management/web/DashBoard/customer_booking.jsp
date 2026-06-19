@@ -4,6 +4,20 @@
     Author     : Admin
 --%>
 
+<%@page import="java.time.ZoneId"%>
+<%@page import="java.time.format.DateTimeFormatter"%>
+<%@page import="java.time.LocalTime"%>
+<%@page import="java.time.LocalDate"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="dto.TimeSlot"%>
+<%@page import="dto.WashService"%>
+<%@page import="java.util.List"%>
+<%@page import="dto.Vehicle"%>
+<%@page import="dao.WashServiceDAO"%>
+<%@page import="dao.CustomerVehicleDAO"%>
+<%@page import="dto.LoyaltyTier"%>
+<%@page import="dto.CustomerLoyalty"%>
+<%@page import="dao.CustomerLoyaltyDAO"%>
 <%@ include file="../includes/auth-check.jsp" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -16,71 +30,79 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         <style>
-            body {
-                font-family: 'Inter', sans-serif;
-            }
-            /* Custom Scrollbar cho các danh sách dài */
-            .custom-scrollbar::-webkit-scrollbar {
-                height: 6px;
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: #f1f5f9;
-                border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 10px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-            }
-
-            /* Hiệu ứng chuyển bước mượt mà */
-            .step-content {
-                transition: all 0.4s ease-in-out;
-                opacity: 0;
-                transform: translateY(10px);
-                display: none;
-            }
-            .step-content.active {
-                opacity: 1;
-                transform: translateY(0);
-                display: block;
-            }
-
-            /* Hàng đợi ưu tiên (Priority Queue) cho Gold/Platinum */
-            .priority-slot {
-                background: linear-gradient(135deg, #FFFAF0 0%, #FFF5E1 100%);
-                border: 2px solid #FBBF24 !important;
-                box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
-            }
+            body { font-family: 'Inter', sans-serif; }
+            .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            .step-content { transition: all 0.4s ease-in-out; opacity: 0; transform: translateY(10px); display: none; }
+            .step-content.active { opacity: 1; transform: translateY(0); display: block; }
+            .priority-slot { background: linear-gradient(135deg, #FFFAF0 0%, #FFF5E1 100%); border: 2px solid #FBBF24 !important; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2); }
+            #toastBox { transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease; transform: translateX(120%); opacity: 0; }
+            #toastBox.show { transform: translateX(0); opacity: 1; }
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
-        <%            // =========================================================
-            // [BACKEND TODO]: KHU VỰC BƠM DỮ LIỆU (DATA BINDING)
-            // =========================================================
-            // 1. Lấy hạng thành viên để tính số ngày được đặt trước
-            String currentTier = "Gold"; // Thay bằng: session.getAttribute("TIER_NAME")
-            int maxDaysAhead = 7; // Mặc định Member
+        <%            
+            // Xử lý thông báo Toast
+            String alertType = (String) request.getAttribute("ALERT_TYPE");
+            String alertMsg = (String) request.getAttribute("ALERT_MSG");
+            if (alertMsg == null) {
+                alertType = (String) session.getAttribute("ALERT_TYPE");
+                alertMsg = (String) session.getAttribute("ALERT_MSG");
+                if (alertMsg != null) {
+                    session.removeAttribute("ALERT_TYPE");
+                    session.removeAttribute("ALERT_MSG");
+                }
+            }
+        %>
+
+        <% if (alertMsg != null) {%>
+        <div id="toastBox" class="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= "success".equals(alertType) ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"%>">
+                <i class="<%= "success".equals(alertType) ? "fa-solid fa-circle-check" : "fa-solid fa-circle-exclamation"%>"></i>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-slate-800 text-sm"><%= "success".equals(alertType) ? "Thành công" : "Thông báo lỗi"%></h4>
+                <p class="text-slate-500 text-xs mt-0.5"><%= alertMsg%></p>
+            </div>
+            <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2"><i class="fa-solid fa-xmark text-sm"></i></button>
+        </div>
+        <% } %>
+
+        <%            
+            CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+            CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
+            LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+
+            String currentTier = curentTier.getTierName();
+            int maxDaysAhead = 7;
             boolean isPriority = false;
 
             if ("Silver".equalsIgnoreCase(currentTier)) {
                 maxDaysAhead = 10;
             } else if ("Gold".equalsIgnoreCase(currentTier)) {
-                maxDaysAhead = 12;
-                isPriority = true;
+                maxDaysAhead = 12; isPriority = true;
             } else if ("Platinum".equalsIgnoreCase(currentTier)) {
-                maxDaysAhead = 14;
-                isPriority = true;
+                maxDaysAhead = 14; isPriority = true;
             }
 
-            // 2. Dữ liệu mồi (Mock data) cho xe và dịch vụ
-            // Tương lai thay bằng vòng lặp <c:forEach items="${VEHICLE_LIST}">
-            String[] mockVehicles = {"51H-123.45 - Honda Civic", "51G-987.65 - Mazda 3"};
-            String[] mockServices = {"Rửa bọt tuyết tiêu chuẩn (150k)", "Combo Cao Cấp + Phủ Sáp (350k)"};
+            CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
+            WashServiceDAO serviceDAO = new WashServiceDAO();
+            List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
+            List<WashService> mockServices = serviceDAO.getAllServices();
+            
+            // Xử lý lấy ngày, giờ hiện tại (múi giờ VN)
+            ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDate today = LocalDate.now(vnZone);
+            LocalTime now = LocalTime.now(vnZone);
+            
+            // Đọc ngày từ thanh URL (do JS truyền lên)
+            String currentSelectedDate = request.getParameter("date");
+            if (currentSelectedDate == null || currentSelectedDate.trim().isEmpty()) {
+                currentSelectedDate = today.toString(); 
+            }
         %>
 
         <div class="flex h-screen overflow-hidden relative">
@@ -128,18 +150,16 @@
                             <div id="step-1" class="step-content active">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6"><i class="fa-solid fa-car text-[#464BE5] mr-2"></i>Chọn xe bạn muốn rửa</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <% for (int i = 0; i < mockVehicles.length; i++) {%>
+                                    <% for (Vehicle v : mockVehicles) {%>
                                     <label class="relative block cursor-pointer">
-                                        <input type="radio" name="vehicleId" value="<%= i%>" class="peer sr-only" <%= i == 0 ? "checked" : ""%>>
+                                        <input type="radio" name="vehicleId" value="<%= v.getVehicleId()%>" class="peer sr-only"> 
                                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#464BE5]/50 peer-checked:border-[#464BE5] peer-checked:bg-blue-50/30 transition-all">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex items-center gap-4">
-                                                    <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 peer-checked:text-[#464BE5]">
-                                                        <i class="fa-solid fa-car-side text-xl"></i>
-                                                    </div>
+                                                    <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 peer-checked:text-[#464BE5]"><i class="fa-solid fa-car-side text-xl"></i></div>
                                                     <div>
-                                                        <h4 class="font-bold text-slate-800"><%= mockVehicles[i].split(" - ")[0]%></h4>
-                                                        <p class="text-sm text-slate-500"><%= mockVehicles[i].split(" - ")[1]%></p>
+                                                        <h4 class="font-bold text-slate-800"><%= v.getLicensePlate()%></h4>
+                                                        <p class="text-sm text-slate-500"><%= v.getBrand() + " " + v.getModel()%></p>
                                                     </div>
                                                 </div>
                                                 <i class="fa-solid fa-circle-check text-2xl text-[#464BE5] opacity-0 peer-checked:opacity-100 transition-opacity"></i>
@@ -156,14 +176,14 @@
                             <div id="step-2" class="step-content">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6"><i class="fa-solid fa-hands-bubbles text-[#464BE5] mr-2"></i>Chọn gói dịch vụ</h3>
                                 <div class="space-y-4">
-                                    <% for (int i = 0; i < mockServices.length; i++) {%>
+                                    <% for (WashService s : mockServices) {%>
                                     <label class="relative block cursor-pointer">
-                                        <input type="radio" name="serviceId" value="<%= i%>" class="peer sr-only" <%= i == 0 ? "checked" : ""%>>
+                                        <input type="radio" name="serviceId" value="<%= s.getServiceId()%>" class="peer sr-only"> 
                                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#464BE5]/50 peer-checked:border-[#464BE5] peer-checked:bg-blue-50/30 transition-all">
                                             <div class="flex items-center justify-between">
                                                 <div>
-                                                    <h4 class="font-bold text-slate-800"><%= mockServices[i]%></h4>
-                                                    <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= (i + 1) * 30%> phút</p>
+                                                    <h4 class="font-bold text-slate-800"><%= s.getServiceName()%></h4>
+                                                    <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= s.getEstimateMinutes()%> phút</p>
                                                 </div>
                                                 <div class="h-6 w-6 rounded-full border-2 border-slate-300 peer-checked:border-[6px] peer-checked:border-[#464BE5] transition-all"></div>
                                             </div>
@@ -190,55 +210,74 @@
                                 </div>
                                 <% } else {%>
                                 <p class="text-sm text-slate-500 mb-6">Bạn đang ở hạng <%= currentTier%>. Có thể đặt trước tối đa <%= maxDaysAhead%> ngày.</p>
-                                <% } %>
+                                <% }%>
 
                                 <div class="mb-6">
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Ngày dự kiến đến</label>
-                                    <input type="date" name="bookingDate" id="bookingDate" required class="w-full md:w-1/2 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#464BE5] outline-none font-medium text-slate-700">
+                                    <input type="date" name="bookingDate" id="bookingDate" data-max-days="<%= maxDaysAhead%>" onchange="handleDateChange(this.value)" required class="w-full md:w-1/2 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#464BE5] outline-none font-medium text-slate-700">
                                 </div>
 
                                 <label class="block text-sm font-bold text-slate-700 mb-3">Khung giờ (Mỗi slot 30 phút)</label>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-2">
-
                                     <%
-                                        // Mock Data cho Slots (Giả lập Backend gửi xuống danh sách slot: Còn trống, Đã đầy)
-                                        String[] slots = {"08:00 - 08:30", "08:30 - 09:00", "09:00 - 09:30", "09:30 - 10:00", "10:00 - 10:30", "10:30 - 11:00"};
-                                        boolean[] isFullList = {false, true, false, false, true, false}; // true = Slot đó đã có >= 3 xe
+                                        List<TimeSlot> slots = (ArrayList<TimeSlot>) request.getAttribute("slots");
+                                        if (slots != null && !slots.isEmpty()) {
+                                            for (TimeSlot t : slots) {
+                                                boolean isFull = t.isIsFull();
+                                                String timeStr = t.getTime() != null ? t.getTime().trim() : "";
+                                                String startHourStr = timeStr.contains("-") ? timeStr.split("-")[0].trim() : timeStr;
+                                                boolean isPastOrTooClose = false;
 
-                                        for (int i = 0; i < slots.length; i++) {
-                                            boolean isFull = isFullList[i];
-                                            // Xử lý logic hiển thị
-                                            String labelClass = "relative block ";
-                                            String boxClass = "p-3 rounded-xl border text-center transition-all ";
+                                                try {
+                                                    LocalTime slotStartTime = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
+                                                    LocalDate parsedBookingDate = LocalDate.parse(currentSelectedDate);
 
-                                            if (isFull) {
-                                                // Slot bị kín: Màu đỏ dịu, tắt tương tác
-                                                labelClass += "cursor-not-allowed opacity-70";
-                                                boxClass += "bg-red-50 border-red-200 text-red-500";
-                                            } else {
-                                                labelClass += "cursor-pointer group";
-                                                boxClass += "bg-white border-slate-200 text-slate-600 hover:border-[#464BE5] peer-checked:bg-[#464BE5] peer-checked:border-[#464BE5] peer-checked:text-white";
+                                                    // [LOGIC KHÓA GIỜ] - Nếu ngày chọn trùng với HÔM NAY thì mới kiểm tra giờ quá khứ
+                                                    if (parsedBookingDate.isEqual(today)) {
+                                                        if (slotStartTime.isBefore(now.plusMinutes(20))) { // Buffer 20 phút
+                                                            isPastOrTooClose = true;
+                                                        }
+                                                    }
+                                                } catch (Exception e) {}
 
-                                                if (isPriority && i == 0) {
-                                                    // Giả lập UI Slot ưu tiên cho hạng cao
-                                                    boxClass = "p-3 rounded-xl text-center transition-all cursor-pointer peer-checked:bg-amber-500 peer-checked:text-white priority-slot text-amber-700 font-bold";
+                                                String labelClass = "relative block ";
+                                                String boxClass = "p-3 rounded-xl border text-center transition-all ";
+                                                String clickHandler = "";
+
+                                                if (isPastOrTooClose) { // Hết hạn do trôi qua giờ
+                                                    labelClass += "cursor-not-allowed opacity-50 select-none";
+                                                    boxClass += "bg-slate-100 border-slate-200 text-slate-400 pointers-disabled";
+                                                    clickHandler = "onclick=\"return false;\"";
+                                                } else if (isFull) { // Hết hạn do kín slot
+                                                    labelClass += "cursor-not-allowed opacity-70 select-none";
+                                                    boxClass += "bg-red-50 border-red-200 text-red-500 pointers-disabled";
+                                                    clickHandler = "onclick=\"return false;\"";
+                                                } else { // Còn trống
+                                                    labelClass += "cursor-pointer group";
+                                                    boxClass += "bg-white border-slate-200 text-slate-600 hover:border-[#464BE5] peer-checked:bg-[#464BE5] peer-checked:border-[#464BE5] peer-checked:text-white";
+                                                    if (isPriority && t.isIsPriority()) {
+                                                        boxClass = "p-3 rounded-xl text-center transition-all cursor-pointer peer-checked:bg-amber-500 peer-checked:text-white priority-slot text-amber-700 font-bold";
+                                                    }
                                                 }
-                                            }
                                     %>
-                                    <label class="<%= labelClass%>">
-                                        <input type="radio" name="timeSlot" value="<%= slots[i]%>" class="peer sr-only" <%= isFull ? "disabled" : ""%>>
-                                        <div class="<%= boxClass%>">
-                                            <span class="text-sm font-semibold"><%= slots[i]%></span>
-                                            <% if (isFull) { %>
+                                    <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
+                                        <input type="radio" name="timeSlot" value="<%= t.getTime()%>" class="peer sr-only" <%= (isPastOrTooClose || isFull) ? "disabled" : ""%>>
+                                        <div class="<%= boxClass%>" style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
+                                            <span class="text-sm font-semibold"><%= timeStr%></span>
+                                            <% if (isPastOrTooClose) { %>
+                                            <div class="text-[10px] uppercase font-bold mt-1">Hết hạn</div>
+                                            <% } else if (isFull) { %>
                                             <div class="text-[10px] uppercase font-bold mt-1">Đã kín (3/3)</div>
-                                            <% } else if (isPriority && i == 0) { %>
+                                            <% } else if (isPriority && t.isIsPriority()) { %>
                                             <div class="text-[10px] uppercase font-bold mt-1"><i class="fa-solid fa-star text-amber-500 peer-checked:text-white"></i> Ưu tiên</div>
                                             <% } else { %>
                                             <div class="text-[10px] text-slate-400 peer-checked:text-blue-100 mt-1">Còn trống</div>
                                             <% } %>
                                         </div>
                                     </label>
-                                    <% }%>
+                                    <% }} else { %>
+                                        <p class="text-sm text-slate-400 col-span-4">Không tìm thấy khung giờ hoạt động.</p>
+                                    <% } %>
                                 </div>
 
                                 <div class="mt-8 flex justify-between">
@@ -259,11 +298,11 @@
                                 <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4 mb-8">
                                     <div class="flex justify-between border-b border-slate-200 pb-3">
                                         <span class="text-slate-500 text-sm">Phương tiện:</span>
-                                        <span class="font-bold text-slate-800 text-sm" id="summary-vehicle">Honda Civic (51H-123.45)</span>
+                                        <span class="font-bold text-slate-800 text-sm" id="summary-vehicle">Chưa chọn xe</span>
                                     </div>
                                     <div class="flex justify-between border-b border-slate-200 pb-3">
                                         <span class="text-slate-500 text-sm">Dịch vụ:</span>
-                                        <span class="font-bold text-slate-800 text-sm" id="summary-service">Rửa bọt tuyết (150k)</span>
+                                        <span class="font-bold text-slate-800 text-sm" id="summary-service">Chưa chọn dịch vụ</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-slate-500 text-sm">Thời gian:</span>
@@ -279,65 +318,71 @@
                                     </button>
                                 </div>
                             </div>
-                        </form>
+                        </form> 
 
                     </div>
                 </div>
             </main>
         </div>
-
         <script>
-            // Logic điều hướng Step-by-Step
             function goToStep(step) {
-                // Ẩn tất cả nội dung bước
+                if (step === 2) {
+                    const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
+                    if (!selectedVehicle) {
+                        alert("Vui lòng chọn xe của bạn trước khi tiếp tục!");
+                        return; 
+                    }
+                }
+                if (step === 3) {
+                    const selectedService = document.querySelector('input[name="serviceId"]:checked');
+                    if (!selectedService) {
+                        alert("Vui lòng chọn gói dịch vụ trước khi tiếp tục!");
+                        return; 
+                    }
+                }
+                if (step === 4) {
+                    const selectedTimeSlot = document.querySelector('input[name="timeSlot"]:checked');
+                    if (!selectedTimeSlot) {
+                        alert("Vui lòng chọn khung giờ hẹn trước khi tiếp tục!");
+                        return; 
+                    }
+                }
+                
                 document.querySelectorAll('.step-content').forEach(el => {
                     el.classList.remove('active');
-                    setTimeout(() => el.style.display = 'none', 300); // Đợi CSS transition fade out
+                    setTimeout(() => el.style.display = 'none', 300); 
                 });
 
-                // Cập nhật giao diện thanh tiến trình (Progress Bar)
                 const progressLineWidths = ['0%', '33%', '66%', '100%'];
                 document.getElementById('progress-line').style.width = progressLineWidths[step - 1];
 
                 for (let i = 1; i <= 4; i++) {
                     const icon = document.getElementById('icon-step-' + i);
                     const text = document.getElementById('text-step-' + i);
-
                     if (i <= step) {
                         icon.className = "w-10 h-10 rounded-full bg-[#464BE5] text-white flex items-center justify-center font-bold shadow-md transition-colors duration-300";
-                        if (text)
-                            text.className = "text-xs font-semibold text-[#464BE5] mt-2";
+                        if (text) text.className = "text-xs font-semibold text-[#464BE5] mt-2";
                     } else {
                         icon.className = "w-10 h-10 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center font-bold transition-colors duration-300";
-                        if (text)
-                            text.className = "text-xs font-semibold text-slate-400 mt-2";
+                        if (text) text.className = "text-xs font-semibold text-slate-400 mt-2";
                     }
                 }
 
-                // Cập nhật thông tin Summary nếu đang ở bước 4
-                if (step === 4) {
-                    updateSummary();
-                }
+                if (step === 4) { updateSummary(); }
 
-                // Hiện thị bước được gọi
                 const targetStep = document.getElementById('step-' + step);
                 setTimeout(() => {
                     targetStep.style.display = 'block';
-                    // setTimeout lồng nhau để trigger transition sau khi display block
                     setTimeout(() => targetStep.classList.add('active'), 10);
                 }, 300);
             }
 
-            // Logic cập nhật thông tin tổng kết (Summary)
             function updateSummary() {
-                // Lấy thông tin từ các input radio đã chọn
                 const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
                 const selectedService = document.querySelector('input[name="serviceId"]:checked');
                 const date = document.getElementById('bookingDate').value;
                 const timeSlot = document.querySelector('input[name="timeSlot"]:checked');
 
-                // Lấy text hiển thị. 
-                // Thực tế nên lấy innerText của thẻ label thay vì value, code dưới đây mô phỏng đơn giản.
                 if (selectedVehicle) {
                     const label = selectedVehicle.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-vehicle').innerText = label;
@@ -346,39 +391,98 @@
                     const label = selectedService.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-service').innerText = label;
                 }
-
-                const timeStr = (date ? date + " | " : "") + (timeSlot ? timeSlot.value : "Chưa chọn giờ");
+                let timeText = "Chưa chọn giờ";
+                if (timeSlot) {
+                    timeText = timeSlot.closest('label').querySelector('span').innerText;
+                }
+                const timeStr = (date ? date + " | " : "") + timeText;
                 document.getElementById('summary-time').innerText = timeStr;
             }
 
-            // Xử lý sự kiện Submit Form (NFR-02)
             document.getElementById('bookingForm').addEventListener('submit', function (e) {
-                // 1. Chặn submit nhiều lần (Loading state)
                 const btnSubmit = document.getElementById('btnSubmit');
                 const loadingIcon = document.getElementById('loadingIcon');
-
                 if (btnSubmit.disabled) {
                     e.preventDefault();
                     return;
-                } // Nếu đang submit thì không làm gì cả
-
+                } 
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('opacity-80', 'cursor-not-allowed');
                 loadingIcon.classList.remove('hidden');
-
-                // NFR-02: Backend sẽ tiếp nhận xử lý trong thời gian thực.
-                // Ở đây là Front-End nên form sẽ tự động gửi qua action url.
             });
 
-            // Gán ngày hiện tại cho date picker và xử lý format
+            // Gửi request lấy ngày mới đồng thời "nhớ" luôn những xe/dịch vụ đã chọn
+            function handleDateChange(selectedDate) {
+                if (!selectedDate) return;
+
+                const currentUrl = window.location.origin + window.location.pathname;
+                const urlParams = new URLSearchParams(window.location.search);
+
+                urlParams.set('date', selectedDate);
+                
+                // Giữ lại lựa chọn Xe và Dịch vụ đang tick trên màn hình
+                const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
+                if (selectedVehicle) urlParams.set('vId', selectedVehicle.value);
+                
+                const selectedService = document.querySelector('input[name="serviceId"]:checked');
+                if (selectedService) urlParams.set('sId', selectedService.value);
+
+                urlParams.set('step', '3'); // Reload xong sẽ nhảy thẳng về bước 3
+
+                window.location.href = `${currentUrl}?${urlParams.toString()}`;
+            }
+
             window.onload = function () {
                 const dateInput = document.getElementById('bookingDate');
+                const maxDaysAllowed = parseInt(dateInput.getAttribute("data-max-days")) || 7;
+
                 const today = new Date();
-                const dd = String(today.getDate()).padStart(2, '0');
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const yyyy = today.getFullYear();
-                dateInput.value = yyyy + '-' + mm + '-' + dd;
-                dateInput.min = yyyy + '-' + mm + '-' + dd;
+                const maxDate = new Date();
+                maxDate.setDate(today.getDate() + maxDaysAllowed);
+
+                function formatDate(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                }
+
+                const todayStr = formatDate(today);
+                const maxDateStr = formatDate(maxDate);
+
+                // Quan trọng: Gán giá trị lấy từ Backend (tránh bị JS đè thành ngày hôm nay)
+                dateInput.value = "<%= currentSelectedDate %>";
+                dateInput.min = todayStr;
+                dateInput.max = maxDateStr;
+
+                dateInput.addEventListener('change', function () {
+                    if (!this.value) {
+                        this.value = todayStr; 
+                        handleDateChange(this.value);
+                    }
+                });
+
+                // Logic phục hồi lại dữ liệu sau khi trang vừa bị F5 (reload do chọn ngày)
+                const urlParams = new URLSearchParams(window.location.search);
+                const vId = urlParams.get('vId');
+                const sId = urlParams.get('sId');
+                const step = urlParams.get('step');
+                
+                if (vId) {
+                    const vInput = document.querySelector(`input[name="vehicleId"][value="${vId}"]`);
+                    if (vInput) vInput.checked = true;
+                }
+                
+                if (sId) {
+                    const sInput = document.querySelector(`input[name="serviceId"][value="${sId}"]`);
+                    if (sInput) sInput.checked = true;
+                }
+                
+                if (step) {
+                    setTimeout(() => {
+                        goToStep(parseInt(step));
+                    }, 100); // Đợi giao diện render xong rồi trượt tới bước 3
+                }
             };
         </script>
     </body>

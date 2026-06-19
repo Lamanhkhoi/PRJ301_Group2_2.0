@@ -184,8 +184,7 @@
                                                 <div>
                                                     <h4 class="font-bold text-slate-800"><%= s.getServiceName()%></h4>
                                                     <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= s.getEstimateMinutes()%> phút</p>
-                                                </div>
-                                                <div class="h-6 w-6 rounded-full border-2 border-slate-300 peer-checked:border-[6px] peer-checked:border-[#464BE5] transition-all"></div>
+                                                </div>         
                                             </div>
                                         </div>
                                     </label>

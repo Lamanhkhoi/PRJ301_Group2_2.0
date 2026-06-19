@@ -33,10 +33,20 @@ public class CustomerHistoryDAO {
                 while (rs.next()) { // Hoặc `if (rs.next())` nếu chỉ lấy 1 dòng
                     BookingHistory history = new BookingHistory();
                     history.setBookingDate(rs.getString("BookingDate"));
+                    history.setTime(rs.getString("CompletedAt"));
+                    history.setLicensePlate(rs.getString("LicensePlate"));
+                    history.setBrand(rs.getString("VehicleBrand"));
+                    history.setModel(rs.getString("VehicleModel"));
+                    history.setColor(rs.getString("VehicleColor"));
+                    history.setServiceName(rs.getString("ServiceName"));
+                    history.setTotalAmount(rs.getDouble("TotalAmount"));
+                    history.setStatus(rs.getString("BookingStatus"));
+                    
+                    list.add(history);
                 }
             }
         } catch (Exception e) {
-            System.out.println("Lỗi tại hàm get[Tên_Hàm]: " + e.getMessage());
+            System.out.println("Lỗi tại getHistoryByCustomerId:" + e.getMessage());
             e.printStackTrace();
         }
 

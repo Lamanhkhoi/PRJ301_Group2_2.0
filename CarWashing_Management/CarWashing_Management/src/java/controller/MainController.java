@@ -70,6 +70,13 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_TAB", "thongtincanhan");
                         url = "UserProfileController";
                         break;
+                    // --- LUỒNG QUẢN LÝ BOOKING ---
+                    case "customerBookingPage":
+                    case "bookingCheckSlots":
+                    case "processBooking":
+                        request.setAttribute("ACTIVE_TAB", "datlich");
+                        url = "BookingController";
+                        break;
                 }
             }
         } catch (Exception e) {

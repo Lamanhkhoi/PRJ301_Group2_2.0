@@ -89,7 +89,11 @@ public class VehicleController extends HttpServlet {
                     } else {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Biển số xe này đã tồn tại trên hệ thống!");
-//                        request.setAttribute("MODE", "add");
+                        request.setAttribute("MODE", "add");
+                        request.setAttribute("plate", liplate);
+                        request.setAttribute("brand", brand);
+                        request.setAttribute("model", model);
+                        request.setAttribute("color", color);
                         isRedirect = false;
                     }
                     break;
@@ -117,12 +121,12 @@ public class VehicleController extends HttpServlet {
                     } else {
                         request.setAttribute("ALERT_TYPE", "error");
                         request.setAttribute("ALERT_MSG", "Biển số chỉnh sửa đã được dùng cho xe khác!");
-//                        request.setAttribute("MODE", "edit");
-//                        request.setAttribute("vehicleId", vehicleId);
-//                        request.setAttribute("plate", liplate);
-//                        request.setAttribute("brand", brand);
-//                        request.setAttribute("model", model);
-//                        request.setAttribute("color", color);
+                        request.setAttribute("MODE", "edit");
+                        request.setAttribute("vehicleId", vehicleId);
+                        request.setAttribute("plate", liplate);
+                        request.setAttribute("brand", brand);
+                        request.setAttribute("model", model);
+                        request.setAttribute("color", color);
                         isRedirect = false;
                     }
                     break;

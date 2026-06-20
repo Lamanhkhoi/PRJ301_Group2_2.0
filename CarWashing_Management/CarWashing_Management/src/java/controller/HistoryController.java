@@ -73,11 +73,12 @@ public class HistoryController extends HttpServlet {
             request.setAttribute("statusFilter", statusFilter);
             request.setAttribute("timeFilter", timeFilter);
             
-            request.getRequestDispatcher("DashBoard/customer_history.jsp").forward(request, response); 
+            
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect("MainController?action=customerPage");
         } 
+        request.getRequestDispatcher("MainController?action=customerHistoryDashboard").forward(request, response); 
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

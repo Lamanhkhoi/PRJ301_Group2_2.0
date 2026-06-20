@@ -51,7 +51,10 @@ public class MainController extends HttpServlet {
                     case "customerHistory":
                         url = "HistoryController";
                         break;
-
+                    case "customerHistoryDashboard":
+                        request.setAttribute("ACTIVE_TAB", "lichsu");
+                        url = "DashBoard/customer_history.jsp";
+                                break;
                     // --- LUỒNG QUẢN LÝ VEHICLES ---
                     case "customerVehicle":
                         request.setAttribute("ACTIVE_TAB", "cus_vehicle");

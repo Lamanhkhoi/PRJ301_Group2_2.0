@@ -5,10 +5,12 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.CustomerVehicleDAO;
 import dao.WashServiceDAO;
 import dto.Booking;
 import dto.Customer;
 import dto.TimeSlot;
+import dto.Vehicle;
 import dto.WashService;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -48,7 +50,6 @@ public class BookingController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-
         switch (action) {
             case "customerBookingPage":
             case "bookingCheckSlots":
@@ -203,7 +204,6 @@ public class BookingController extends HttpServlet {
             }
 
             // 6. Thực hiện gọi DAO để chèn vào Database
-            
             boolean isSuccess = bookingDAO.createNewBooking(
                     cus.getCustomerId(),
                     vehicleId,

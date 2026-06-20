@@ -45,9 +45,34 @@ public class HistoryController extends HttpServlet {
         }
         
         try {
+            String statusFilter = request.getParameter("statusFilter");
+            String timeFilter = request.getParameter("timeFilter");
+            String pageStr = request.getParameter("page");
+            
+            if (statusFilter == null) statusFilter = "ALL";
+            if (timeFilter == null) timeFilter = "ALL";
+            int page = 1;
+            if (pageStr != null && !pageStr.isEmpty()) {
+                page = Integer.parseInt(pageStr); 
+            }
+            int pageSize = 10;
+            
+            
             CustomerHistoryDAO dao = new CustomerHistoryDAO();
-            List<BookingHistory> historyList = dao.getHistoryByCustomerId(cus.getCustomerId());
+            // Lấy tính tổng số giao dịch trong lịch sử
+            int totalRecords = dao.countTotalHistory(cus.getCustomerId(), statusFilter, timeFilter);
+            // Dùng Math.ceil để làm tròn lên (Ví dụ 45/10 = 4.5 -> làm tròn thành 5 trang)
+            int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+            
+            List<BookingHistory> historyList = dao.getHistory(cus.getCustomerId(), statusFilter, timeFilter, page, pageSize);
+            
             request.setAttribute("HISTORY_LIST", historyList);
+            request.setAttribute("TOTAL_PAGES", totalPages);
+            request.setAttribute("CURRENT_PAGE", page);
+            request.setAttribute("TOTAL_RECORDS", totalRecords);
+            request.setAttribute("statusFilter", statusFilter);
+            request.setAttribute("timeFilter", timeFilter);
+            
             request.getRequestDispatcher("DashBoard/customer_history.jsp").forward(request, response); 
         } catch (Exception e) {
             e.printStackTrace();

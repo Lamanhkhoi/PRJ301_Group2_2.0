@@ -40,7 +40,7 @@
                                 String tFilter = (String) request.getAttribute("timeFilter");
                                 if (tFilter == null) tFilter = "ALL";
                             %>
-                            <form action="MainController?action=customerHistory" method="POST" class="flex items-center bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+                            <form action="${pageContext.request.contextPath}/MainController?action=customerHistory" method="POST" class="flex items-center bg-white p-1 rounded-xl shadow-sm border border-slate-100">
                                 <input type="hidden" name="action" value="customerHistory">
 
                                 <select name="statusFilter" onchange="this.form.submit()" class="bg-transparent border-none text-sm font-medium text-slate-600 focus:ring-0 cursor-pointer outline-none px-4 py-2">
@@ -101,7 +101,7 @@
 
                                 <div class="flex justify-between items-start mb-5 pl-2 border-b border-slate-100 pb-4">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-14 py-2 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-200 shadow-sm">
+                                        <div class="min-w-[80px] px-3 py-2 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-200 shadow-sm">
                                             <span class="text-sm font-bold text-slate-800"><%= item.getBookingDate()%></span>
                                             <div class="w-6 h-[1px] bg-slate-200 my-1"></div>
                                             <span class="text-[11px] font-bold text-[#464BE5]"><%= item.getTime()%></span>
@@ -197,7 +197,7 @@
                                     <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
 
                                         <% if (currentPage > 1) {%>
-                                        <a href="MainController?action=customerHistory&page=<%= currentPage - 1%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-200 hover:bg-slate-50">
+                                        <a href="${pageContext.request.contextPath}/MainController?action=customerHistory&page=<%= currentPage - 1%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-200 hover:bg-slate-50">
                                             <i class="fa-solid fa-chevron-left h-4 w-4"></i>
                                         </a>
                                         <% } %>
@@ -205,14 +205,14 @@
                                         <% for (int i = 1; i <= totalPages; i++) {
                                                 String activeClass = (i == currentPage) ? "bg-[#464BE5] text-white" : "text-slate-900 bg-white hover:bg-slate-50";
                                         %>
-                                        <a href="MainController?action=customerHistory&page=<%= i%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" 
+                                        <a href="${pageContext.request.contextPath}/MainController?action=customerHistory&page=<%= i%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" 
                                            class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-slate-200 <%= activeClass%>">
                                             <%= i%>
                                         </a>
                                         <% } %>
 
                                         <% if (currentPage < totalPages) {%>
-                                        <a href="MainController?action=customerHistory&page=<%= currentPage + 1%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-200 hover:bg-slate-50">
+                                        <a href="${pageContext.request.contextPath}/MainController?action=customerHistory&page=<%= currentPage + 1%>&statusFilter=<%= sFilter%>&timeFilter=<%= tFilter%>" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-200 hover:bg-slate-50">
                                             <i class="fa-solid fa-chevron-right h-4 w-4"></i>
                                         </a>
                                         <% } %>

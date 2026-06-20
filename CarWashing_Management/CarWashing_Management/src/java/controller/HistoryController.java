@@ -42,6 +42,7 @@ public class HistoryController extends HttpServlet {
         
         if(cus == null){
             response.sendRedirect("MainController?action=login");
+            return;
         }
         
         try {
@@ -72,11 +73,12 @@ public class HistoryController extends HttpServlet {
             request.setAttribute("TOTAL_RECORDS", totalRecords);
             request.setAttribute("statusFilter", statusFilter);
             request.setAttribute("timeFilter", timeFilter);
-            
+
             
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect("MainController?action=customerPage");
+            return;
         } 
         request.getRequestDispatcher("MainController?action=customerHistoryDashboard").forward(request, response); 
     }

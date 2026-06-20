@@ -54,4 +54,14 @@ public class CustomerHistoryDAO {
 
         return list;
     }
+    
+    public int countTotalHistory(int customerId, String statusFilter, String timeFilter) {
+        int count = 0;
+        
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM Bookings b "
+              + "WHERE b.CustomerId = ? "
+              + "AND b.BookingStatus IN (N'Completed', N'Cancelled', N'NoShow') "
+        );
+    }
 }

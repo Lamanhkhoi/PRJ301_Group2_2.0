@@ -300,7 +300,7 @@
                                                 String onClickAction = (!isPastOrTooClose && !isFull) ? "onclick=\"selectSlot('" + t.getSlotNumber() + "')\"" : "";
                                     %>
 
-                                    <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>"<%= onClickAction %>>
+                                    <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>"<%= onClickAction%>>
                                         <input type="radio" name="timeSlot" value="<%= t.getTime()%>" class="peer sr-only" <%= (isPastOrTooClose || isFull) ? "disabled" : ""%>>
                                         <div class="<%= boxClass%>" style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
                                             <span class="text-sm font-semibold"><%= timeStr%></span>

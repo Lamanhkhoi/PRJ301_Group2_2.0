@@ -153,12 +153,12 @@ public class BookingController extends HttpServlet {
             String serviceIdStr = request.getParameter("serviceId");
             String bookingDate = request.getParameter("bookingDate");
             String slotNumberStr = request.getParameter("slotNumber");
-//            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
-//            System.out.println("vehicleId: " + vehicleIdStr);
-//            System.out.println("serviceId: " + serviceIdStr);
-//            System.out.println("bookingDate: " + bookingDate);
-//            System.out.println("slotNumber: " + slotNumberStr);
-//            System.out.println("--------------------------------");
+            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
+            System.out.println("vehicleId: " + vehicleIdStr);
+            System.out.println("serviceId: " + serviceIdStr);
+            System.out.println("bookingDate: " + bookingDate);
+            System.out.println("slotNumber: " + slotNumberStr);
+            System.out.println("--------------------------------");
             // 3. Kiểm tra xem có tham số nào bị rỗng hoặc null không (Lỗi từ phía JSP không gửi đúng tên name)
             if (vehicleIdStr == null || vehicleIdStr.trim().isEmpty()
                     || serviceIdStr == null || serviceIdStr.trim().isEmpty()
@@ -216,7 +216,7 @@ public class BookingController extends HttpServlet {
             if (isSuccess) {
                 session.setAttribute("ALERT_TYPE", "success");
                 session.setAttribute("ALERT_MSG", "Booking thành công!");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerPage&status=success");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=success");
             } else {
                 session.setAttribute("ALERT_TYPE", "fail");
                 session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");

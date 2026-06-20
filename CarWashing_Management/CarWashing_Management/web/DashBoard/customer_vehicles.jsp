@@ -35,22 +35,21 @@
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
-        <%  
-                // 1. Kiểm tra trong request trước
-                String alertType = (String) request.getAttribute("ALERT_TYPE");
-                String alertMsg = (String) request.getAttribute("ALERT_MSG");
+        <%            // 1. Kiểm tra trong request trước
+            String alertType = (String) request.getAttribute("ALERT_TYPE");
+            String alertMsg = (String) request.getAttribute("ALERT_MSG");
 
-                // 2. Nếu request không có, kiểm tra tiếp trong session
-                if (alertMsg == null) {
-                    alertType = (String) session.getAttribute("ALERT_TYPE");
-                    alertMsg = (String) session.getAttribute("ALERT_MSG");
+            // 2. Nếu request không có, kiểm tra tiếp trong session
+            if (alertMsg == null) {
+                alertType = (String) session.getAttribute("ALERT_TYPE");
+                alertMsg = (String) session.getAttribute("ALERT_MSG");
 
-                    // 3. XÓA NGAY trong session sau khi đã lấy ra để tránh F5 bị lặp lại thông báo
-                    if (alertMsg != null) {
-                        session.removeAttribute("ALERT_TYPE");
-                        session.removeAttribute("ALERT_MSG");
-                    }
+                // 3. XÓA NGAY trong session sau khi đã lấy ra để tránh F5 bị lặp lại thông báo
+                if (alertMsg != null) {
+                    session.removeAttribute("ALERT_TYPE");
+                    session.removeAttribute("ALERT_MSG");
                 }
+            }
         %>
 
         <%-- 1. HỆ THỐNG TOAST ALERT --%>
@@ -221,21 +220,37 @@
                             <input type="hidden" id="inpVehicleId" name="vehicleId">
                             <input type="hidden" id="inpOldPlate" name="oldPlate"> 
 
+                            <!--                            <div>
+                                                            <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe *</label>
+                                                            <input type="text" id="inpPlate" name="plate" pattern="[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}" value="${plate}" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
+                                                            <input type="text" id="inpBrand" name="brand" value="${brand}" placeholder="VD: Toyota, Mazda..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-slate-600 mb-1">Dòng xe (Model)</label>
+                                                            <input type="text" id="inpModel" name="model" value="${model}" placeholder="VD: Vios, CX-5..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-slate-600 mb-1">Màu sắc</label>
+                                                            <input type="text" id="inpColor" name="color" value="${color}" placeholder="VD: Đỏ, Đen, Trắng..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                                        </div>-->
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Biển số xe *</label>
-                                <input type="text" id="inpPlate" name="plate" pattern="[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}" value="${plate}" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
+                                <input type="text" id="inpPlate" name="plate" pattern="[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}" placeholder="VD: 51H-999.99" required class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none uppercase font-mono">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Hãng xe</label>
-                                <input type="text" id="inpBrand" name="brand" value="${brand}" placeholder="VD: Toyota, Mazda..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                <input type="text" id="inpBrand" name="brand" placeholder="VD: Toyota, Mazda..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Dòng xe (Model)</label>
-                                <input type="text" id="inpModel" name="model" value="${model}" placeholder="VD: Vios, CX-5..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                <input type="text" id="inpModel" name="model" placeholder="VD: Vios, CX-5..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-1">Màu sắc</label>
-                                <input type="text" id="inpColor" name="color" value="${color}" placeholder="VD: Đỏ, Đen, Trắng..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
+                                <input type="text" id="inpColor" name="color" placeholder="VD: Đỏ, Đen, Trắng..." class="w-full px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-emerald-500 outline-none">
                             </div>
                         </div>
                         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
@@ -286,25 +301,27 @@
                     document.getElementById('modalTitle').innerText = 'Thêm Xe Mới';
                     document.getElementById("action").value = "addVehicle"; // Thay đổi value input ẩn thành addVehicle
 
-                    if (!document.getElementById("inpPlate").value) {
-                        form.reset();
-                    }
+//                    if (!document.getElementById("inpPlate").value) {
+//                        form.reset();
+//                    }
+                    form.reset();
                     document.getElementById('inpVehicleId').value = '';
                     document.getElementById('inpOldPlate').value = '';
 
                 } else if (mode === 'edit') {
                     document.getElementById('modalTitle').innerText = 'Sửa Thông Tin Xe';
                     document.getElementById("action").value = "updateVehicle"; // Thay đổi value input ẩn thành updateVehicle
+                    if (btnElement) {
+                        const card = btnElement.closest('.vehicle-card');
+                        const currentPlate = card.querySelector('.val-plate').innerText;
 
-                    const card = btnElement.closest('.vehicle-card');
-                    const currentPlate = card.querySelector('.val-plate').innerText;
-
-                    document.getElementById('inpVehicleId').value = card.dataset.id;
-                    document.getElementById('inpPlate').value = currentPlate;
-                    document.getElementById('inpOldPlate').value = currentPlate;
-                    document.getElementById('inpBrand').value = card.querySelector('.val-brand').innerText;
-                    document.getElementById('inpModel').value = card.querySelector('.val-model').innerText;
-                    document.getElementById('inpColor').value = card.querySelector('.val-color').innerText;
+                        document.getElementById('inpVehicleId').value = card.dataset.id;
+                        document.getElementById('inpPlate').value = currentPlate;
+                        document.getElementById('inpOldPlate').value = currentPlate;
+                        document.getElementById('inpBrand').value = card.querySelector('.val-brand').innerText;
+                        document.getElementById('inpModel').value = card.querySelector('.val-model').innerText;
+                        document.getElementById('inpColor').value = card.querySelector('.val-color').innerText;
+                    }
             }
             }
 
@@ -346,5 +363,27 @@
             };
         </script>
         <%}%> --%>
+        <%
+            String mode = (String) request.getAttribute("MODE");
+            if (mode != null) {
+        %>
+        <script>
+            window.onload = function () {
+                // 1. Mở modal đúng chế độ lỗi (add hoặc edit)
+                openModal('<%= mode.toLowerCase()%>');
+
+                // 2. Điền lại đúng đống dữ liệu lỗi mà người dùng vừa nhập vào form
+                document.getElementById('inpPlate').value = `<%= request.getAttribute("plate") != null ? request.getAttribute("plate") : ""%>`;
+                document.getElementById('inpBrand').value = `<%= request.getAttribute("brand") != null ? request.getAttribute("brand") : ""%>`;
+                document.getElementById('inpModel').value = `<%= request.getAttribute("model") != null ? request.getAttribute("model") : ""%>`;
+                document.getElementById('inpColor').value = `<%= request.getAttribute("color") != null ? request.getAttribute("color") : ""%>`;
+
+            <% if ("edit".equalsIgnoreCase(mode)) {%>
+                document.getElementById('inpVehicleId').value = `<%= request.getAttribute("vehicleId")%>`;
+                document.getElementById('inpOldPlate').value = `<%= request.getAttribute("oldPlate") != null ? request.getAttribute("oldPlate") : ""%>`;
+            <% } %>
+            };
+        </script>
+        <%}%>
     </body>
 </html>

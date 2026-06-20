@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BookingDAO {
 
@@ -353,5 +355,74 @@ public class BookingDAO {
             }
         }
         return map;
+    }
+
+    public List<Booking> getUpcomingBookingsByCustomer(int customerId) {
+
+        List<Booking> list = new ArrayList<>();
+
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        String sql
+                = "SELECT b.*, "
+                + "v.LicensePlate, "
+                + "v.VehicleBrand, "
+                + "v.VehicleModel, "
+                + "s.ServiceName "
+                + "FROM Bookings b "
+                + "INNER JOIN CustomerVehicles v ON b.VehicleId = v.VehicleID "
+                + "INNER JOIN WashServices s ON b.ServiceId = s.ServiceId "
+                + "WHERE b.CustomerId = ? "
+                + "AND b.BookingStatus IN ('Pending','CheckedIn') "
+                + "ORDER BY b.BookingDate ASC";
+
+        try {
+
+            cn = DBContext.getConnection();
+
+            pst = cn.prepareStatement(sql);
+
+            pst.setInt(1, customerId);
+
+            rs = pst.executeQuery();
+
+            while (rs.next()) {
+
+                Booking b = new Booking();
+
+                b.setBookingId(rs.getInt("BookingId"));
+                b.setCustomerId(rs.getInt("CustomerId"));
+                b.setVehicleId(rs.getInt("VehicleId"));
+                b.setServiceId(rs.getInt("ServiceId"));
+
+                b.setBookingDate(rs.getDate("BookingDate"));
+
+                b.setSlotNumber(rs.getInt("SlotNumber"));
+
+                b.setBookingStatus(
+                        rs.getString("BookingStatus"));
+
+                b.setLicensePlate(
+                        rs.getString("LicensePlate"));
+
+                b.setVehicleBrand(
+                        rs.getString("VehicleBrand"));
+
+                b.setVehicleModel(
+                        rs.getString("VehicleModel"));
+
+                b.setServiceName(
+                        rs.getString("ServiceName"));
+
+                list.add(b);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 }

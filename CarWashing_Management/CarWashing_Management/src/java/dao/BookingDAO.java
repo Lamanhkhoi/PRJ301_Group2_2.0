@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import dbutils.DBContext;
@@ -9,11 +5,11 @@ import dto.Booking;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- *
- * @author LENOVO
- */
 public class BookingDAO {
 
     public boolean isSlotAvailable(String bookingDate, int slotNumber) {
@@ -196,5 +192,166 @@ public class BookingDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Map<String, Object>> getAdminBookingSlots(String bookingDate, String searchLicensePlate) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        String sql = "SELECT b.BookingId, b.SlotNumber, b.BookingStatus, b.Note, b.TotalAmount, "
+                + "       v.LicensePlate, s.ServiceName, acc.FullName, t.TierName "
+                + "FROM Bookings b "
+                + "JOIN CustomerVehicles v ON b.VehicleId = v.VehicleId "
+                + "JOIN WashServices s ON b.ServiceId = s.ServiceId "
+                + "JOIN Customers c ON b.CustomerId = c.CustomerId "
+                + "JOIN Accounts acc ON c.AccountId = acc.AccountId "
+                + "JOIN CustomerLoyalty cl ON acc.AccountId = cl.AccountId "
+                + "JOIN LoyaltyTiers t ON cl.CurrentTierId = t.TierId "
+                + "WHERE b.BookingDate = ? ";
+
+        // Lọc theo biển số xe theo tìm kiếm
+        if (searchLicensePlate != null && !searchLicensePlate.trim().isEmpty()) {
+            sql += " AND v.LicensePlate LIKE ?";
+        }
+
+        // Sắp xếp thứ tự theo ca cho dễ quản lý
+        sql += " ORDER BY b.SlotNumber ASC";
+
+        try {
+            cn = dbutils.DBContext.getConnection();
+            pst = cn.prepareStatement(sql);
+            pst.setString(1, bookingDate);
+
+            if (searchLicensePlate != null && !searchLicensePlate.trim().isEmpty()) {
+                pst.setString(2, "%" + searchLicensePlate.trim() + "%");
+            }
+
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("BookingId", rs.getInt("BookingId"));
+                map.put("SlotNumber", rs.getInt("SlotNumber"));
+                map.put("BookingStatus", rs.getString("BookingStatus"));
+                map.put("Note", rs.getString("Note"));
+                map.put("TotalAmount", rs.getDouble("TotalAmount"));
+                map.put("LicensePlate", rs.getString("LicensePlate"));
+                map.put("ServiceName", rs.getString("ServiceName"));
+                map.put("FullName", rs.getString("FullName"));
+                map.put("TierName", rs.getString("TierName"));
+
+                list.add(map);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+
+    public boolean updateBookingStatus(int bookingId, String newStatus) {
+        Connection cn = null;
+        PreparedStatement pst = null;
+        String sql = "UPDATE Bookings SET BookingStatus = ? WHERE BookingId = ?";
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                pst = cn.prepareStatement(sql);
+                pst.setString(1, newStatus);
+                pst.setInt(2, bookingId);
+                return pst.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public Map<String, Object> getBookingById(int bookingId) {
+        Map<String, Object> map = null;
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        String sql = "SELECT BookingId, SlotNumber, BookingStatus, BookingDate, Note, TotalAmount "
+                + "FROM Bookings WHERE BookingId = ?";
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                pst = cn.prepareStatement(sql);
+                pst.setInt(1, bookingId);
+                rs = pst.executeQuery();
+                if (rs.next()) {
+                    map = new HashMap<>();
+                    map.put("BookingId", rs.getInt("BookingId"));
+                    map.put("SlotNumber", rs.getInt("SlotNumber"));
+                    map.put("BookingStatus", rs.getString("BookingStatus"));
+                    map.put("BookingDate", rs.getDate("BookingDate")); // Trả về dạng Date hoặc String tương ứng
+                    map.put("Note", rs.getString("Note"));
+                    map.put("TotalAmount", rs.getDouble("TotalAmount"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return map;
     }
 }

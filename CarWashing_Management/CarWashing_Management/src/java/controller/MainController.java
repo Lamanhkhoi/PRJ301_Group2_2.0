@@ -79,11 +79,19 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_TAB", "datlich");
                         url = "BookingController";
                         break;
-                        
+
                     // --- LUỒNG QUẢN LÝ ADMIN BOOKINGS ---
                     case "manageBooking":
-                        request.setAttribute("ACTIVE_TAB", "quanly_datlich");
-                        url = "Admin/admin_booking_management.jsp";
+                        request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
+                        if (request.getAttribute("SLOT_MAP") == null) {
+                            url = "AdminBookingManagement";
+                        } else {
+                            url = "Admin/admin_booking_management.jsp";
+                        }
+                        break;
+                    case "updateBookingStatus":
+                        request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
+                        url = "UpdateBookingStatus";
                         break;
                 }
             }

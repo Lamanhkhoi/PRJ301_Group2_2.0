@@ -9,6 +9,7 @@ import dao.WashServiceDAO;
 import dto.Booking;
 import dto.Customer;
 import dto.TimeSlot;
+import dto.WashService;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
@@ -138,33 +139,94 @@ public class BookingController extends HttpServlet {
         HttpSession session = request.getSession();
 
         try {
-            Customer cus = (Customer) request.getSession().getAttribute("CUSTOMER");
+            // 1. Kiểm tra session của khách hàng xem có bị hết hạn không
+            Customer cus = (Customer) session.getAttribute("CUSTOMER");
+            if (cus == null) {
+                session.setAttribute("ALERT_TYPE", "error");
+                session.setAttribute("ALERT_MSG", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+                response.sendRedirect(request.getContextPath() + "/login.jsp"); // Đổi link login của bạn nếu cần
+                return;
+            }
 
-            int vehicleId = Integer.parseInt(request.getParameter("vehicleId"));
-            int serviceId = Integer.parseInt(request.getParameter("serviceId"));
+            // 2. Lấy dữ liệu dạng Chuỗi từ Request
+            String vehicleIdStr = request.getParameter("vehicleId");
+            String serviceIdStr = request.getParameter("serviceId");
             String bookingDate = request.getParameter("bookingDate");
-            int slotNumber = Integer.parseInt(request.getParameter("slotNumber"));
-            WashServiceDAO w = new WashServiceDAO();
-            System.out.println(slotNumber);
-            BookingDAO bookingDAO = new BookingDAO();
+            String slotNumberStr = request.getParameter("slotNumber");
+//            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
+//            System.out.println("vehicleId: " + vehicleIdStr);
+//            System.out.println("serviceId: " + serviceIdStr);
+//            System.out.println("bookingDate: " + bookingDate);
+//            System.out.println("slotNumber: " + slotNumberStr);
+//            System.out.println("--------------------------------");
+            // 3. Kiểm tra xem có tham số nào bị rỗng hoặc null không (Lỗi từ phía JSP không gửi đúng tên name)
+            if (vehicleIdStr == null || vehicleIdStr.trim().isEmpty()
+                    || serviceIdStr == null || serviceIdStr.trim().isEmpty()
+                    || bookingDate == null || bookingDate.trim().isEmpty()
+                    || slotNumberStr == null || slotNumberStr.trim().isEmpty()) {
 
-            // Gọi phương thức thêm mới bản ghi từ BookingDAO
-            boolean isSuccess = bookingDAO.createNewBooking(cus.getCustomerId(), vehicleId, serviceId, bookingDate, slotNumber, w.getServiceById(serviceId).getPrice());
+                session.setAttribute("ALERT_TYPE", "fail");
+                session.setAttribute("ALERT_MSG", "Lỗi: Không nhận được đầy đủ dữ liệu từ Form (Có tham số bị rỗng)!");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+                return;
+            }
+
+            // 4. Tiến hành parse dữ liệu một cách an toàn
+            int vehicleId, serviceId, slotNumber;
+            try {
+                vehicleId = Integer.parseInt(vehicleIdStr.trim());
+                serviceId = Integer.parseInt(serviceIdStr.trim());
+                slotNumber = Integer.parseInt(slotNumberStr.trim());
+            } catch (NumberFormatException nfe) {
+                // Nếu nhảy vào đây tức là JSP có gửi dữ liệu, nhưng dữ liệu không phải là SỐ (ví dụ: chuỗi "abc")
+                session.setAttribute("ALERT_TYPE", "fail");
+                session.setAttribute("ALERT_MSG", "Lỗi định dạng: ID xe, dịch vụ hoặc mã Slot phải là số!");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+                return;
+            }
+            BookingDAO bookingDAO = new BookingDAO();
+            // Kiểm tra trùng: Mỗi khách hàng chỉ được đặt 1 slot vào 1 ngày
+            if (bookingDAO.isDuplicateBooking(vehicleId, bookingDate, slotNumber)) {
+                session.setAttribute("ALERT_TYPE", "fail");
+                session.setAttribute("ALERT_MSG", "Xe này của bạn đã có một lịch hẹn trong khung giờ này rồi!");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+                return;
+            }
+            // 5. Kiểm tra tính hợp lệ của Service dịch vụ trong Database trước khi lấy giá tiền
+            WashServiceDAO w = new WashServiceDAO();
+            WashService service = w.getServiceById(serviceId);
+            if (service == null) {
+                session.setAttribute("ALERT_TYPE", "fail");
+                session.setAttribute("ALERT_MSG", "Lỗi: Dịch vụ bạn chọn không tồn tại trong hệ thống!");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+                return;
+            }
+
+            // 6. Thực hiện gọi DAO để chèn vào Database
+            
+            boolean isSuccess = bookingDAO.createNewBooking(
+                    cus.getCustomerId(),
+                    vehicleId,
+                    serviceId,
+                    bookingDate,
+                    slotNumber,
+                    service.getPrice()
+            );
 
             if (isSuccess) {
-                // Thành công: Chuyển hướng về trang Dashboard chung kèm cờ báo thành công
                 session.setAttribute("ALERT_TYPE", "success");
                 session.setAttribute("ALERT_MSG", "Booking thành công!");
                 response.sendRedirect(request.getContextPath() + "/MainController?action=customerPage&status=success");
             } else {
                 session.setAttribute("ALERT_TYPE", "fail");
-                session.setAttribute("ALERT_MSG", "Booking thất bại!");
+                session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");
                 response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
             }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(); // In log ra console để dev kiểm tra hệ thống sập vì lý do gì khác
             session.setAttribute("ALERT_TYPE", "error");
-            session.setAttribute("ALERT_MSG", "Hệ thống bảo trì!");
+            session.setAttribute("ALERT_MSG", "Hệ thống gặp sự cố không xác định: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=error");
         }
     }

@@ -8,6 +8,7 @@
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%@page import="java.time.LocalTime"%>
 <%@page import="java.time.LocalDate"%>
+<%@page import="java.time.LocalDateTime"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="dto.TimeSlot"%>
 <%@page import="dto.WashService"%>
@@ -30,22 +31,54 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         <style>
-            body { font-family: 'Inter', sans-serif; }
-            .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-            .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-            .step-content { transition: all 0.4s ease-in-out; opacity: 0; transform: translateY(10px); display: none; }
-            .step-content.active { opacity: 1; transform: translateY(0); display: block; }
-            .priority-slot { background: linear-gradient(135deg, #FFFAF0 0%, #FFF5E1 100%); border: 2px solid #FBBF24 !important; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2); }
-            #toastBox { transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease; transform: translateX(120%); opacity: 0; }
-            #toastBox.show { transform: translateX(0); opacity: 1; }
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                height: 6px;
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+            .step-content {
+                transition: all 0.4s ease-in-out;
+                opacity: 0;
+                transform: translateY(10px);
+                display: none;
+            }
+            .step-content.active {
+                opacity: 1;
+                transform: translateY(0);
+                display: block;
+            }
+            .priority-slot {
+                background: linear-gradient(135deg, #FFFAF0 0%, #FFF5E1 100%);
+                border: 2px solid #FBBF24 !important;
+                box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+            }
+            #toastBox {
+                transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            #toastBox.show {
+                transform: translateX(0);
+                opacity: 1;
+            }
         </style>
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
-        <%            
-            // Xử lý thông báo Toast
+        <%            // Xử lý thông báo Toast
             String alertType = (String) request.getAttribute("ALERT_TYPE");
             String alertMsg = (String) request.getAttribute("ALERT_MSG");
             if (alertMsg == null) {
@@ -71,7 +104,7 @@
         </div>
         <% } %>
 
-        <%            
+        <%
             CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
             CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
             LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
@@ -83,25 +116,27 @@
             if ("Silver".equalsIgnoreCase(currentTier)) {
                 maxDaysAhead = 10;
             } else if ("Gold".equalsIgnoreCase(currentTier)) {
-                maxDaysAhead = 12; isPriority = true;
+                maxDaysAhead = 12;
+                isPriority = true;
             } else if ("Platinum".equalsIgnoreCase(currentTier)) {
-                maxDaysAhead = 14; isPriority = true;
+                maxDaysAhead = 14;
+                isPriority = true;
             }
 
             CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
             WashServiceDAO serviceDAO = new WashServiceDAO();
             List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
             List<WashService> mockServices = serviceDAO.getAllServices();
-            
+
             // Xử lý lấy ngày, giờ hiện tại (múi giờ VN)
             ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
             LocalDate today = LocalDate.now(vnZone);
             LocalTime now = LocalTime.now(vnZone);
-            
+
             // Đọc ngày từ thanh URL
             String currentSelectedDate = request.getParameter("date");
             if (currentSelectedDate == null || currentSelectedDate.trim().isEmpty()) {
-                currentSelectedDate = today.toString(); 
+                currentSelectedDate = today.toString();
             }
         %>
 
@@ -217,7 +252,7 @@
                                 </div>
 
                                 <label class="block text-sm font-bold text-slate-700 mb-3">Khung giờ (Mỗi slot 30 phút)</label>
-                                
+                                <input type="hidden" id="selectedSlotNumber" name="slotNumber" value="">
                                 <div id="slotsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 pb-2">
                                     <%
                                         List<TimeSlot> slots = (ArrayList<TimeSlot>) request.getAttribute("slots");
@@ -229,38 +264,43 @@
                                                 boolean isPastOrTooClose = false;
 
                                                 try {
-                                                    LocalTime slotStartTime = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
+                                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
+                                                    LocalTime slotStartTime = LocalTime.parse(startHourStr, formatter);
                                                     LocalDate parsedBookingDate = LocalDate.parse(currentSelectedDate);
 
-                                                    // CHUẨN XÁC: Chỉ khóa giờ khi ngày đang chọn trùng với HÔM NAY
-                                                    if (parsedBookingDate.isEqual(today)) {
-                                                        if (slotStartTime.isBefore(now.plusMinutes(20))) { // Buffer lùi 20 phút
-                                                            isPastOrTooClose = true;
-                                                        }
+                                                    LocalDateTime nowDateTime = LocalDateTime.now(vnZone);
+                                                    LocalDateTime slotDateTime = LocalDateTime.of(parsedBookingDate, slotStartTime);
+
+                                                    // CHUẨN XÁC: Khóa giờ nếu slotDateTime nằm trong quá khứ hoặc quá gần (< 20 phút)
+                                                    if (slotDateTime.isBefore(nowDateTime.plusMinutes(20))) {
+                                                        isPastOrTooClose = true;
                                                     }
-                                                } catch (Exception e) {}
+                                                } catch (Exception e) {
+                                                }
 
                                                 String labelClass = "relative block ";
                                                 String boxClass = "p-3 rounded-xl border text-center transition-all ";
                                                 String clickHandler = "";
 
-                                                if (isPastOrTooClose) { 
+                                                if (isPastOrTooClose) {
                                                     labelClass += "cursor-not-allowed opacity-50 select-none";
                                                     boxClass += "bg-slate-100 border-slate-200 text-slate-400 pointers-disabled";
                                                     clickHandler = "onclick=\"return false;\"";
-                                                } else if (isFull) { 
+                                                } else if (isFull) {
                                                     labelClass += "cursor-not-allowed opacity-70 select-none";
                                                     boxClass += "bg-red-50 border-red-200 text-red-500 pointers-disabled";
                                                     clickHandler = "onclick=\"return false;\"";
-                                                } else { 
+                                                } else {
                                                     labelClass += "cursor-pointer group";
                                                     boxClass += "bg-white border-slate-200 text-slate-600 hover:border-[#464BE5] peer-checked:bg-[#464BE5] peer-checked:border-[#464BE5] peer-checked:text-white";
                                                     if (isPriority && t.isIsPriority()) {
                                                         boxClass = "p-3 rounded-xl text-center transition-all cursor-pointer peer-checked:bg-amber-500 peer-checked:text-white priority-slot text-amber-700 font-bold";
                                                     }
                                                 }
+                                                String onClickAction = (!isPastOrTooClose && !isFull) ? "onclick=\"selectSlot('" + t.getSlotNumber() + "')\"" : "";
                                     %>
-                                    <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
+
+                                    <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>"<%= onClickAction %>>
                                         <input type="radio" name="timeSlot" value="<%= t.getTime()%>" class="peer sr-only" <%= (isPastOrTooClose || isFull) ? "disabled" : ""%>>
                                         <div class="<%= boxClass%>" style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
                                             <span class="text-sm font-semibold"><%= timeStr%></span>
@@ -270,14 +310,15 @@
                                             <div class="text-[10px] uppercase font-bold mt-1">Đã kín (3/3)</div>
                                             <% } else if (isPriority && t.isIsPriority()) { %>
                                             <div class="text-[10px] uppercase font-bold mt-1"><i class="fa-solid fa-star text-amber-500 peer-checked:text-white"></i> Ưu tiên</div>
-                                            <% } else { %>
-                                            <div class="text-[10px] text-slate-400 peer-checked:text-blue-100 mt-1">Còn trống</div>
+                                            <% } else {%>
+                                            <div class="text-[10px] text-slate-400 peer-checked:text-blue-100 mt-1">Còn trống <%= 3 - t.getBookedCount()%>/3</div>
                                             <% } %>
                                         </div>
                                     </label>
-                                    <% }} else { %>
-                                        <p class="text-sm text-slate-400 col-span-4">Không tìm thấy khung giờ hoạt động.</p>
-                                    <% } %>
+                                    <% }
+                                    } else { %>
+                                    <p class="text-sm text-slate-400 col-span-4">Không tìm thấy khung giờ hoạt động.</p>
+                                    <% }%>
                                 </div>
 
                                 <div class="mt-8 flex justify-between">
@@ -330,27 +371,27 @@
                     const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
                     if (!selectedVehicle) {
                         alert("Vui lòng chọn xe của bạn trước khi tiếp tục!");
-                        return; 
+                        return;
                     }
                 }
                 if (step === 3) {
                     const selectedService = document.querySelector('input[name="serviceId"]:checked');
                     if (!selectedService) {
                         alert("Vui lòng chọn gói dịch vụ trước khi tiếp tục!");
-                        return; 
+                        return;
                     }
                 }
                 if (step === 4) {
                     const selectedTimeSlot = document.querySelector('input[name="timeSlot"]:checked');
                     if (!selectedTimeSlot) {
                         alert("Vui lòng chọn khung giờ hẹn trước khi tiếp tục!");
-                        return; 
+                        return;
                     }
                 }
-                
+
                 document.querySelectorAll('.step-content').forEach(el => {
                     el.classList.remove('active');
-                    setTimeout(() => el.style.display = 'none', 300); 
+                    setTimeout(() => el.style.display = 'none', 300);
                 });
 
                 const progressLineWidths = ['0%', '33%', '66%', '100%'];
@@ -361,14 +402,18 @@
                     const text = document.getElementById('text-step-' + i);
                     if (i <= step) {
                         icon.className = "w-10 h-10 rounded-full bg-[#464BE5] text-white flex items-center justify-center font-bold shadow-md transition-colors duration-300";
-                        if (text) text.className = "text-xs font-semibold text-[#464BE5] mt-2";
+                        if (text)
+                            text.className = "text-xs font-semibold text-[#464BE5] mt-2";
                     } else {
                         icon.className = "w-10 h-10 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center font-bold transition-colors duration-300";
-                        if (text) text.className = "text-xs font-semibold text-slate-400 mt-2";
+                        if (text)
+                            text.className = "text-xs font-semibold text-slate-400 mt-2";
                     }
                 }
 
-                if (step === 4) { updateSummary(); }
+                if (step === 4) {
+                    updateSummary();
+                }
 
                 const targetStep = document.getElementById('step-' + step);
                 setTimeout(() => {
@@ -398,47 +443,53 @@
                 const timeStr = (date ? date + " | " : "") + timeText;
                 document.getElementById('summary-time').innerText = timeStr;
             }
-
+            function selectSlot(slotNumber) {
+                // Gán giá trị slot vào thẻ input ẩn duy nhất
+                document.getElementById('selectedSlotNumber').value = slotNumber;
+                console.log("Đã chọn Slot số: " + slotNumber);
+            }
             document.getElementById('bookingForm').addEventListener('submit', function (e) {
                 const btnSubmit = document.getElementById('btnSubmit');
                 const loadingIcon = document.getElementById('loadingIcon');
                 if (btnSubmit.disabled) {
                     e.preventDefault();
                     return;
-                } 
+                }
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('opacity-80', 'cursor-not-allowed');
                 loadingIcon.classList.remove('hidden');
             });
 
+
             // TỐI ƯU CỰC MẠNH: Dùng Fetch HTML để bóc tách khung giờ (Không load lại trang nữa)
             function handleDateChange(selectedDate) {
-                if (!selectedDate) return;
+                if (!selectedDate)
+                    return;
 
                 const container = document.getElementById('slotsContainer');
                 container.innerHTML = '<p class="text-sm text-slate-400 col-span-4 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải khung giờ...</p>';
 
                 // Khởi tạo URL gọi lên chính trang này nhưng với ngày mới
-                const fetchUrl = '<%= request.getContextPath() %>/MainController?action=customerBookingPage&date=' + selectedDate;
+                const fetchUrl = '<%= request.getContextPath()%>/MainController?action=customerBookingPage&date=' + selectedDate;
 
                 fetch(fetchUrl)
-                    .then(response => response.text())
-                    .then(html => {
-                        // Dùng kỹ thuật DOM Parser để bóc duy nhất cái slotsContainer từ Backend trả về
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const newSlots = doc.getElementById('slotsContainer');
-                        
-                        if (newSlots) {
-                            container.innerHTML = newSlots.innerHTML;
-                        } else {
-                            container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Lỗi tải dữ liệu khung giờ.</p>';
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Lỗi:", err);
-                        container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Mất kết nối với máy chủ!</p>';
-                    });
+                        .then(response => response.text())
+                        .then(html => {
+                            // Dùng kỹ thuật DOM Parser để bóc duy nhất cái slotsContainer từ Backend trả về
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newSlots = doc.getElementById('slotsContainer');
+
+                            if (newSlots) {
+                                container.innerHTML = newSlots.innerHTML;
+                            } else {
+                                container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Lỗi tải dữ liệu khung giờ.</p>';
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Lỗi:", err);
+                            container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Mất kết nối với máy chủ!</p>';
+                        });
             }
 
             window.onload = function () {
@@ -459,13 +510,13 @@
                 const todayStr = formatDate(today);
                 const maxDateStr = formatDate(maxDate);
 
-                dateInput.value = "<%= currentSelectedDate %>";
+                dateInput.value = "<%= currentSelectedDate%>";
                 dateInput.min = todayStr;
                 dateInput.max = maxDateStr;
 
                 dateInput.addEventListener('change', function () {
                     if (!this.value) {
-                        this.value = todayStr; 
+                        this.value = todayStr;
                         handleDateChange(this.value);
                     }
                 });

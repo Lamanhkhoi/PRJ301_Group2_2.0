@@ -52,9 +52,10 @@ public class BookingDAO {
         try {
             // Đồng bộ: Dùng DBContext thay vì utils.DBUtils cũ
             cn = DBContext.getConnection();
-            System.out.println(slotNumber);
+
             if (cn != null) {
                 // 2. Gán các giá trị tham số tương ứng vào dấu ?
+                pst = cn.prepareStatement(sql);
                 pst.setInt(1, customerId);
                 pst.setInt(2, vehicleId);
                 pst.setInt(3, serviceId);
@@ -100,7 +101,7 @@ public class BookingDAO {
             cn = DBContext.getConnection();
             String sql = "SELECT COUNT(*) FROM Bookings "
                     + "WHERE BookingDate = ? AND SlotNumber = ? "
-                    + "AND BookingStatus IN ('Pending', 'Confirmed')";
+                    + "AND BookingStatus IN ('Pending', 'CheckedIn')";
             pst = cn.prepareStatement(sql);
             pst.setString(1, bookingDate);
             pst.setInt(2, slotNumber);
@@ -168,6 +169,29 @@ public class BookingDAO {
                         return daysDifference <= 7;  // Mặc định như Member
                     }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isDuplicateBooking(int vehicleId, String bookingDate, int slotNumber) {
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        String sql = "SELECT COUNT(*) FROM Bookings WHERE VehicleId = ? AND bookingDate = ? AND slotNumber = ?";
+        try {
+            cn = DBContext.getConnection();
+            pst = cn.prepareStatement(sql);
+            pst.setInt(1, vehicleId);
+            pst.setString(2, bookingDate);
+            pst.setInt(3, slotNumber);
+            rs = pst.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Nếu > 0 nghĩa là đã tồn tại
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

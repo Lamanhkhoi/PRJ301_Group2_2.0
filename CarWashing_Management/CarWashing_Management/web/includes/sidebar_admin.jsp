@@ -14,17 +14,16 @@
         
         <nav class="mt-6 flex flex-col gap-2 px-4" id="adminSidebar">
             <%
-                // Đồng đội của bạn sẽ điều khiển biến này từ Controller
-                String activeTab = (String) request.getAttribute("ACTIVE_TAB");
+                String activeTab = (String) request.getAttribute("ACTIVE_ADMIN");
             %>
 
-            <a href="<%=request.getContextPath()%>/AdminController?action=dashboard" data-tab="tongquan" 
+            <a href="<%=request.getContextPath()%>/MainController?action=adminDashboard" data-tab="tongquan" 
                class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 <%= "tongquan".equals(activeTab) ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20" : "hover:bg-slate-800 hover:text-white" %>">
                 <i class="fa-solid fa-chart-line w-5 text-lg"></i> 
                 <span>Tổng Quan</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/AdminController?action=manageBooking" data-tab="quanly_datlich" 
+            <a href="<%=request.getContextPath()%>/MainController?action=manageBooking" data-tab="quanly_datlich" 
                class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 <%= "quanly_datlich".equals(activeTab) ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20" : "hover:bg-slate-800 hover:text-white" %>">
                 <i class="fa-solid fa-calendar-check w-5 text-lg"></i> 
                 <span>Quản Lý Đặt Lịch</span>

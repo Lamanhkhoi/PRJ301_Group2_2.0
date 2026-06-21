@@ -6,7 +6,6 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1,
@@ -20,7 +19,6 @@ public class MainController extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
 
-        HttpSession session = request.getSession();
         String url = "home.jsp";
         try {
             String ac = request.getParameter("action");
@@ -45,6 +43,10 @@ public class MainController extends HttpServlet {
                     case "customerPage":
                         request.setAttribute("ACTIVE_TAB", "tongquan");
                         url = "DashBoard/customer_dashboard.jsp";
+                        break;
+                    case "adminDashboard":
+                        request.setAttribute("ACTIVE_ADMIN", "tongquan");
+                        url = "Admin/admin_dashboard.jsp";
                         break;
 
                     // --- LUỒNG QUẢN LÝ VEHICLES ---
@@ -76,6 +78,20 @@ public class MainController extends HttpServlet {
                     case "processBooking":
                         request.setAttribute("ACTIVE_TAB", "datlich");
                         url = "BookingController";
+                        break;
+
+                    // --- LUỒNG QUẢN LÝ ADMIN BOOKINGS ---
+                    case "manageBooking":
+                        request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
+                        if (request.getAttribute("SLOT_MAP") == null) {
+                            url = "AdminBookingManagement";
+                        } else {
+                            url = "Admin/admin_booking_management.jsp";
+                        }
+                        break;
+                    case "updateBookingStatus":
+                        request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
+                        url = "UpdateBookingStatus";
                         break;
                 }
             }

@@ -1,8 +1,10 @@
 package controller;
 
 import dao.AccountDAO;
+import dao.AdminDAO;
 import dao.CustomerDAO;
 import dto.Account;
+import dto.Admin;
 import dto.Customer;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -38,19 +40,27 @@ public class LoginController extends HttpServlet {
             }
 
             // COMMENT SỬA ĐỔI: Lúc này chắc chắn acc != null và đang ở trạng thái 'Active'
-            // Tiến hành lấy thông tin cá nhân Customer an toàn từ database
-            CustomerDAO cdao = new CustomerDAO();
-            Customer cus = cdao.getCustomerByAccountId(acc.getAccountID());
-
-            // Lưu thông tin người dùng đăng nhập vào Session hệ thống
-            request.getSession().setAttribute("USER", acc);
-            request.getSession().setAttribute("CUSTOMER", cus);
-
             // 2. Phân quyền điều hướng thông qua MainController
             if ("Admin".equalsIgnoreCase(acc.getRole())) {
+                // Tiến hành lấy thông tin cá nhân Customer an toàn từ database
+                AdminDAO adao = new AdminDAO();
+                Admin admin = adao.getAdminByAccountId(acc.getAccountID());
+
+                // Lưu thông tin người dùng đăng nhập vào Session hệ thống
+                request.getSession().setAttribute("USER", acc);
+                request.getSession().setAttribute("ADMIN", admin);
+                
                 // Chuyển hướng sang trang quản trị của Admin
                 response.sendRedirect(request.getContextPath() + "/MainController?action=adminDashboard");
             } else {
+                // Tiến hành lấy thông tin cá nhân Customer an toàn từ database
+                CustomerDAO cdao = new CustomerDAO();
+                Customer cus = cdao.getCustomerByAccountId(acc.getAccountID());
+
+                // Lưu thông tin người dùng đăng nhập vào Session hệ thống
+                request.getSession().setAttribute("USER", acc);
+                request.getSession().setAttribute("CUSTOMER", cus);
+                
                 // Chuyển hướng sang MainController
                 response.sendRedirect(request.getContextPath() + "/MainController?action=customerPage");
             }

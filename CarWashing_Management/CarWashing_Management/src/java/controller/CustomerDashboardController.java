@@ -55,7 +55,7 @@ public class CustomerDashboardController extends HttpServlet {
             BookingDAO bookingDAO = new BookingDAO();
 
             List<Booking> upcomingBookings
-                    = bookingDAO.getUpcomingBookingsByCustomer(
+                    = bookingDAO.getPendingBookingsByCustomer(
                             cus.getCustomerId());
 
             request.setAttribute(
@@ -69,7 +69,7 @@ public class CustomerDashboardController extends HttpServlet {
             request.setAttribute(
                     "upcomingBookings",
                     upcomingBookings);
-            
+
             request.setAttribute(
                     "ACTIVE_TAB",
                     "tongquan");

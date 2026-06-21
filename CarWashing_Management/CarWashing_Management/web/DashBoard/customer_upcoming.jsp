@@ -23,7 +23,7 @@
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
         <div class="flex h-screen overflow-hidden relative">
-            <% request.setAttribute("activeTab", "lichdahen"); %>
+            <% request.setAttribute("ACTIVE_TAB", "lichdahen"); %>
             <jsp:include page="/includes/sidebar_DashBoard.jsp" />
 
             <main class="flex-1 flex flex-col overflow-hidden relative">
@@ -47,6 +47,21 @@
                                 <%= bookings == null ? 0 : bookings.size()%>
                             </p>
                             <%
+                                if (bookings == null || bookings.isEmpty()) {
+                            %>
+
+                            <div class="bg-white rounded-2xl p-10 text-center border">
+                                <i class="fa-solid fa-calendar-xmark text-5xl text-slate-300"></i>
+
+                                <p class="mt-4 text-slate-500 font-medium">
+                                    Bạn chưa có lịch hẹn nào.
+                                </p>
+                            </div>
+
+                            <%
+                                }
+                            %>
+                            <%
                                 if (bookings != null) {
 
                                     for (Booking item : bookings) {
@@ -55,13 +70,20 @@
 //                                        String plate = item[2];
 //                                        String car = item[3];
 //                                        String service = item[4];
-                                        String status = item.getBookingStatus();
 //                                        boolean canCancel = Boolean.parseBoolean(item[6]);
+                                        String status = item.getBookingStatus();
 
                                         int currentStep = 1;
 
-                                        if ("CheckedIn".equalsIgnoreCase(status)) {
+                                        if ("Pending".equalsIgnoreCase(status)) {
+                                            currentStep = 1;
+                                        } else if ("CheckedIn".equalsIgnoreCase(status)) {
                                             currentStep = 2;
+                                        } else if ("Completed".equalsIgnoreCase(status)) {
+                                            currentStep = 4;
+                                        } else if ("Cancelled".equalsIgnoreCase(status)
+                                                || "NoShow".equalsIgnoreCase(status)) {
+                                            currentStep = 0;
                                         }
                             %>
 
@@ -130,10 +152,42 @@
                                             </button>
                                         </div>
                                         <% } %>
-                                        <% } else { %>
-                                        <div class="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
-                                            <p class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Xe đang trong tiến trình xử lý, không thể thao tác.</p>
+                                        <% } else if ("CheckedIn".equalsIgnoreCase(status)) { %>
+
+                                        <div class="bg-blue-50 rounded-xl p-2.5 text-center border border-blue-100">
+                                            <p class="text-xs font-semibold text-blue-600">
+                                                <i class="fa-solid fa-car-side mr-1"></i>
+                                                Xe đã được tiếp nhận tại cửa hàng.
+                                            </p>
                                         </div>
+
+                                        <% } else if ("Completed".equalsIgnoreCase(status)) { %>
+
+                                        <div class="bg-green-50 rounded-xl p-2.5 text-center border border-green-100">
+                                            <p class="text-xs font-semibold text-green-600">
+                                                <i class="fa-solid fa-circle-check mr-1"></i>
+                                                Dịch vụ đã hoàn thành.
+                                            </p>
+                                        </div>
+
+                                        <% } else if ("Cancelled".equalsIgnoreCase(status)) { %>
+
+                                        <div class="bg-red-50 rounded-xl p-2.5 text-center border border-red-100">
+                                            <p class="text-xs font-semibold text-red-600">
+                                                <i class="fa-solid fa-ban mr-1"></i>
+                                                Lịch hẹn đã bị hủy.
+                                            </p>
+                                        </div>
+
+                                        <% } else if ("NoShow".equalsIgnoreCase(status)) { %>
+
+                                        <div class="bg-orange-50 rounded-xl p-2.5 text-center border border-orange-100">
+                                            <p class="text-xs font-semibold text-orange-600">
+                                                <i class="fa-solid fa-user-xmark mr-1"></i>
+                                                Khách hàng không đến.
+                                            </p>
+                                        </div>
+
                                         <% } %>
 
                                     </div>

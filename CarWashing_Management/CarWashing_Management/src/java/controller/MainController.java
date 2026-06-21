@@ -123,6 +123,10 @@ public class MainController extends HttpServlet {
                     case "customerUpcoming":
                         url = "UpcomingBookingController";
                         break;
+                        
+                    case "cancelBooking":
+                        url = "CancelBookingController";
+                        break;
                 }
             }
         } catch (Exception e) {

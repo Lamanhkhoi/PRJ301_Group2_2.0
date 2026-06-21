@@ -38,7 +38,7 @@
                 <% } %>
             </a>  
 
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_history.jsp" data-tab="lichsu" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "lichsu".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/MainController?action=customerHistory" data-tab="lichsu" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "lichsu".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-clock-rotate-left w-5"></i> <span>Lịch Sử</span>
             </a>
 

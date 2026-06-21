@@ -428,18 +428,19 @@
                 else if (type === "fail") { bgColor = "bg-amber-100 text-amber-600"; iconClass = "fa-solid fa-triangle-exclamation"; title = "Cảnh báo"; }
                 else if (type === "error") { bgColor = "bg-red-100 text-red-600"; iconClass = "fa-solid fa-circle-xmark"; title = "Lỗi hệ thống"; }
 
-                const toastHtml = `
-                    <div id="toastBox" class="fixed top-6 right-6 z-[2000] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100" style="transform: translateX(120%); opacity: 0; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${bgColor}">
-                            <i class="${iconClass}"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold text-slate-800 text-sm">${title}</h4>
-                            <p class="text-slate-500 text-xs mt-0.5">${message}</p>
-                        </div>
-                        <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2"><i class="fa-solid fa-xmark text-sm"></i></button>
-                    </div>
-                `;
+                // NỐI CHUỖI BẰNG DẤU + ĐỂ TRÁNH TOMCAT DỊCH NHẦM JSP EL
+                const toastHtml = 
+                    '<div id="toastBox" class="fixed top-6 right-6 z-[2000] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100" style="transform: translateX(120%); opacity: 0; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;">' +
+                        '<div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ' + bgColor + '">' +
+                            '<i class="' + iconClass + '"></i>' +
+                        '</div>' +
+                        '<div class="flex-1">' +
+                            '<h4 class="font-bold text-slate-800 text-sm">' + title + '</h4>' +
+                            '<p class="text-slate-500 text-xs mt-0.5">' + message + '</p>' +
+                        '</div>' +
+                        '<button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2"><i class="fa-solid fa-xmark text-sm"></i></button>' +
+                    '</div>';
+                    
                 document.body.insertAdjacentHTML('beforeend', toastHtml);
                 
                 const newToast = document.getElementById('toastBox');

@@ -45,8 +45,13 @@ public class MainController extends HttpServlet {
 
                     // --- LUỒNG QUẢN LÝ DASHBOARD ---
                     case "customerPage":
-                        request.setAttribute("ACTIVE_TAB", "tongquan");
-                        url = "DashBoard/customer_dashboard.jsp";
+
+                        request.setAttribute(
+                                "ACTIVE_TAB",
+                                "tongquan");
+
+                        url = "CustomerDashboardController";
+
                         break;
                     case "adminDashboard":
                         request.setAttribute("ACTIVE_ADMIN", "tongquan");
@@ -113,6 +118,14 @@ public class MainController extends HttpServlet {
                     case "updateBookingStatus":
                         request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
                         url = "UpdateBookingStatus";
+                        break;
+                        //xử lý đưa data lên upcoming.jsp
+                    case "customerUpcoming":
+                        url = "UpcomingBookingController";
+                        break;
+                        
+                    case "cancelBooking":
+                        url = "CancelBookingController";
                         break;
                 }
             }

@@ -6,16 +6,19 @@
 <%@page import="dao.CustomerLoyaltyDAO"%>
 <%@page import="dto.Customer"%>
 <%@page import="dto.Account"%>
+<%@page import="dto.Booking"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ include file="../includes/auth-check.jsp" %>
 
-<%
-    CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+<%    CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
     CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
     LoyaltyTier nextTier = loyalty.getNextTierDetails();
 
     CustomerVehicleDAO vehicleDAO = new CustomerVehicleDAO();
     List<Vehicle> vehicleList = vehicleDAO.getAllVehicles(cus.getCustomerId());
+    List<Booking> upcomingBookings
+            = (List<Booking>) request.getAttribute(
+                    "upcomingBookings");
 %>
 
 <!DOCTYPE html>
@@ -55,7 +58,7 @@
             <main class="flex-1 flex flex-col overflow-hidden relative">
 
                 <jsp:include page="/includes/topbar.jsp"/>
-                   
+
 
                 <div class="flex-1 overflow-y-auto p-8">
 
@@ -102,7 +105,7 @@
                         <div class="col-span-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold text-slate-800">Danh sách xe của tôi</h3>
-                                <a href="<%= request.getContextPath() %>/MainController?action=customerVehicle" class="text-sm text-emerald-500 font-medium hover:underline">Xem tất cả</a>
+                                <a href="<%= request.getContextPath()%>/MainController?action=customerVehicle" class="text-sm text-emerald-500 font-medium hover:underline">Xem tất cả</a>
                             </div>
                             <div class="flex-1 overflow-y-auto max-h-[320px] pr-1 space-y-3">
                                 <% if (vehicleList != null && !vehicleList.isEmpty()) {
@@ -122,11 +125,11 @@
                                     <% } %>
                                 </div>
                                 <% }
-                                    } else { %>
+                                } else {%>
                                 <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center h-full">
                                     <div class="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400 mb-2 text-xl"><i class="fa-solid fa-car-side"></i></div>
                                     <p class="text-xs text-slate-500 font-medium mb-3">Bạn chưa đăng ký xe nào.</p>
-                                    <a href="<%= request.getContextPath() %>/MainController?action=customerVehicle" class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm ngay</a>
+                                    <a href="<%= request.getContextPath()%>/MainController?action=customerVehicle" class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"><i class="fa-solid fa-plus mr-1"></i> Thêm ngay</a>
                                 </div>
                                 <% }%>
                             </div>
@@ -176,13 +179,83 @@
 
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col">
                                 <div class="flex-1 overflow-y-auto pr-2 space-y-4 max-h-[220px]">
-                                    <div class="flex flex-col items-center justify-center h-full py-4">
-                                        <img src="https://cdn-icons-png.flaticon.com/512/7470/7470876.png" alt="No Appointment" class="w-16 opacity-50 mb-2">
-                                        <p class="text-slate-500 text-sm font-medium mb-3">Bạn chưa có lịch hẹn nào sắp tới.</p>
-                                        <a href="booking?action=create" class="bg-[#464BE5] hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-colors flex items-center gap-2">
-                                            <i class="fa-regular fa-calendar-plus"></i> Đặt lịch rửa xe ngay
-                                        </a>
+
+                                    <% if (upcomingBookings != null && !upcomingBookings.isEmpty()) { %>
+
+                                    <% for (Booking b : upcomingBookings) {%>
+
+                                    <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+
+                                        <div class="flex justify-between items-start">
+
+                                            <div>
+
+                                                <h4 class="font-bold text-slate-800">
+                                                    <i class="fa-solid fa-car text-blue-500 mr-2"></i>
+                                                    <%= b.getLicensePlate()%>
+                                                </h4>
+
+                                                <p class="text-sm text-slate-500 mt-1">
+                                                    <%= b.getVehicleBrand()%>
+                                                    -
+                                                    <%= b.getVehicleModel()%>
+                                                </p>
+
+                                            </div>
+
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                                <%= b.getBookingStatus()%>
+                                            </span>
+
+                                        </div>
+
+                                        <div class="mt-3 text-sm text-slate-600">
+
+                                            <p>
+                                                <i class="fa-solid fa-soap text-emerald-500 mr-2"></i>
+                                                <%= b.getServiceName()%>
+                                            </p>
+
+                                            <p class="mt-1">
+                                                <i class="fa-regular fa-calendar mr-2"></i>
+                                                <%= b.getBookingDate()%>
+                                            </p>
+
+                                            <p class="mt-1">
+                                                <i class="fa-regular fa-clock mr-2"></i>
+                                                Slot <%= b.getSlotNumber()%>
+                                            </p>
+
+                                        </div>
+
                                     </div>
+
+                                    <% } %>
+
+                                    <% } else {%>
+
+                                    <div class="flex flex-col items-center justify-center h-full py-4">
+
+                                        <img src="https://cdn-icons-png.flaticon.com/512/7470/7470876.png"
+                                             alt="No Appointment"
+                                             class="w-16 opacity-50 mb-2">
+
+                                        <p class="text-slate-500 text-sm font-medium mb-3">
+                                            Bạn chưa có lịch hẹn nào sắp tới.
+                                        </p>
+
+                                        <a href="<%=request.getContextPath()%>/MainController?action=customerBookingPage"
+                                           class="bg-[#464BE5] hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-colors flex items-center gap-2">
+
+                                            <i class="fa-regular fa-calendar-plus"></i>
+                                            Đặt lịch rửa xe ngay
+
+                                        </a>
+
+                                    </div>
+
+                                    <% }%>
+
                                 </div>
                             </div>
                         </div>

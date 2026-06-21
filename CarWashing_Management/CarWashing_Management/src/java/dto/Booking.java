@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 public class Booking {
+
     private int bookingId;
     private int customerId;
     private int vehicleId;
@@ -15,13 +16,17 @@ public class Booking {
     private double totalAmount;
     private String bookingStatus;
     private String note;
+    private String licensePlate;
+    private String vehicleBrand;
+    private String vehicleModel;
+    private String serviceName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, Date bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, Date bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, String licensePlate, String vehicleBrand, String vehicleModel, String serviceName, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.bookingId = bookingId;
         this.customerId = customerId;
         this.vehicleId = vehicleId;
@@ -33,6 +38,10 @@ public class Booking {
         this.totalAmount = totalAmount;
         this.bookingStatus = bookingStatus;
         this.note = note;
+        this.licensePlate = licensePlate;
+        this.vehicleBrand = vehicleBrand;
+        this.vehicleModel = vehicleModel;
+        this.serviceName = serviceName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -117,14 +126,44 @@ public class Booking {
         this.bookingStatus = bookingStatus;
     }
 
-  
-
     public String getNote() {
         return note;
     }
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getLicensePlate() {
+        return licensePlate;
+    }
+
+    public void setLicensePlate(String licensePlate) {
+        this.licensePlate = licensePlate;
+    }
+
+    public String getVehicleBrand() {
+        return vehicleBrand;
+    }
+
+    public void setVehicleBrand(String vehicleBrand) {
+        this.vehicleBrand = vehicleBrand;
+    }
+
+    public String getVehicleModel() {
+        return vehicleModel;
+    }
+
+    public void setVehicleModel(String vehicleModel) {
+        this.vehicleModel = vehicleModel;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -142,6 +181,7 @@ public class Booking {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
     
-    
+
 }

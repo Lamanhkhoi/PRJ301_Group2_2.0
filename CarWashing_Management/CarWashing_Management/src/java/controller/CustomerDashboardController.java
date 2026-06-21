@@ -11,25 +11,27 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
+import dao.BookingDAO;
+import dto.Booking;
+import java.util.List;
 
 @WebServlet(name = "CustomerDashboardController", urlPatterns = {"/CustomerDashboardController"})
 public class CustomerDashboardController extends HttpServlet {
 
     private CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
-        
+
         try {
             HttpSession session = request.getSession();
-            
+
             // Đọc thông tin thực tế từ Session kiểm tra Login
             Account acc = (Account) session.getAttribute("USER");
             Customer cus = (Customer) session.getAttribute("CUSTOMER");
-            
+
             // KIỂM TRA BẢO MẬT: Nếu chưa đăng nhập, đá về trang login ngay lập tức
             if (acc == null || cus == null) {
                 request.setAttribute("LOGIN_ERROR", "Vui lòng đăng nhập hệ thống để xem hồ sơ thành viên!");
@@ -39,16 +41,41 @@ public class CustomerDashboardController extends HttpServlet {
 
             // Gọi đúng hàm getAccountID() chữ ID viết hoa theo đúng DTO của bạn
             int accId = acc.getAccountID();
+
+            CustomerLoyalty loyaltyProfile
+                    = loyaltyDAO.getLoyaltyProfileByAccountId(accId);
+
+            request.setAttribute(
+                    "LOYALTY_PROFILE",
+                    loyaltyProfile);
+
+            /* ==========================
+   BOOKING COUNT
+   ========================== */
+            BookingDAO bookingDAO = new BookingDAO();
+
+            List<Booking> upcomingBookings
+                    = bookingDAO.getUpcomingBookingsByCustomer(
+                            cus.getCustomerId());
+
+            request.setAttribute(
+                    "ACTIVE_BOOKING_COUNT",
+                    upcomingBookings.size());
+
+            System.out.println(
+                    "Dashboard bookings = "
+                    + upcomingBookings.size());
+
+            request.setAttribute(
+                    "upcomingBookings",
+                    upcomingBookings);
             
-            // Thực hiện gọi DAO kết nối DB thật
-            CustomerLoyalty loyaltyProfile = loyaltyDAO.getLoyaltyProfileByAccountId(accId);
-            
-            // Gửi dữ liệu đồng bộ sang cho file .jsp
-            request.setAttribute("LOYALTY_PROFILE", loyaltyProfile);
-            
+            request.setAttribute(
+                    "ACTIVE_TAB",
+                    "tongquan");
             // Điều hướng sang file hiển thị
             request.getRequestDispatcher("/DashBoard/customer_dashboard.jsp").forward(request, response);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -49,17 +49,19 @@
             .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                 background: #94a3b8;
             }
+            /* ĐIỀU CHỈNH CSS CHO CÁC BƯỚC */
             .step-content {
-                transition: all 0.4s ease-in-out;
-                opacity: 0;
-                transform: translateY(10px);
-                display: none;
+                display: none; /* Mặc định ẩn tất cả */
+                animation: fadeIn 0.4s ease-in-out;
             }
             .step-content.active {
-                opacity: 1;
-                transform: translateY(0);
-                display: block;
+                display: block; /* Chỉ hiện thằng nào có class active */
             }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
             .priority-slot {
                 background: linear-gradient(135deg, #FFFAF0 0%, #FFF5E1 100%);
                 border: 2px solid #FBBF24 !important;
@@ -201,7 +203,7 @@
                             </div>
                         </div>
 
-                        <form id="bookingForm" action="<%= request.getContextPath()%>/MainController?action=processBooking" method="POST" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 min-h-[400px] relative">
+                        <form id="bookingForm" action="<%= request.getContextPath()%>/MainController?action=processBooking" method="POST" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 relative">
 
                             <div id="step-1" class="step-content active">
                                 <h3 class="text-lg font-bold text-slate-800 mb-6"><i class="fa-solid fa-car text-[#464BE5] mr-2"></i>Chọn xe bạn muốn rửa</h3>
@@ -234,13 +236,16 @@
                                 <div class="space-y-4">
                                     <% for (WashService s : mockServices) {%>
                                     <label class="relative block cursor-pointer">
-                                        <input type="radio" name="serviceId" value="<%= s.getServiceId()%>" class="peer sr-only"> 
+                                        <input type="radio" name="serviceId" value="<%= s.getServiceId()%>" data-price="<%= s.getPrice()%>" class="peer sr-only"> 
                                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#464BE5]/50 peer-checked:border-[#464BE5] peer-checked:bg-blue-50/30 transition-all">
                                             <div class="flex items-center justify-between">
                                                 <div>
                                                     <h4 class="font-bold text-slate-800"><%= s.getServiceName()%></h4>
                                                     <p class="text-sm text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Ước tính: <%= s.getEstimateMinutes()%> phút</p>
                                                 </div>         
+                                                <div class="text-right">
+                                                    <p class="text-lg font-black text-[#464BE5]"><%= String.format("%,.0f", s.getPrice()) %> VNĐ</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </label>
@@ -366,9 +371,13 @@
                                         <span class="text-slate-500 text-sm">Dịch vụ:</span>
                                         <span class="font-bold text-slate-800 text-sm" id="summary-service">Chưa chọn dịch vụ</span>
                                     </div>
-                                    <div class="flex justify-between">
+                                    <div class="flex justify-between border-b border-slate-200 pb-3">
                                         <span class="text-slate-500 text-sm">Thời gian:</span>
-                                        <span class="font-bold text-[#464BE5] text-sm" id="summary-time">Chưa chọn ngày giờ</span>
+                                        <span class="font-bold text-slate-800 text-sm" id="summary-time">Chưa chọn ngày giờ</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-1">
+                                        <span class="text-slate-700 font-bold text-sm">Tổng thanh toán:</span>
+                                        <span class="font-black text-xl text-[#464BE5]" id="summary-price">0 VNĐ</span>
                                     </div>
                                 </div>
 
@@ -467,14 +476,16 @@
                     }
                 }
 
+                // Ẩn tất cả các bước
                 document.querySelectorAll('.step-content').forEach(el => {
                     el.classList.remove('active');
-                    setTimeout(() => el.style.display = 'none', 300);
                 });
 
+                // Cập nhật thanh Progress Bar
                 const progressLineWidths = ['0%', '33%', '66%', '100%'];
                 document.getElementById('progress-line').style.width = progressLineWidths[step - 1];
 
+                // Cập nhật màu các con số 1 2 3 4
                 for (let i = 1; i <= 4; i++) {
                     const icon = document.getElementById('icon-step-' + i);
                     const text = document.getElementById('text-step-' + i);
@@ -493,11 +504,9 @@
                     updateSummary();
                 }
 
+                // Kích hoạt hiển thị bước được chọn
                 const targetStep = document.getElementById('step-' + step);
-                setTimeout(() => {
-                    targetStep.style.display = 'block';
-                    setTimeout(() => targetStep.classList.add('active'), 10);
-                }, 300);
+                targetStep.classList.add('active');
             }
 
             function updateSummary() {
@@ -510,10 +519,19 @@
                     const label = selectedVehicle.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-vehicle').innerText = label;
                 }
+                
                 if (selectedService) {
                     const label = selectedService.closest('label').querySelector('h4').innerText;
                     document.getElementById('summary-service').innerText = label;
+                    
+                    // Lấy giá tiền từ thuộc tính data-price và format theo chuẩn Việt Nam
+                    const priceValue = selectedService.getAttribute('data-price');
+                    if (priceValue) {
+                        const formattedPrice = parseInt(priceValue).toLocaleString('vi-VN');
+                        document.getElementById('summary-price').innerText = formattedPrice + " VNĐ";
+                    }
                 }
+                
                 let timeText = "Chưa chọn giờ";
                 if (timeSlot) {
                     timeText = timeSlot.closest('label').querySelector('span').innerText;

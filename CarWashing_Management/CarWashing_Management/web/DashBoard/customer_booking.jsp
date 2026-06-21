@@ -65,6 +65,7 @@
                 border: 2px solid #FBBF24 !important;
                 box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
             }
+            /* CSS HIỆU ỨNG TOAST ALERT */
             #toastBox {
                 transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;
                 transform: translateX(120%);
@@ -78,7 +79,8 @@
     </head>
     <body class="bg-[#F8FAFC] text-gray-800 relative">
 
-        <%            // Xử lý thông báo Toast
+        <%            
+            // Xử lý thông báo Toast từ Server
             String alertType = (String) request.getAttribute("ALERT_TYPE");
             String alertMsg = (String) request.getAttribute("ALERT_MSG");
             if (alertMsg == null) {
@@ -91,14 +93,33 @@
             }
         %>
 
-        <% if (alertMsg != null) {%>
-        <div id="toastBox" class="fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= "success".equals(alertType) ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"%>">
-                <i class="<%= "success".equals(alertType) ? "fa-solid fa-circle-check" : "fa-solid fa-circle-exclamation"%>"></i>
+        <%-- GIAO DIỆN TOAST ALERT TỪ SERVER ĐÃ ĐƯỢC CHIA 3 TRẠNG THÁI --%>
+        <% if (alertMsg != null) {
+            String bgColor = "bg-slate-100 text-slate-600";
+            String iconClass = "fa-solid fa-bell";
+            String title = "Thông báo";
+
+            if ("success".equals(alertType)) {
+                bgColor = "bg-green-100 text-green-600";
+                iconClass = "fa-solid fa-circle-check";
+                title = "Thành công";
+            } else if ("fail".equals(alertType)) {
+                bgColor = "bg-amber-100 text-amber-600";
+                iconClass = "fa-solid fa-triangle-exclamation";
+                title = "Cảnh báo";
+            } else if ("error".equals(alertType)) {
+                bgColor = "bg-red-100 text-red-600";
+                iconClass = "fa-solid fa-circle-xmark";
+                title = "Lỗi hệ thống";
+            }
+        %>
+        <div id="toastBox" class="fixed top-6 right-6 z-[2000] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg <%= bgColor %>">
+                <i class="<%= iconClass %>"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-bold text-slate-800 text-sm"><%= "success".equals(alertType) ? "Thành công" : "Thông báo lỗi"%></h4>
-                <p class="text-slate-500 text-xs mt-0.5"><%= alertMsg%></p>
+                <h4 class="font-bold text-slate-800 text-sm"><%= title %></h4>
+                <p class="text-slate-500 text-xs mt-0.5"><%= alertMsg %></p>
             </div>
             <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2"><i class="fa-solid fa-xmark text-sm"></i></button>
         </div>
@@ -365,26 +386,83 @@
                 </div>
             </main>
         </div>
+
         <script>
+            // HỆ THỐNG ĐIỀU KHIỂN TOAST ALERT
+            const serverToast = document.getElementById('toastBox');
+
+            // Xử lý Toast từ Server render ra
+            if (serverToast) {
+                setTimeout(() => serverToast.classList.add('show'), 100);
+                setTimeout(() => closeToast(), 3100);
+            }
+
+            function closeToast() {
+                const t = document.getElementById('toastBox');
+                if (t) {
+                    t.classList.remove('show');
+                    setTimeout(() => t.remove(), 400);
+                }
+            }
+
+            // Hàm tạo Toast động bằng JavaScript dùng cho Fetch API
+            function showDynamicToast(type, message) {
+                // Xóa toast cũ nếu có để tránh đè lên nhau
+                const oldToast = document.getElementById('toastBox');
+                if (oldToast) oldToast.remove();
+
+                let bgColor = "bg-slate-100 text-slate-600";
+                let iconClass = "fa-solid fa-bell";
+                let title = "Thông báo";
+
+                if (type === "success") { bgColor = "bg-green-100 text-green-600"; iconClass = "fa-solid fa-circle-check"; title = "Thành công"; }
+                else if (type === "fail") { bgColor = "bg-amber-100 text-amber-600"; iconClass = "fa-solid fa-triangle-exclamation"; title = "Cảnh báo"; }
+                else if (type === "error") { bgColor = "bg-red-100 text-red-600"; iconClass = "fa-solid fa-circle-xmark"; title = "Lỗi hệ thống"; }
+
+                const toastHtml = `
+                    <div id="toastBox" class="fixed top-6 right-6 z-[2000] flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm bg-white border-slate-100" style="transform: translateX(120%); opacity: 0; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s ease;">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${bgColor}">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-800 text-sm">${title}</h4>
+                            <p class="text-slate-500 text-xs mt-0.5">${message}</p>
+                        </div>
+                        <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 transition ml-2"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', toastHtml);
+                
+                const newToast = document.getElementById('toastBox');
+                setTimeout(() => {
+                    newToast.style.transform = 'translateX(0)';
+                    newToast.style.opacity = '1';
+                    newToast.classList.add('show');
+                }, 10);
+
+                setTimeout(() => closeToast(), 3100);
+            }
+
+            // HỆ THỐNG ĐIỀU KHIỂN CÁC BƯỚC (STEPS)
             function goToStep(step) {
                 if (step === 2) {
                     const selectedVehicle = document.querySelector('input[name="vehicleId"]:checked');
                     if (!selectedVehicle) {
-                        alert("Vui lòng chọn xe của bạn trước khi tiếp tục!");
+                        showDynamicToast('fail', 'Vui lòng chọn xe của bạn trước khi tiếp tục!');
                         return;
                     }
                 }
                 if (step === 3) {
                     const selectedService = document.querySelector('input[name="serviceId"]:checked');
                     if (!selectedService) {
-                        alert("Vui lòng chọn gói dịch vụ trước khi tiếp tục!");
+                        showDynamicToast('fail', 'Vui lòng chọn gói dịch vụ trước khi tiếp tục!');
                         return;
                     }
                 }
                 if (step === 4) {
                     const selectedTimeSlot = document.querySelector('input[name="timeSlot"]:checked');
                     if (!selectedTimeSlot) {
-                        alert("Vui lòng chọn khung giờ hẹn trước khi tiếp tục!");
+                        showDynamicToast('fail', 'Vui lòng chọn khung giờ hẹn trước khi tiếp tục!');
                         return;
                     }
                 }
@@ -443,11 +521,12 @@
                 const timeStr = (date ? date + " | " : "") + timeText;
                 document.getElementById('summary-time').innerText = timeStr;
             }
+            
             function selectSlot(slotNumber) {
-                // Gán giá trị slot vào thẻ input ẩn duy nhất
                 document.getElementById('selectedSlotNumber').value = slotNumber;
                 console.log("Đã chọn Slot số: " + slotNumber);
             }
+            
             document.getElementById('bookingForm').addEventListener('submit', function (e) {
                 const btnSubmit = document.getElementById('btnSubmit');
                 const loadingIcon = document.getElementById('loadingIcon');
@@ -461,7 +540,7 @@
             });
 
 
-            // TỐI ƯU CỰC MẠNH: Dùng Fetch HTML để bóc tách khung giờ (Không load lại trang nữa)
+            // FETCH API: TẢI KHUNG GIỜ
             function handleDateChange(selectedDate) {
                 if (!selectedDate)
                     return;
@@ -469,13 +548,11 @@
                 const container = document.getElementById('slotsContainer');
                 container.innerHTML = '<p class="text-sm text-slate-400 col-span-4 text-center py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Đang tải khung giờ...</p>';
 
-                // Khởi tạo URL gọi lên chính trang này nhưng với ngày mới
                 const fetchUrl = '<%= request.getContextPath()%>/MainController?action=customerBookingPage&date=' + selectedDate;
 
                 fetch(fetchUrl)
                         .then(response => response.text())
                         .then(html => {
-                            // Dùng kỹ thuật DOM Parser để bóc duy nhất cái slotsContainer từ Backend trả về
                             const parser = new DOMParser();
                             const doc = parser.parseFromString(html, 'text/html');
                             const newSlots = doc.getElementById('slotsContainer');
@@ -484,11 +561,13 @@
                                 container.innerHTML = newSlots.innerHTML;
                             } else {
                                 container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Lỗi tải dữ liệu khung giờ.</p>';
+                                showDynamicToast('error', 'Không thể bóc tách dữ liệu khung giờ từ Server!');
                             }
                         })
                         .catch(err => {
                             console.error("Lỗi:", err);
                             container.innerHTML = '<p class="text-sm text-red-500 col-span-4 text-center py-4">Mất kết nối với máy chủ!</p>';
+                            showDynamicToast('error', 'Mất kết nối mạng! Vui lòng kiểm tra lại Internet.');
                         });
             }
 

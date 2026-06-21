@@ -1,6 +1,10 @@
 package controller;
 
+import dao.CustomerVehicleDAO;
+import dto.Customer;
+import dto.Vehicle;
 import java.io.IOException;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
@@ -83,6 +87,14 @@ public class MainController extends HttpServlet {
                         break;
                     // --- LUỒNG QUẢN LÝ BOOKING ---
                     case "customerBookingPage":
+                        Customer cus = (Customer) request.getSession().getAttribute("CUSTOMER");
+                        CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
+                        List<Vehicle> list = veDAO.getAllVehicles(cus.getCustomerId());
+                        if (list == null || list.isEmpty()) {
+                            request.setAttribute("ACTIVE_TAB", "cus_vehicle");
+                            url = "DashBoard/customer_vehicles.jsp";
+                            break;
+                        }
                     case "bookingCheckSlots":
                     case "processBooking":
                         request.setAttribute("ACTIVE_TAB", "datlich");

@@ -5,10 +5,12 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.CustomerVehicleDAO;
 import dao.WashServiceDAO;
 import dto.Booking;
 import dto.Customer;
 import dto.TimeSlot;
+import dto.Vehicle;
 import dto.WashService;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -48,7 +50,6 @@ public class BookingController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-
         switch (action) {
             case "customerBookingPage":
             case "bookingCheckSlots":
@@ -153,12 +154,12 @@ public class BookingController extends HttpServlet {
             String serviceIdStr = request.getParameter("serviceId");
             String bookingDate = request.getParameter("bookingDate");
             String slotNumberStr = request.getParameter("slotNumber");
-//            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
-//            System.out.println("vehicleId: " + vehicleIdStr);
-//            System.out.println("serviceId: " + serviceIdStr);
-//            System.out.println("bookingDate: " + bookingDate);
-//            System.out.println("slotNumber: " + slotNumberStr);
-//            System.out.println("--------------------------------");
+            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
+            System.out.println("vehicleId: " + vehicleIdStr);
+            System.out.println("serviceId: " + serviceIdStr);
+            System.out.println("bookingDate: " + bookingDate);
+            System.out.println("slotNumber: " + slotNumberStr);
+            System.out.println("--------------------------------");
             // 3. Kiểm tra xem có tham số nào bị rỗng hoặc null không (Lỗi từ phía JSP không gửi đúng tên name)
             if (vehicleIdStr == null || vehicleIdStr.trim().isEmpty()
                     || serviceIdStr == null || serviceIdStr.trim().isEmpty()
@@ -203,7 +204,6 @@ public class BookingController extends HttpServlet {
             }
 
             // 6. Thực hiện gọi DAO để chèn vào Database
-            
             boolean isSuccess = bookingDAO.createNewBooking(
                     cus.getCustomerId(),
                     vehicleId,
@@ -216,7 +216,7 @@ public class BookingController extends HttpServlet {
             if (isSuccess) {
                 session.setAttribute("ALERT_TYPE", "success");
                 session.setAttribute("ALERT_MSG", "Booking thành công!");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerPage&status=success");
+                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=success");
             } else {
                 session.setAttribute("ALERT_TYPE", "fail");
                 session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");

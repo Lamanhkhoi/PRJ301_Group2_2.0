@@ -119,6 +119,10 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
                         url = "UpdateBookingStatus";
                         break;
+                        //xử lý đưa data lên upcoming.jsp
+                    case "customerUpcoming":
+                        url = "UpcomingBookingController";
+                        break;
                 }
             }
         } catch (Exception e) {

@@ -64,7 +64,7 @@
                                 <p class="text-slate-500 text-sm mt-1">Giám sát và cập nhật trạng thái vận hành linh hoạt theo bộ lọc nâng cao.</p>
                             </div>
 
-                            <form action="MainController" method="GET" class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-3xl w-full md:w-auto">
+                            <form action="MainController?action=manageBooking" method="POST" class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-3xl w-full md:w-auto">
                                 <input type="hidden" name="action" value="manageBooking">                                
                                 <div class="relative flex-1">
                                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>

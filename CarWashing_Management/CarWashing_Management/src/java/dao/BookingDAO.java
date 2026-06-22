@@ -563,21 +563,34 @@ public class BookingDAO {
 
     public void updateExpiredBookings() {
 
-        String sql
-                = "UPDATE Bookings "
-                + "SET BookingStatus = 'NoShow' "
-                + "WHERE BookingStatus = 'Pending' "
-                + "AND BookingDate < CAST(GETDATE() AS DATE)";
-
         try {
+
             Connection cn = DBContext.getConnection();
 
-            PreparedStatement ps
-                    = cn.prepareStatement(sql);
+            String sqlNoShow
+                    = "UPDATE Bookings "
+                    + "SET BookingStatus = 'NoShow' "
+                    + "WHERE BookingStatus = 'Pending' "
+                    + "AND BookingDate < CAST(GETDATE() AS DATE)";
 
-            ps.executeUpdate();
+            PreparedStatement ps1
+                    = cn.prepareStatement(sqlNoShow);
 
-            ps.close();
+            ps1.executeUpdate();
+
+            String sqlCompleted
+                    = "UPDATE Bookings "
+                    + "SET BookingStatus = 'Completed' "
+                    + "WHERE BookingStatus = 'CheckedIn' "
+                    + "AND BookingDate < CAST(GETDATE() AS DATE)";
+
+            PreparedStatement ps2
+                    = cn.prepareStatement(sqlCompleted);
+
+            ps2.executeUpdate();
+
+            ps1.close();
+            ps2.close();
             cn.close();
 
         } catch (Exception e) {

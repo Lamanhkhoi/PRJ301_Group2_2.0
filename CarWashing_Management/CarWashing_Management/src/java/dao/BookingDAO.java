@@ -375,7 +375,7 @@ public class BookingDAO {
                 + "INNER JOIN CustomerVehicles v ON b.VehicleId = v.VehicleID "
                 + "INNER JOIN WashServices s ON b.ServiceId = s.ServiceId "
                 + "WHERE b.CustomerId = ? "
-                + "AND b.BookingStatus IN 'Pending' "
+                + "AND b.BookingStatus IN ('Pending') "
                 + "ORDER BY b.BookingDate DESC";
 
         try {

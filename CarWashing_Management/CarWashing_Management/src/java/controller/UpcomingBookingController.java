@@ -38,7 +38,7 @@ public class UpcomingBookingController extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
-
+        
         Customer cus
                 = (Customer) session.getAttribute("CUSTOMER");
 
@@ -48,7 +48,7 @@ public class UpcomingBookingController extends HttpServlet {
         }
 
         BookingDAO dao = new BookingDAO();
-
+        dao.updateExpiredBookings();
         List<Booking> bookings
                 = dao.getUpcomingBookingsByCustomer(
                         cus.getCustomerId());

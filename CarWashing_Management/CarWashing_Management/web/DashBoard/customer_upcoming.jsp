@@ -140,7 +140,11 @@
                                         <% if ("Pending".equalsIgnoreCase(status)) { %>
                                         <% if (true) {%>
                                         <div class="flex justify-end">
-                                            <button onclick="openConfirmModal('Booking ID: <%= item.getBookingId()%>')" class="px-5 py-2.5 rounded-xl text-sm font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors border border-red-100 shadow-sm">
+                                            <button onclick="openConfirmModal(
+                                                            '<%= item.getBookingDate()%>',
+                                                            '<%= item.getBookingId()%>'
+                                                            )"
+                                                    class="px-5 py-2.5 rounded-xl text-sm font-bold text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors border border-red-100 shadow-sm">
                                                 <i class="fa-solid fa-trash-can mr-1"></i> Hủy lịch hẹn
                                             </button>
                                         </div>
@@ -197,7 +201,7 @@
                             <%
                                     }   // end for
                                 }       // end if(bookings != null)
-%>
+                            %>
                         </div>
                     </div>
                 </div>
@@ -225,14 +229,20 @@
         </div>
 
         <script>
-            function openConfirmModal(timeTarget) {
-                document.getElementById('cancelTimeTarget').innerText = timeTarget;
+            function openConfirmModal(timeTarget, bookingId) {
+
+                document.getElementById('cancelTimeTarget').innerText
+                        = timeTarget;
+
+                document.getElementById('cancelBookingId').value
+                        = bookingId;
 
                 const modal = document.getElementById('confirmModal');
                 const backdrop = document.getElementById('confirmBackdrop');
                 const content = document.getElementById('confirmContent');
 
                 modal.classList.remove('hidden');
+
                 setTimeout(() => {
                     backdrop.classList.remove('opacity-0');
                     content.classList.remove('opacity-0', 'scale-95');

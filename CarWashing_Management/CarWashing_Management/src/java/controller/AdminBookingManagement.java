@@ -26,7 +26,7 @@ public class AdminBookingManagement extends HttpServlet {
         try {
             HttpSession session = request.getSession();
 
-            // 1. Kiểm tra và lấy dữ liệu bộ lọc được treo tạm ở Session (từ Update gán sang)
+            // Kiểm tra và lấy dữ liệu bộ lọc được treo tạm ở Session
             String keepDate = (String) session.getAttribute("KEEP_DATE");
             String keepPlate = (String) session.getAttribute("KEEP_PLATE");
 
@@ -35,20 +35,20 @@ public class AdminBookingManagement extends HttpServlet {
 
             if (keepDate != null) {
                 dateParam = keepDate;
-                session.removeAttribute("KEEP_DATE"); // Đọc xong xóa ngay
+                session.removeAttribute("KEEP_DATE"); 
             }
             if (keepPlate != null) {
                 searchLicensePlate = keepPlate;
-                session.removeAttribute("KEEP_PLATE"); // Đọc xong xóa ngay
+                session.removeAttribute("KEEP_PLATE"); 
             }
 
-            // 2. Chuyển tiếp các thông điệp Toast Alert từ Session vào lại Request để hiển thị trên UI JSP
+            // Chuyển tiếp các thông điệp Toast Alert từ Session
             String sessAlert = (String) session.getAttribute("ALERT_TYPE");
             String sessMsg = (String) session.getAttribute("ALERT_MSG");
             if (sessAlert != null) {
                 request.setAttribute("ALERT_TYPE", sessAlert);
                 request.setAttribute("ALERT_MSG", sessMsg);
-                session.removeAttribute("ALERT_TYPE"); // Đọc xong xóa ngay
+                session.removeAttribute("ALERT_TYPE");
                 session.removeAttribute("ALERT_MSG");
             }
 
@@ -92,7 +92,7 @@ public class AdminBookingManagement extends HttpServlet {
                         }
                     }
 
-                    // QUY TẮC: Nếu đơn CheckedIn ở QUÁ KHỨ -> Completed
+                    // Nếu đơn CheckedIn ở QUÁ KHỨ -> Completed
                     if ("CheckedIn".equals(status) && isPastDate) {
                         dao.updateBookingStatus(bookingId, "Completed");
                     }
@@ -117,7 +117,7 @@ public class AdminBookingManagement extends HttpServlet {
                     int slotNumber = (Integer) b.get("SlotNumber");
                     String status = (String) b.get("BookingStatus");
 
-                    if (slotMap.containsKey(slotNumber)) {
+                    if (slotMap.containsKey(slotNumber) && !"Cancelled".equals(status)) {
                         slotMap.get(slotNumber).add(b);
                     }
 

@@ -32,7 +32,7 @@
     </head>
     <body class="text-slate-800 relative">
 
-        <%            Map<Integer, List<Map<String, Object>>> slotMap = (Map<Integer, List<Map<String, Object>>>) request.getAttribute("SLOT_MAP");
+        <%  Map<Integer, List<Map<String, Object>>> slotMap = (Map<Integer, List<Map<String, Object>>>) request.getAttribute("SLOT_MAP");
             DecimalFormat df = new DecimalFormat("###,###,###");
 
             int totalCount = request.getAttribute("TOTAL_COUNT") != null ? (Integer) request.getAttribute("TOTAL_COUNT") : 0;

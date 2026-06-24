@@ -22,7 +22,7 @@ public class BookingDAO {
             cn = DBContext.getConnection();
             String sql = "SELECT COUNT(*) FROM Bookings "
                     + "WHERE BookingDate = ? AND SlotNumber = ? "
-                    + "AND BookingStatus IN ('Pending', 'CheckedIn')";
+                    + "AND BookingStatus = 'Pending'";
             pst = cn.prepareStatement(sql);
             pst.setString(1, bookingDate);
             pst.setInt(2, slotNumber);
@@ -177,7 +177,7 @@ public class BookingDAO {
         Connection cn = null;
         PreparedStatement pst = null;
         ResultSet rs = null;
-        String sql = "SELECT COUNT(*) FROM Bookings WHERE VehicleId = ? AND bookingDate = ? AND slotNumber = ?";
+        String sql = "SELECT COUNT(*) FROM Bookings WHERE VehicleId = ? AND bookingDate = ? AND slotNumber = ? AND BookingStatus <> 'Cancelled'";
         try {
             cn = DBContext.getConnection();
             pst = cn.prepareStatement(sql);

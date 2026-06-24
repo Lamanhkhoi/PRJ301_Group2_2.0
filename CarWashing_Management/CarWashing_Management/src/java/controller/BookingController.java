@@ -52,7 +52,6 @@ public class BookingController extends HttpServlet {
         String action = request.getParameter("action");
         switch (action) {
             case "customerBookingPage":
-            case "bookingCheckSlots":
                 handleCheckSlots(request, response);
                 break;
             case "processBooking":
@@ -145,7 +144,7 @@ public class BookingController extends HttpServlet {
             if (cus == null) {
                 session.setAttribute("ALERT_TYPE", "error");
                 session.setAttribute("ALERT_MSG", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
-                response.sendRedirect(request.getContextPath() + "/login.jsp"); // Đổi link login của bạn nếu cần
+                request.getRequestDispatcher(request.getContextPath() + "/login.jsp"); // Đổi link login của bạn nếu cần
                 return;
             }
 
@@ -154,23 +153,23 @@ public class BookingController extends HttpServlet {
             String serviceIdStr = request.getParameter("serviceId");
             String bookingDate = request.getParameter("bookingDate");
             String slotNumberStr = request.getParameter("slotNumber");
-            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
-            System.out.println("vehicleId: " + vehicleIdStr);
-            System.out.println("serviceId: " + serviceIdStr);
-            System.out.println("bookingDate: " + bookingDate);
-            System.out.println("slotNumber: " + slotNumberStr);
-            System.out.println("--------------------------------");
-            // 3. Kiểm tra xem có tham số nào bị rỗng hoặc null không (Lỗi từ phía JSP không gửi đúng tên name)
-            if (vehicleIdStr == null || vehicleIdStr.trim().isEmpty()
-                    || serviceIdStr == null || serviceIdStr.trim().isEmpty()
-                    || bookingDate == null || bookingDate.trim().isEmpty()
-                    || slotNumberStr == null || slotNumberStr.trim().isEmpty()) {
-
-                session.setAttribute("ALERT_TYPE", "fail");
-                session.setAttribute("ALERT_MSG", "Lỗi: Không nhận được đầy đủ dữ liệu từ Form (Có tham số bị rỗng)!");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
-                return;
-            }
+//            System.out.println("--- DEBUG BOOKING PARAMETERS ---");
+//            System.out.println("vehicleId: " + vehicleIdStr);
+//            System.out.println("serviceId: " + serviceIdStr);
+//            System.out.println("bookingDate: " + bookingDate);
+//            System.out.println("slotNumber: " + slotNumberStr);
+//            System.out.println("--------------------------------");
+//            // 3. Kiểm tra xem có tham số nào bị rỗng hoặc null không (Lỗi từ phía JSP không gửi đúng tên name)
+//            if (vehicleIdStr == null || vehicleIdStr.trim().isEmpty()
+//                    || serviceIdStr == null || serviceIdStr.trim().isEmpty()
+//                    || bookingDate == null || bookingDate.trim().isEmpty()
+//                    || slotNumberStr == null || slotNumberStr.trim().isEmpty()) {
+//
+//                session.setAttribute("ALERT_TYPE", "fail");
+//                session.setAttribute("ALERT_MSG", "Lỗi: Không nhận được đầy đủ dữ liệu từ Form (Có tham số bị rỗng)!");
+//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+//                return;
+//            }
 
             // 4. Tiến hành parse dữ liệu một cách an toàn
             int vehicleId, serviceId, slotNumber;
@@ -196,12 +195,12 @@ public class BookingController extends HttpServlet {
             // 5. Kiểm tra tính hợp lệ của Service dịch vụ trong Database trước khi lấy giá tiền
             WashServiceDAO w = new WashServiceDAO();
             WashService service = w.getServiceById(serviceId);
-            if (service == null) {
-                session.setAttribute("ALERT_TYPE", "fail");
-                session.setAttribute("ALERT_MSG", "Lỗi: Dịch vụ bạn chọn không tồn tại trong hệ thống!");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
-                return;
-            }
+//            if (service == null) {
+//                session.setAttribute("ALERT_TYPE", "fail");
+//                session.setAttribute("ALERT_MSG", "Lỗi: Dịch vụ bạn chọn không tồn tại trong hệ thống!");
+//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+//                return;
+//            }
 
             // 6. Thực hiện gọi DAO để chèn vào Database
             boolean isSuccess = bookingDAO.createNewBooking(

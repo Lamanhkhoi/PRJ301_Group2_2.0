@@ -100,7 +100,6 @@ public class MainController extends HttpServlet {
                             url = "DashBoard/customer_vehicles.jsp";
                             break;
                         }
-                    case "bookingCheckSlots":
                     case "processBooking":
                         request.setAttribute("ACTIVE_TAB", "datlich");
                         url = "BookingController";

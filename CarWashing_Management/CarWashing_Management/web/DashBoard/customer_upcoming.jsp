@@ -92,10 +92,32 @@
 
                                     <div class="md:w-1/3 border-b md:border-b-0 md:border-r border-slate-100 pr-6 pb-4 md:pb-0">
                                         <div class="flex items-center gap-3 mb-4">
+                                            <%
+                                                int slot = item.getSlotNumber();
+
+                                                int totalMinutesStart = (slot - 1) * 30;
+                                                int totalMinutesEnd = slot * 30;
+
+                                                int slotStartHour = 8 + totalMinutesStart / 60;
+                                                int slotStartMin = totalMinutesStart % 60;
+
+                                                int slotEndHour = 8 + totalMinutesEnd / 60;
+                                                int slotEndMin = totalMinutesEnd % 60;
+
+                                                String slotTime = String.format(
+                                                        "%02d:%02d-%02d:%02d",
+                                                        slotStartHour,
+                                                        slotStartMin,
+                                                        slotEndHour,
+                                                        slotEndMin
+                                                );
+                                            %>
                                             <div class="w-12 py-2 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-200">
                                                 <span class="text-xs font-bold text-slate-800"><%= item.getBookingDate()%></span>
                                                 <div class="w-8 h-[1px] bg-slate-200 my-1"></div>
-                                                <span class="text-xs font-bold text-[#464BE5]">Slot <%= item.getSlotNumber()%></span>
+                                                <span class="text-xs font-bold text-[#464BE5]">
+                                                    <%= slotTime%>
+                                                </span>
                                             </div>
                                             <div>
                                                 <h4 class="text-base font-bold text-slate-800"><%= item.getVehicleBrand()%>

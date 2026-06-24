@@ -221,9 +221,27 @@
                                                 <%= b.getBookingDate()%>
                                             </p>
 
+                                            <%
+                                                int slot = b.getSlotNumber();
+
+                                                int startHour = 8 + ((slot - 1) * 30) / 60;
+                                                int startMinute = ((slot - 1) * 30) % 60;
+
+                                                int endHour = 8 + (slot * 30) / 60;
+                                                int endMinute = (slot * 30) % 60;
+
+                                                String timeLabel = String.format(
+                                                        "%02d:%02d - %02d:%02d",
+                                                        startHour,
+                                                        startMinute,
+                                                        endHour,
+                                                        endMinute
+                                                );
+                                            %>
+
                                             <p class="mt-1">
                                                 <i class="fa-regular fa-clock mr-2"></i>
-                                                Slot <%= b.getSlotNumber()%>
+                                                Slot <%= slot%> (<%= timeLabel%>)
                                             </p>
 
                                         </div>

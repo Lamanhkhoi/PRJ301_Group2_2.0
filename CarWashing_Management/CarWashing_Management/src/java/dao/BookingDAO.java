@@ -375,7 +375,7 @@ public class BookingDAO {
                 + "INNER JOIN CustomerVehicles v ON b.VehicleId = v.VehicleID "
                 + "INNER JOIN WashServices s ON b.ServiceId = s.ServiceId "
                 + "WHERE b.CustomerId = ? "
-                + "AND b.BookingStatus IN ('Pending') "
+                + "AND b.BookingStatus IN ('Pending', 'CheckedIn') "
                 + "ORDER BY b.BookingDate DESC";
 
         try {
@@ -567,25 +567,25 @@ public class BookingDAO {
 
             Connection cn = DBContext.getConnection();
 
-            String sqlNoShow
+            String sql1
                     = "UPDATE Bookings "
                     + "SET BookingStatus = 'NoShow' "
                     + "WHERE BookingStatus = 'Pending' "
                     + "AND BookingDate < CAST(GETDATE() AS DATE)";
 
             PreparedStatement ps1
-                    = cn.prepareStatement(sqlNoShow);
+                    = cn.prepareStatement(sql1);
 
             ps1.executeUpdate();
 
-            String sqlCompleted
+            String sql2
                     = "UPDATE Bookings "
                     + "SET BookingStatus = 'Completed' "
                     + "WHERE BookingStatus = 'CheckedIn' "
                     + "AND BookingDate < CAST(GETDATE() AS DATE)";
 
             PreparedStatement ps2
-                    = cn.prepareStatement(sqlCompleted);
+                    = cn.prepareStatement(sql2);
 
             ps2.executeUpdate();
 

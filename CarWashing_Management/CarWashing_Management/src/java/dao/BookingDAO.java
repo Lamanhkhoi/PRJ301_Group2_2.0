@@ -44,8 +44,8 @@ public class BookingDAO {
 
         // Đồng bộ: Đổi tên bảng thành 'Bookings' và các cột theo đúng cấu trúc thực tế của bạn
         String sql = "INSERT INTO Bookings (CustomerId, VehicleId, ServiceId, BookingDate, "
-                + "SlotNumber, TotalAmount, BookingStatus, Note) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                + "SlotNumber, TotalAmount, Note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try {
             // Đồng bộ: Dùng DBContext thay vì utils.DBUtils cũ
@@ -60,9 +60,8 @@ public class BookingDAO {
                 pst.setString(4, bookingDate); // Truyền chuỗi dạng "YYYY-MM-DD"
                 pst.setInt(5, slotNumber);
                 pst.setDouble(6, totalAmount);
-                pst.setString(7, "Pending");
 
-                pst.setString(8, "");
+                pst.setString(7, "");
 
                 // 3. Thực thi câu lệnh SQL, trả về số dòng bị ảnh hưởng
                 int rowsAffected = pst.executeUpdate();
@@ -99,7 +98,7 @@ public class BookingDAO {
             cn = DBContext.getConnection();
             String sql = "SELECT COUNT(*) FROM Bookings "
                     + "WHERE BookingDate = ? AND SlotNumber = ? "
-                    + "AND BookingStatus IN ('Pending', 'CheckedIn')";
+                    + "AND BookingStatus = 'Pending'";
             pst = cn.prepareStatement(sql);
             pst.setString(1, bookingDate);
             pst.setInt(2, slotNumber);

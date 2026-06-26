@@ -127,7 +127,6 @@ public class BookingController extends HttpServlet {
 
         // Gửi list này và ngày đã chọn sang trang JSP
         request.setAttribute("slots", slotList);
-        request.setAttribute("selectedDate", bookingDate);
 
         // Chuyển hướng hiển thị lại giao diện (Thay vì in JSON)
         request.getRequestDispatcher("DashBoard/customer_booking.jsp").forward(request, response);

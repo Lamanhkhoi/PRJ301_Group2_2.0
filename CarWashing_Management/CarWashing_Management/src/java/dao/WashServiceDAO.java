@@ -32,7 +32,7 @@ public class WashServiceDAO {
                         + "      ,[Price]\n"
                         + "      ,[EstimatedMinutes]\n"
                         + "      ,[IsActive]\n"
-                        + "  FROM [AutoCarWashingDB].[dbo].[WashServices]";
+                        + "  FROM [AutoCarWashingDB].[dbo].[WashServices] WHERE [IsActive] = 1 ";
                 PreparedStatement st = cn.prepareStatement(sql);
                 ResultSet table = st.executeQuery();
                 if (table != null) {

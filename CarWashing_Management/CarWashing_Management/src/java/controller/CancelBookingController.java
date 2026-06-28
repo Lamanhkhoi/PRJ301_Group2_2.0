@@ -19,13 +19,17 @@ public class CancelBookingController extends HttpServlet {
 
         try {
 
-            int bookingId =
-                    Integer.parseInt(
+            int bookingId
+                    = Integer.parseInt(
                             request.getParameter("bookingId"));
 
             BookingDAO dao = new BookingDAO();
 
-            dao.cancelBooking(bookingId);
+            if (dao.canCancelBooking(bookingId)) {
+
+                dao.cancelBooking(bookingId);
+
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

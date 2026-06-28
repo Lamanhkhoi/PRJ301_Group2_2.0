@@ -600,23 +600,22 @@ public class BookingDAO {
         }
     }
 
-    public boolean canCancelBooking(Date bookingDate, int slotNumber) {
-
-        LocalDate bookingLocalDate = bookingDate.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-
-        // Slot 1 = 08:00
-        LocalTime bookingTime = LocalTime.of(8, 0)
-                .plusMinutes((slotNumber - 1) * 30);
-
-        LocalDateTime bookingDateTime
-                = LocalDateTime.of(bookingLocalDate, bookingTime);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        return now.isBefore(bookingDateTime.minusHours(2));
-    }
+//    public boolean canCancelBooking(Date bookingDate, int slotNumber) {
+//
+//        LocalDate bookingLocalDate
+//                = new java.sql.Date(bookingDate.getTime()).toLocalDate();
+//
+//        // Slot 1 = 08:00
+//        LocalTime bookingTime = LocalTime.of(8, 0)
+//                .plusMinutes((slotNumber - 1) * 30);
+//
+//        LocalDateTime bookingDateTime
+//                = LocalDateTime.of(bookingLocalDate, bookingTime);
+//
+//        LocalDateTime now = LocalDateTime.now();
+//
+//        return now.isBefore(bookingDateTime.minusHours(2));
+//    }
 
     public boolean canCancelBooking(int bookingId) {
 
@@ -643,8 +642,7 @@ public class BookingDAO {
 
             if (rs.next()) {
 
-                Date bookingDate
-                        = rs.getDate("BookingDate");
+                java.sql.Date bookingDate = rs.getDate("BookingDate");
 
                 int slot
                         = rs.getInt("SlotNumber");
@@ -656,9 +654,7 @@ public class BookingDAO {
                 // BƯỚC 2.6: Tính thời điểm booking
                 // ===============================
                 LocalDate bookingLocalDate
-                        = bookingDate.toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate();
+                        = bookingDate.toLocalDate();
 
                 int totalMinutesStart = (slot - 1) * 30;
 
@@ -683,7 +679,13 @@ public class BookingDAO {
 
                 LocalDateTime cancelDeadline
                         = bookingDateTime.minusHours(2);
-
+                System.out.println("========== DEBUG CANCEL ==========");
+                System.out.println("BookingId = " + bookingId);
+                System.out.println("BookingDateTime = " + bookingDateTime);
+                System.out.println("Now = " + now);
+                System.out.println("CancelDeadline = " + cancelDeadline);
+                System.out.println("Result = " + (!now.isAfter(cancelDeadline)));
+                System.out.println("==================================");
                 return !now.isAfter(cancelDeadline);
 
             }

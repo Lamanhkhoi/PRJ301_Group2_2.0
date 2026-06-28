@@ -160,7 +160,7 @@
                                         </div>
 
                                         <% if ("Pending".equalsIgnoreCase(status)) { %>
-                                        <% if (true) {%>
+                                        <% if (item.isCanCancel()) {%>
                                         <div class="flex justify-end">
                                             <button onclick="openConfirmModal(
                                                             '<%= item.getBookingDate()%>',
@@ -172,7 +172,7 @@
                                         </div>
                                         <% } else { %>
                                         <div class="flex justify-end items-center gap-3">
-                                            <span class="text-[11px] font-semibold text-red-500"><i class="fa-solid fa-circle-info mr-1"></i>Không thể hủy do < 24h</span>
+                                            <span class="text-[11px] font-semibold text-red-500"><i class="fa-solid fa-circle-info mr-1"></i>Không thể hủy do < 2 giờ .</span>
                                             <button disabled class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed">
                                                 <i class="fa-solid fa-trash-can mr-1"></i> Hủy lịch hẹn
                                             </button>

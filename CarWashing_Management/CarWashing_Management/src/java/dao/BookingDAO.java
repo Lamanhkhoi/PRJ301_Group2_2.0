@@ -5,11 +5,14 @@ import dto.Booking;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BookingDAO {
@@ -595,5 +598,123 @@ public class BookingDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+//    public boolean canCancelBooking(Date bookingDate, int slotNumber) {
+//
+//        LocalDate bookingLocalDate
+//                = new java.sql.Date(bookingDate.getTime()).toLocalDate();
+//
+//        // Slot 1 = 08:00
+//        LocalTime bookingTime = LocalTime.of(8, 0)
+//                .plusMinutes((slotNumber - 1) * 30);
+//
+//        LocalDateTime bookingDateTime
+//                = LocalDateTime.of(bookingLocalDate, bookingTime);
+//
+//        LocalDateTime now = LocalDateTime.now();
+//
+//        return now.isBefore(bookingDateTime.minusHours(2));
+//    }
+
+    public boolean canCancelBooking(int bookingId) {
+
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        String sql
+                = "SELECT BookingDate, "
+                + "SlotNumber, "
+                + "BookingStatus "
+                + "FROM Bookings "
+                + "WHERE BookingId = ?";
+
+        try {
+
+            cn = DBContext.getConnection();
+
+            pst = cn.prepareStatement(sql);
+
+            pst.setInt(1, bookingId);
+
+            rs = pst.executeQuery();
+
+            if (rs.next()) {
+
+                java.sql.Date bookingDate = rs.getDate("BookingDate");
+
+                int slot
+                        = rs.getInt("SlotNumber");
+
+                String status
+                        = rs.getString("BookingStatus");
+
+                // ===============================
+                // BƯỚC 2.6: Tính thời điểm booking
+                // ===============================
+                LocalDate bookingLocalDate
+                        = bookingDate.toLocalDate();
+
+                int totalMinutesStart = (slot - 1) * 30;
+
+                int hour = 8 + totalMinutesStart / 60;
+
+                int minute = totalMinutesStart % 60;
+
+                LocalTime bookingTime
+                        = LocalTime.of(hour, minute);
+
+                LocalDateTime bookingDateTime
+                        = LocalDateTime.of(
+                                bookingLocalDate,
+                                bookingTime
+                        );
+
+                if (!"Pending".equalsIgnoreCase(status)) {
+                    return false;
+                }
+
+                LocalDateTime now = LocalDateTime.now();
+
+                LocalDateTime cancelDeadline
+                        = bookingDateTime.minusHours(2);
+                System.out.println("========== DEBUG CANCEL ==========");
+                System.out.println("BookingId = " + bookingId);
+                System.out.println("BookingDateTime = " + bookingDateTime);
+                System.out.println("Now = " + now);
+                System.out.println("CancelDeadline = " + cancelDeadline);
+                System.out.println("Result = " + (!now.isAfter(cancelDeadline)));
+                System.out.println("==================================");
+                return !now.isAfter(cancelDeadline);
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        } finally {
+
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+
+                if (pst != null) {
+                    pst.close();
+                }
+
+                if (cn != null) {
+                    cn.close();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return false;
     }
 }

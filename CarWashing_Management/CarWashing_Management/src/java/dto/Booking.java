@@ -22,11 +22,11 @@ public class Booking {
     private String serviceName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
+    private boolean canCancel;
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, Date bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, String licensePlate, String vehicleBrand, String vehicleModel, String serviceName, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, Date bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, String licensePlate, String vehicleBrand, String vehicleModel, String serviceName, LocalDateTime createdAt, LocalDateTime updatedAt, boolean canCancel) {
         this.bookingId = bookingId;
         this.customerId = customerId;
         this.vehicleId = vehicleId;
@@ -44,6 +44,7 @@ public class Booking {
         this.serviceName = serviceName;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.canCancel = canCancel;
     }
 
     public int getBookingId() {
@@ -182,6 +183,13 @@ public class Booking {
         this.updatedAt = updatedAt;
     }
 
-    
+    public boolean isCanCancel() {
+        return canCancel;
+    }
 
+    public void setCanCancel(boolean canCancel) {
+        this.canCancel = canCancel;
+    }
+
+    
 }

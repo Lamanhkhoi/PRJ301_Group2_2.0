@@ -128,9 +128,8 @@
         <% } %>
 
         <%
-            CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
-            CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
-            LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+            
+            LoyaltyTier curentTier = (LoyaltyTier) request.getAttribute("TIER");
 
             String currentTier = curentTier.getTierName();
             int maxDaysAhead = 7;
@@ -146,10 +145,9 @@
                 isPriority = true;
             }
 
-            CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
-            WashServiceDAO serviceDAO = new WashServiceDAO();
-            List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
-            List<WashService> mockServices = serviceDAO.getAllServices();
+            
+            List<Vehicle> mockVehicles = (List) request.getAttribute("VEHICLE_LIST");
+            List<WashService> mockServices = (List) request.getAttribute("SERVICE_LIST");
 
             // Xử lý lấy ngày, giờ hiện tại (múi giờ VN)
             ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");

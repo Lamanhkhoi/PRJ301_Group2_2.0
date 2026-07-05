@@ -2,6 +2,7 @@ package controller;
 
 import dao.BookingDAO;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -35,11 +36,11 @@ public class AdminBookingManagement extends HttpServlet {
 
             if (keepDate != null) {
                 dateParam = keepDate;
-                session.removeAttribute("KEEP_DATE"); 
+                session.removeAttribute("KEEP_DATE");
             }
             if (keepPlate != null) {
                 searchLicensePlate = keepPlate;
-                session.removeAttribute("KEEP_PLATE"); 
+                session.removeAttribute("KEEP_PLATE");
             }
 
             // Chuyển tiếp các thông điệp Toast Alert từ Session
@@ -63,7 +64,8 @@ public class AdminBookingManagement extends HttpServlet {
             boolean isFiltered = !searchLicensePlate.trim().isEmpty();
             BookingDAO dao = new BookingDAO();
 
-            // QUÉT VÀ CẬP NHẬT TRƯỚC KHI HIỂN THỊ (Logic NoShow giữ nguyên của bạn)
+            // Lấy toàn bộ 28 khung giờ ca từ DB (bảng TimeSlot)
+            Map<Integer, Map<String, Object>> timeSlotMap = dao.getAllTimeSlots();
             LocalDate today = LocalDate.now();
             LocalTime now = LocalTime.now();
 
@@ -79,10 +81,10 @@ public class AdminBookingManagement extends HttpServlet {
 
                     // Nếu đơn ở trạng thái Pending ở QUÁ KHỨ -> No show
                     if ("Pending".equals(status)) {
-                        double startHour = 8.0 + (slotNumber - 1) / 2.0;
-                        int hourPart = (int) startHour;
-                        int minutePart = (startHour % 1 == 0) ? 0 : 30;
-                        LocalTime slotStartTime = LocalTime.of(hourPart, minutePart);
+                        Map<String, Object> tsInfo = timeSlotMap.get(slotNumber);
+                        LocalTime slotStartTime = (tsInfo != null)
+                                ? ((Time) tsInfo.get("StartTime")).toLocalTime()
+                                : LocalTime.of(8, 0);
                         LocalTime noShowDeadline = slotStartTime.plusMinutes(1);
 
                         boolean isTodayAndOverdue = bDate.isEqual(today) && now.isAfter(noShowDeadline);
@@ -133,6 +135,7 @@ public class AdminBookingManagement extends HttpServlet {
             }
 
             request.setAttribute("SLOT_MAP", slotMap);
+            request.setAttribute("TIME_SLOT_MAP", timeSlotMap);
             request.setAttribute("TOTAL_COUNT", totalCount);
             request.setAttribute("PENDING_COUNT", pendingCount);
             request.setAttribute("CHECKEDIN_COUNT", checkedInCount);

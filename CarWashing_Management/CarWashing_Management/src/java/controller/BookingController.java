@@ -5,10 +5,14 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.CustomerLoyaltyDAO;
 import dao.CustomerVehicleDAO;
 import dao.WashServiceDAO;
+import dto.Account;
 import dto.Booking;
 import dto.Customer;
+import dto.CustomerLoyalty;
+import dto.LoyaltyTier;
 import dto.TimeSlot;
 import dto.Vehicle;
 import dto.WashService;
@@ -52,7 +56,20 @@ public class BookingController extends HttpServlet {
         String action = request.getParameter("action");
         switch (action) {
             case "customerBookingPage":
+                Account userAcc = (Account) request.getSession().getAttribute("USER");
+                Customer cus = (Customer) request.getSession().getAttribute("CUSTOMER");
+                CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+                CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
+                LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+                CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
+                WashServiceDAO serviceDAO = new WashServiceDAO();
+                List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
+                List<WashService> mockServices = serviceDAO.getAllServices();
                 handleCheckSlots(request, response);
+                request.setAttribute("TIER", curentTier);
+                request.setAttribute("VEHICLE_LIST", mockVehicles);
+                request.setAttribute("SERVICE_LIST", mockServices);
+                request.getRequestDispatcher("DashBoard/customer_booking.jsp").forward(request, response);
                 break;
             case "processBooking":
                 handleProcessBooking(request, response);
@@ -129,7 +146,7 @@ public class BookingController extends HttpServlet {
         request.setAttribute("slots", slotList);
 
         // Chuyển hướng hiển thị lại giao diện (Thay vì in JSON)
-        request.getRequestDispatcher("DashBoard/customer_booking.jsp").forward(request, response);
+        
     }
 
     private void handleProcessBooking(HttpServletRequest request, HttpServletResponse response)

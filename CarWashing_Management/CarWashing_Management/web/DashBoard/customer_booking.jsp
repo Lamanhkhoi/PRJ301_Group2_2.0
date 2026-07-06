@@ -128,9 +128,8 @@
         <% } %>
 
         <%
-            CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
-            CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
-            LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+            
+            LoyaltyTier curentTier = (LoyaltyTier) request.getAttribute("TIER");
 
             String currentTier = curentTier.getTierName();
             int maxDaysAhead = 7;
@@ -146,10 +145,9 @@
                 isPriority = true;
             }
 
-            CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
-            WashServiceDAO serviceDAO = new WashServiceDAO();
-            List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
-            List<WashService> mockServices = serviceDAO.getAllServices();
+            
+            List<Vehicle> mockVehicles = (List) request.getAttribute("VEHICLE_LIST");
+            List<WashService> mockServices = (List) request.getAttribute("SERVICE_LIST");
 
             // Xử lý lấy ngày, giờ hiện tại (múi giờ VN)
             ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -285,24 +283,7 @@
                                         if (slots != null && !slots.isEmpty()) {
                                             for (TimeSlot t : slots) {
                                                 boolean isFull = t.isIsFull();
-                                                String timeStr = t.getTime() != null ? t.getTime().trim() : "";
-                                                String startHourStr = timeStr.contains("-") ? timeStr.split("-")[0].trim() : timeStr;
-                                                boolean isPastOrTooClose = false;
-
-                                                try {
-                                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
-                                                    LocalTime slotStartTime = LocalTime.parse(startHourStr, formatter);
-                                                    LocalDate parsedBookingDate = LocalDate.parse(currentSelectedDate);
-
-                                                    LocalDateTime nowDateTime = LocalDateTime.now(vnZone);
-                                                    LocalDateTime slotDateTime = LocalDateTime.of(parsedBookingDate, slotStartTime);
-
-                                                    // CHUẨN XÁC: Khóa giờ nếu slotDateTime nằm trong quá khứ hoặc quá gần (< 20 phút)
-                                                    if (slotDateTime.isBefore(nowDateTime.plusMinutes(20))) {
-                                                        isPastOrTooClose = true;
-                                                    }
-                                                } catch (Exception e) {
-                                                }
+                                                boolean isPastOrTooClose = t.isIsPast();
 
                                                 String labelClass = "relative block ";
                                                 String boxClass = "p-3 rounded-xl border text-center transition-all ";
@@ -327,9 +308,9 @@
                                     %>
 
                                     <label class="<%= labelClass%>" <%= clickHandler%> style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>"<%= onClickAction%>>
-                                        <input type="radio" name="timeSlot" value="<%= t.getTime()%>" class="peer sr-only" <%= (isPastOrTooClose || isFull) ? "disabled" : ""%>>
+                                        <input type="radio" name="timeSlot" value="<%= t.getStartTime().substring(0, 5)+ "-" + t.getEndTime().substring(0, 5)%>" class="peer sr-only" <%= (isPastOrTooClose || isFull) ? "disabled" : ""%>>
                                         <div class="<%= boxClass%>" style="<%= (isPastOrTooClose || isFull) ? "pointer-events: none;" : ""%>">
-                                            <span class="text-sm font-semibold"><%= timeStr%></span>
+                                            <span class="text-sm font-semibold"><%= t.getStartTime().substring(0, 5)+ "-" + t.getEndTime().substring(0, 5)%></span>
                                             <% if (isPastOrTooClose) { %>
                                             <div class="text-[10px] uppercase font-bold mt-1">Hết hạn</div>
                                             <% } else if (isFull) { %>

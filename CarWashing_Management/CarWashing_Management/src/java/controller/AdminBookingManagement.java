@@ -1,8 +1,9 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.TimeSlotDAO;
+import dto.TimeSlot;
 import java.io.IOException;
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -65,7 +66,8 @@ public class AdminBookingManagement extends HttpServlet {
             BookingDAO dao = new BookingDAO();
 
             // Lấy toàn bộ 28 khung giờ ca từ DB (bảng TimeSlot)
-            Map<Integer, Map<String, Object>> timeSlotMap = dao.getAllTimeSlots();
+            TimeSlotDAO timeSlotDAO = new TimeSlotDAO();
+            Map<Integer, TimeSlot> timeSlotMap = timeSlotDAO.getAllTimeSlots();
             LocalDate today = LocalDate.now();
             LocalTime now = LocalTime.now();
 
@@ -81,10 +83,8 @@ public class AdminBookingManagement extends HttpServlet {
 
                     // Nếu đơn ở trạng thái Pending ở QUÁ KHỨ -> No show
                     if ("Pending".equals(status)) {
-                        Map<String, Object> tsInfo = timeSlotMap.get(slotNumber);
-                        LocalTime slotStartTime = (tsInfo != null)
-                                ? ((Time) tsInfo.get("StartTime")).toLocalTime()
-                                : LocalTime.of(8, 0);
+                        TimeSlot tsInfo = timeSlotMap.get(slotNumber);
+                        LocalTime slotStartTime = (tsInfo != null) ? LocalTime.parse(tsInfo.getStartTime()) : LocalTime.of(8, 0);
                         LocalTime noShowDeadline = slotStartTime.plusMinutes(1);
 
                         boolean isTodayAndOverdue = bDate.isEqual(today) && now.isAfter(noShowDeadline);

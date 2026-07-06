@@ -5,10 +5,15 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.CustomerLoyaltyDAO;
 import dao.CustomerVehicleDAO;
+import dao.TimeSlotDAO;
 import dao.WashServiceDAO;
+import dto.Account;
 import dto.Booking;
 import dto.Customer;
+import dto.CustomerLoyalty;
+import dto.LoyaltyTier;
 import dto.TimeSlot;
 import dto.Vehicle;
 import dto.WashService;
@@ -52,7 +57,20 @@ public class BookingController extends HttpServlet {
         String action = request.getParameter("action");
         switch (action) {
             case "customerBookingPage":
+                Account userAcc = (Account) request.getSession().getAttribute("USER");
+                Customer cus = (Customer) request.getSession().getAttribute("CUSTOMER");
+                CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+                CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(userAcc.getAccountID());
+                LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+                CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
+                WashServiceDAO serviceDAO = new WashServiceDAO();
+                List<Vehicle> mockVehicles = veDAO.getAllVehicles(cus.getCustomerId());
+                List<WashService> mockServices = serviceDAO.getAllServices();
                 handleCheckSlots(request, response);
+                request.setAttribute("TIER", curentTier);
+                request.setAttribute("VEHICLE_LIST", mockVehicles);
+                request.setAttribute("SERVICE_LIST", mockServices);
+                request.getRequestDispatcher("DashBoard/customer_booking.jsp").forward(request, response);
                 break;
             case "processBooking":
                 handleProcessBooking(request, response);
@@ -71,65 +89,12 @@ public class BookingController extends HttpServlet {
             bookingDate = LocalDate.now().toString();
         }
 
-        BookingDAO bookingDAO = new BookingDAO();
-        int totalSlotsInDay = 28;
-        int startHour = 8;
-        int startMinute = 0;
-        boolean foundFirstAvailable = false;
-
         // Tạo một List để chứa các slot 
-        List<TimeSlot> slotList = new ArrayList<>();
-
-        int[] carCounts = new int[totalSlotsInDay];
-        for (int i = 0; i < totalSlotsInDay; i++) {
-            carCounts[i] = bookingDAO.countBookedCars(bookingDate, i + 1);
-        }
-
-        for (int i = 0; i < totalSlotsInDay; i++) {
-            int slotNumber = i + 1;
-
-            int totalMinutesStart = i * 30;
-            int totalMinutesEnd = (i + 1) * 30;
-
-            int slotStartHour = startHour + (totalMinutesStart / 60);
-            int slotStartMin = startMinute + (totalMinutesStart % 60);
-            int slotEndHour = startHour + (totalMinutesEnd / 60);
-            int slotEndMin = startMinute + (totalMinutesEnd % 60);
-
-            String timeLabel = String.format("%02d:%02d - %02d:%02d",
-                    slotStartHour, slotStartMin, slotEndHour, slotEndMin);
-
-            int currentCars = carCounts[i];
-            boolean isFull = (currentCars >= 3);
-            boolean isPastOrTooClose = false;
-            String startHourStr = String.format("%02d:%02d", slotStartHour, slotStartMin);
-            LocalTime slotStartTime = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
-            // Điều kiện chặn: Giờ của slot < (Giờ hiện tại + 20 phút)
-            ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
-            LocalDate today = LocalDate.now(vnZone);
-            LocalTime now = LocalTime.now(vnZone);
-            LocalDate parsedBookingDate = LocalDate.parse(bookingDate);
-            if (parsedBookingDate.isEqual(today)) {
-
-                if (slotStartTime.isBefore(now.plusMinutes(20))) {
-                    isPastOrTooClose = true;
-                }
-            }
-            boolean isPriority = false;
-            if (!isPastOrTooClose && !isFull && !foundFirstAvailable) {
-                isPriority = true;
-                foundFirstAvailable = true;
-            }
-
-            // Tạo object Slot và add vào list
-            slotList.add(new TimeSlot(slotNumber, timeLabel, isFull, isPriority, currentCars));
-        }
-
+        TimeSlotDAO timeDAO = new TimeSlotDAO();
+        List<TimeSlot> slotList = timeDAO.getAllAvailableSlots(bookingDate);
         // Gửi list này và ngày đã chọn sang trang JSP
         request.setAttribute("slots", slotList);
-
-        // Chuyển hướng hiển thị lại giao diện (Thay vì in JSON)
-        request.getRequestDispatcher("DashBoard/customer_booking.jsp").forward(request, response);
+        
     }
 
     private void handleProcessBooking(HttpServletRequest request, HttpServletResponse response)

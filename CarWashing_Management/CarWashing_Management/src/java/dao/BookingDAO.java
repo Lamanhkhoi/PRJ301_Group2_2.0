@@ -716,48 +716,4 @@ public class BookingDAO {
 
         return false;
     }
-
-    public Map<Integer, Map<String, Object>> getAllTimeSlots() {
-        Map<Integer, Map<String, Object>> map = new HashMap<>();
-        Connection cn = null;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        String sql = "SELECT SlotNumber, StartTime, EndTime FROM TimeSlot ORDER BY SlotNumber ASC";
-        try {
-            cn = DBContext.getConnection();
-            pst = cn.prepareStatement(sql);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                Map<String, Object> slotInfo = new HashMap<>();
-                slotInfo.put("StartTime", rs.getTime("StartTime"));
-                slotInfo.put("EndTime", rs.getTime("EndTime"));
-                map.put(rs.getInt("SlotNumber"), slotInfo);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                if (pst != null) {
-                    pst.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                if (cn != null) {
-                    cn.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return map;
-    }
 }

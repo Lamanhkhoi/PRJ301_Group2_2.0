@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import dbutils.DBContext;
@@ -14,11 +10,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-/**
- *
- * @author LENOVO
- */
 public class TimeSlotDAO {
 
     public List<TimeSlot> getAllAvailableSlots(String selectedDate) {
@@ -75,7 +68,7 @@ public class TimeSlotDAO {
             // --- LOGIC THIẾT LẬP ISPRIORITY CHO SLOT TRỐNG SỚM NHẤT ---
             for (TimeSlot slot : list) {
                 // Điều kiện: Slot KHÔNG nằm trong quá khứ VÀ KHÔNG bị đầy (còn trống)
-                if (!slot.isIsPast()&& !slot.isIsFull()) {
+                if (!slot.isIsPast() && !slot.isIsFull()) {
                     slot.setIsPriority(true); // Gắn cờ Priority cho slot này
                     break; // Dừng vòng lặp ngay lập tức để chỉ lấy duy nhất 1 slot sớm nhất
                 }
@@ -87,5 +80,45 @@ public class TimeSlotDAO {
             // Đóng kết nối DB (cn, pst, rs)...
         }
         return list;
+    }
+
+    public Map<Integer, TimeSlot> getAllTimeSlots() {
+        Map<Integer, TimeSlot> map = new java.util.HashMap<>();
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        String sql = "SELECT SlotNumber, StartTime, EndTime FROM TimeSlot ORDER BY SlotNumber ASC";
+        try {
+            cn = DBContext.getConnection();
+            pst = cn.prepareStatement(sql);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                TimeSlot slot = new TimeSlot();
+                slot.setSlotNumber(rs.getInt("SlotNumber"));
+                slot.setStartTime(rs.getString("StartTime"));
+                slot.setEndTime(rs.getString("EndTime"));
+                map.put(slot.getSlotNumber(), slot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+
+                if (pst != null) {
+                    pst.close();
+                }
+
+                if (cn != null) {
+                    cn.close();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return map;
     }
 }

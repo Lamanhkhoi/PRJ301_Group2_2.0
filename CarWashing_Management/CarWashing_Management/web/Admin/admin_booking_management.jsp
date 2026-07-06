@@ -1,10 +1,10 @@
+<%@page import="dto.TimeSlot"%>
 <%@page import="java.net.URLEncoder"%>
 <%@ include file="../includes/admin-auth-check.jsp" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.util.Map"%>
 <%@page import="java.util.List"%>
 <%@page import="java.text.DecimalFormat"%>
-<%@page import="java.sql.Time"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -35,7 +35,7 @@
     <body class="text-slate-800 relative">
 
         <%  Map<Integer, List<Map<String, Object>>> slotMap = (Map<Integer, List<Map<String, Object>>>) request.getAttribute("SLOT_MAP");
-            Map<Integer, Map<String, Object>> timeSlotMap = (Map<Integer, Map<String, Object>>) request.getAttribute("TIME_SLOT_MAP");
+            Map<Integer, TimeSlot> timeSlotMap = (Map<Integer, TimeSlot>) request.getAttribute("TIME_SLOT_MAP");
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
             DecimalFormat df = new DecimalFormat("###,###,###");
 
@@ -127,10 +127,8 @@
                                             boolean dynamicRowHasData = false;
                                             for (int slot = 1; slot <= 28; slot++) {
                                                 // Lấy giờ bắt đầu ca từ bảng TimeSlot (qua timeSlotMap)
-                                                Map<String, Object> tsInfo = (timeSlotMap != null) ? timeSlotMap.get(slot) : null;
-                                                String timeString = (tsInfo != null)
-                                                        ? ((Time) tsInfo.get("StartTime")).toLocalTime().format(timeFormatter)
-                                                        : "--:--";
+                                                TimeSlot tsInfo = (timeSlotMap != null) ? timeSlotMap.get(slot) : null;
+                                                String timeString = (tsInfo != null) ? java.time.LocalTime.parse(tsInfo.getStartTime()).format(timeFormatter) : "--:--";
 
                                                 List<Map<String, Object>> bookingList = (slotMap != null) ? slotMap.get(slot) : null;
                                                 int listSize = (bookingList != null) ? bookingList.size() : 0;

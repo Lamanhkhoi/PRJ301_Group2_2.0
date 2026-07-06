@@ -284,24 +284,6 @@
                                             for (TimeSlot t : slots) {
                                                 boolean isFull = t.isIsFull();
                                                 boolean isPastOrTooClose = t.isIsPast();
-//                                                String timeStr = t.getTime() != null ? t.getTime().trim() : "";
-//                                                String startHourStr = t.getStartTime();
-//                                                
-
-//                                                try {
-//                                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("H:mm");
-//                                                    LocalTime slotStartTime = LocalTime.parse(startHourStr, formatter);
-//                                                    LocalDate parsedBookingDate = LocalDate.parse(currentSelectedDate);
-//
-//                                                    LocalDateTime nowDateTime = LocalDateTime.now(vnZone);
-//                                                    LocalDateTime slotDateTime = LocalDateTime.of(parsedBookingDate, slotStartTime);
-//
-//                                                    // CHUẨN XÁC: Khóa giờ nếu slotDateTime nằm trong quá khứ hoặc quá gần (< 20 phút)
-////                                                    if (slotDateTime.isBefore(nowDateTime.plusMinutes(20))) {
-////                                                        isPastOrTooClose = true;
-////                                                    }
-//                                                } catch (Exception e) {
-//                                                }
 
                                                 String labelClass = "relative block ";
                                                 String boxClass = "p-3 rounded-xl border text-center transition-all ";

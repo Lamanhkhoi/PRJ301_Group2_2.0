@@ -1,32 +1,32 @@
 package dto;
 
 // Chứa thông tin về danh sách phần thưởng trong hệ thống.
-
 import java.util.Date;
 
 public class Reward {
+
     private int rewardId;
     private String rewardName;
     private String description;
-    private int requiredPoints;
-    private String rewardType;
-    private int discount;
-    private int freeServiceId;
-    private Boolean isActive;
+    private int pointsRequired;
+    private double discountPercent;
+    private double minBillAmount;
+    private double maxDiscountAmount;
+    private boolean active;
     private Date createdAt;
 
     public Reward() {
     }
 
-    public Reward(int rewardId, String rewardName, String description, int requiredPoints, String rewardType, int discount, int freeServiceId, Boolean isActive, Date createdAt) {
+    public Reward(int rewardId, String rewardName, String description, int pointsRequired, double discountPercent, double minBillAmount, double maxDiscountAmount, boolean active, Date createdAt) {
         this.rewardId = rewardId;
         this.rewardName = rewardName;
         this.description = description;
-        this.requiredPoints = requiredPoints;
-        this.rewardType = rewardType;
-        this.discount = discount;
-        this.freeServiceId = freeServiceId;
-        this.isActive = isActive;
+        this.pointsRequired = pointsRequired;
+        this.discountPercent = discountPercent;
+        this.minBillAmount = minBillAmount;
+        this.maxDiscountAmount = maxDiscountAmount;
+        this.active = active;
         this.createdAt = createdAt;
     }
 
@@ -54,44 +54,44 @@ public class Reward {
         this.description = description;
     }
 
-    public int getRequiredPoints() {
-        return requiredPoints;
+    public int getPointsRequired() {
+        return pointsRequired;
     }
 
-    public void setRequiredPoints(int requiredPoints) {
-        this.requiredPoints = requiredPoints;
+    public void setPointsRequired(int pointsRequired) {
+        this.pointsRequired = pointsRequired;
     }
 
-    public String getRewardType() {
-        return rewardType;
+    public double getDiscountPercent() {
+        return discountPercent;
     }
 
-    public void setRewardType(String rewardType) {
-        this.rewardType = rewardType;
+    public void setDiscountPercent(double discountPercent) {
+        this.discountPercent = discountPercent;
     }
 
-    public int getDiscount() {
-        return discount;
+    public double getMinBillAmount() {
+        return minBillAmount;
     }
 
-    public void setDiscount(int discount) {
-        this.discount = discount;
+    public void setMinBillAmount(double minBillAmount) {
+        this.minBillAmount = minBillAmount;
     }
 
-    public int getFreeServiceId() {
-        return freeServiceId;
+    public double getMaxDiscountAmount() {
+        return maxDiscountAmount;
     }
 
-    public void setFreeServiceId(int freeServiceId) {
-        this.freeServiceId = freeServiceId;
+    public void setMaxDiscountAmount(double maxDiscountAmount) {
+        this.maxDiscountAmount = maxDiscountAmount;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Date getCreatedAt() {
@@ -101,6 +101,5 @@ public class Reward {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-    
-    
+
 }

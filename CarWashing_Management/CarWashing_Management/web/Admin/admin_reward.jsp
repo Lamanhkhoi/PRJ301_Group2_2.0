@@ -1,6 +1,7 @@
 <%@page import="java.util.*"%>
 <%@page import="dto.Reward"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page import="java.util.ArrayList"%>
 <%--
     ============================================================
     TRANG: QUẢN LÝ VOUCHER / REWARD (Admin) - admin_reward.jsp
@@ -16,29 +17,12 @@
 <%
     request.setAttribute("ACTIVE_ADMIN", "voucherreward");
 
-    // ================= MOCK DATA - XÓA KHI GẮN BACKEND =================
-    List<Reward> rewards = new ArrayList<>();
-    String[][] seed = {
-        // {id, tên, mô tả, điểm cần, loại, giá trị giảm, đang bật}
-        {"1", "Phiếu mua hàng 10.000 VNĐ", "Trừ trực tiếp vào hóa đơn", "1000", "DISCOUNT", "10000", "true"},
-        {"2", "Phiếu mua hàng 20.000 VNĐ", "Trừ trực tiếp vào hóa đơn", "2000", "DISCOUNT", "20000", "true"},
-        {"3", "Miễn phí wax xe", "Tặng 1 lần wax bóng thân xe", "300", "FREE_SERVICE", "0", "true"},
-        {"4", "Nâng cấp gói Deluxe", "Nâng miễn phí từ Basic lên Deluxe", "3000", "FREE_SERVICE", "0", "false"},
-        {"5", "Rửa xe miễn phí gói Basic", "1 lần rửa Basic miễn phí", "5000", "FREE_SERVICE", "0", "true"},
-        {"6", "Bình nước giữ nhiệt SmartWash", "Quà tặng thương hiệu, nhận tại quầy", "1500", "GIFT", "0", "true"}
-    };
-    for (String[] s : seed) {
-        Reward r = new Reward();
-        r.setRewardId(Integer.parseInt(s[0]));
-        r.setRewardName(s[1]);
-        r.setDescription(s[2]);
-        r.setRequiredPoints(Integer.parseInt(s[3]));
-        r.setRewardType(s[4]);
-        r.setDiscount(Integer.parseInt(s[5]));
-        r.setIsActive(Boolean.parseBoolean(s[6]));
-        rewards.add(r);
+    List<Reward> rewards
+            = (List<Reward>) request.getAttribute("rewardList");
+
+    if (rewards == null) {
+        rewards = new ArrayList<>();
     }
-    // ====================================================================
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -48,7 +32,10 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }</style>
+        <style>body {
+                font-family: 'Inter', sans-serif;
+                background-color: #F1F5F9;
+            }</style>
     </head>
     <body class="text-slate-800 relative">
 
@@ -91,47 +78,93 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-                                        <th class="py-3 px-6 font-bold">Tên reward</th>
-                                        <th class="py-3 px-4 font-bold">Loại</th>
-                                        <th class="py-3 px-4 font-bold text-right">Điểm cần</th>
-                                        <th class="py-3 px-4 font-bold text-right">Giá trị</th>
+                                        <th class="py-3 px-6 font-bold">Tên Reward</th>
+                                        <th class="py-3 px-4 font-bold text-right">Điểm đổi</th>
+                                        <th class="py-3 px-4 font-bold text-right">% Giảm</th>
+                                        <th class="py-3 px-4 font-bold text-right">HĐ tối thiểu</th>
+                                        <th class="py-3 px-4 font-bold text-right">Giảm tối đa</th>
                                         <th class="py-3 px-4 font-bold text-center">Trạng thái</th>
                                         <th class="py-3 px-6 font-bold text-right">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm">
-                                    <% for (Reward r : rewards) {
-                                        boolean on = Boolean.TRUE.equals(r.getIsActive());
-                                        String typeLabel = "DISCOUNT".equals(r.getRewardType()) ? "Giảm giá"
-                                                         : "GIFT".equals(r.getRewardType()) ? "Quà tặng" : "Dịch vụ miễn phí";
-                                        String typeBadge = "DISCOUNT".equals(r.getRewardType()) ? "bg-blue-100 text-blue-700"
-                                                         : "GIFT".equals(r.getRewardType()) ? "bg-pink-100 text-pink-700" : "bg-purple-100 text-purple-700";
-                                        String valueLabel = "DISCOUNT".equals(r.getRewardType()) ? String.format("%,d", r.getDiscount()) + "đ" : "—";
+                                    <%
+                                        for (Reward r : rewards) {
+
+                                            boolean on = r.isActive();
                                     %>
-                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50 transition" data-name="<%= r.getRewardName().toLowerCase() %>" data-type="<%= r.getRewardType() %>">
+
+                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50">
+
                                         <td class="py-4 px-6">
-                                            <p class="font-bold text-slate-800"><%= r.getRewardName() %></p>
-                                            <p class="text-xs text-slate-400 mt-0.5"><%= r.getDescription() %></p>
+
+                                            <p class="font-bold text-slate-800">
+                                                <%= r.getRewardName()%>
+                                            </p>
+
+                                            <p class="text-xs text-slate-400 mt-1">
+                                                <%= r.getDescription()%>
+                                            </p>
+
                                         </td>
-                                        <td class="py-4 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full <%= typeBadge %>"><%= typeLabel %></span></td>
-                                        <td class="py-4 px-4 text-right font-bold text-amber-600"><i class="fa-solid fa-coins mr-1 text-xs"></i><%= String.format("%,d", r.getRequiredPoints()) %> P</td>
-                                        <td class="py-4 px-4 text-right text-slate-600 font-medium"><%= valueLabel %></td>
+
+                                        <td class="py-4 px-4 text-right font-bold text-amber-600">
+
+                                            <i class="fa-solid fa-coins mr-1"></i>
+
+                                            <%= String.format("%,d", r.getPointsRequired())%>
+
+                                        </td>
+
+                                        <td class="py-4 px-4 text-right">
+
+                                            <%= r.getDiscountPercent()%>%
+
+                                        </td>
+
+                                        <td class="py-4 px-4 text-right">
+
+                                            <%= String.format("%,.0f", r.getMinBillAmount())%> đ
+
+                                        </td>
+
+                                        <td class="py-4 px-4 text-right">
+
+                                            <%= String.format("%,.0f", r.getMaxDiscountAmount())%> đ
+
+                                        </td>
+
                                         <td class="py-4 px-4 text-center">
-                                            <button onclick="toggleActive(this)" class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition <%= on ? "bg-emerald-500" : "bg-slate-300" %>">
-                                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition <%= on ? "translate-x-6" : "translate-x-1" %>"></span>
+
+                                            <button
+                                                onclick="toggleActive(this)"
+                                                class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition
+                                                <%= on ? "bg-emerald-500" : "bg-slate-300"%>">
+
+                                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition
+                                                      <%= on ? "translate-x-6" : "translate-x-1"%>">
+                                                </span>
+
                                             </button>
+
                                         </td>
-                                        <td class="py-4 px-6 text-right whitespace-nowrap">
-                                            <button onclick="openRewardModal('<%= r.getRewardName() %>', '<%= r.getDescription() %>', '<%= r.getRewardType() %>', <%= r.getRequiredPoints() %>, <%= r.getDiscount() %>)"
-                                                    class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50 transition" title="Sửa">
+
+                                        <td class="py-4 px-6 text-right">
+
+                                            <button
+                                                class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
+
                                                 <i class="fa-solid fa-pen-to-square"></i>
+
                                             </button>
-                                            <button onclick="openDeleteModal('<%= r.getRewardName() %>')" class="w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 transition" title="Xóa">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
+
                                         </td>
+
                                     </tr>
-                                    <% } %>
+
+                                    <%
+                                        }
+                                    %>
                                     <tr id="rwEmpty" class="hidden">
                                         <td colspan="6" class="py-12 text-center text-slate-400 text-sm">
                                             <i class="fa-regular fa-folder-open text-2xl block mb-2"></i> Không tìm thấy reward phù hợp
@@ -218,7 +251,8 @@
                 document.querySelectorAll('.reward-row').forEach(r => {
                     const show = r.dataset.name.includes(kw) && (tp === 'ALL' || r.dataset.type === tp);
                     r.classList.toggle('hidden', !show);
-                    if (show) visible++;
+                    if (show)
+                        visible++;
                 });
                 document.getElementById('rwEmpty').classList.toggle('hidden', visible > 0);
             }
@@ -242,24 +276,36 @@
                         document.getElementById('rType').value === 'DISCOUNT' ? 'visible' : 'hidden';
             }
 
-            function openRewardModal(name, desc, type, points, discount) {
+            function function openRewardModal(
+                    name,
+                    desc,
+                    points,
+                    discount,
+                    minBill,
+                    maxDiscount) {
                 const isEdit = name !== undefined;
                 document.getElementById('rewardModalTitle').textContent = isEdit ? 'Sửa reward' : 'Tạo reward mới';
                 document.getElementById('rName').value = isEdit ? name : '';
                 document.getElementById('rDesc').value = isEdit ? desc : '';
-                document.getElementById('rType').value = isEdit ? type : 'DISCOUNT';
+//                document.getElementById('rType').value = isEdit ? type : 'DISCOUNT';
                 document.getElementById('rPoints').value = isEdit ? points : '';
                 document.getElementById('rDiscount').value = isEdit ? discount : '';
                 toggleDiscountField();
                 rModal.classList.remove('hidden');
-                setTimeout(() => { rModal.classList.remove('opacity-0'); rContent.classList.replace('scale-95', 'scale-100'); }, 10);
+                setTimeout(() => {
+                    rModal.classList.remove('opacity-0');
+                    rContent.classList.replace('scale-95', 'scale-100');
+                }, 10);
             }
             function closeRewardModal() {
                 rModal.classList.add('opacity-0');
                 rContent.classList.replace('scale-100', 'scale-95');
                 setTimeout(() => rModal.classList.add('hidden'), 300);
             }
-            rModal.addEventListener('click', e => { if (e.target === rModal) closeRewardModal(); });
+            rModal.addEventListener('click', e => {
+                if (e.target === rModal)
+                    closeRewardModal();
+            });
 
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
@@ -267,14 +313,20 @@
             function openDeleteModal(name) {
                 document.getElementById('delName').textContent = name;
                 dModal.classList.remove('hidden');
-                setTimeout(() => { dModal.classList.remove('opacity-0'); dContent.classList.replace('scale-95', 'scale-100'); }, 10);
+                setTimeout(() => {
+                    dModal.classList.remove('opacity-0');
+                    dContent.classList.replace('scale-95', 'scale-100');
+                }, 10);
             }
             function closeDeleteModal() {
                 dModal.classList.add('opacity-0');
                 dContent.classList.replace('scale-100', 'scale-95');
                 setTimeout(() => dModal.classList.add('hidden'), 300);
             }
-            dModal.addEventListener('click', e => { if (e.target === dModal) closeDeleteModal(); });
+            dModal.addEventListener('click', e => {
+                if (e.target === dModal)
+                    closeDeleteModal();
+            });
         </script>
     </body>
 </html>

@@ -399,7 +399,10 @@ public class BookingDAO {
                 b.setVehicleId(rs.getInt("VehicleId"));
                 b.setServiceId(rs.getInt("ServiceId"));
 
-                b.setBookingDate(rs.getDate("BookingDate"));
+                java.sql.Date sqlDate = rs.getDate("BookingDate");
+                if (sqlDate != null) {
+                    b.setBookingDate(sqlDate.toLocalDate());
+                }
 
                 b.setSlotNumber(rs.getInt("SlotNumber"));
 
@@ -470,7 +473,10 @@ public class BookingDAO {
                 b.setVehicleId(rs.getInt("VehicleId"));
                 b.setServiceId(rs.getInt("ServiceId"));
 
-                b.setBookingDate(rs.getDate("BookingDate"));
+                java.sql.Date sqlDate = rs.getDate("BookingDate");
+                if (sqlDate != null) {
+                    b.setBookingDate(sqlDate.toLocalDate());
+                }
 
                 b.setSlotNumber(rs.getInt("SlotNumber"));
 
@@ -714,6 +720,135 @@ public class BookingDAO {
 
         }
 
+        return false;
+    }
+
+    /**
+     * Thực hiện SQL Transaction chốt đơn đặt lịch sau khi nhận tiền qua mã QR.
+     * Gồm 3 hành động: 1. Thêm mới bản ghi vào bảng Bookings với trạng thái
+     * 'Confirmed' 2. Cập nhật trừ điểm tích lũy của khách hàng (nếu có dùng) 3.
+     * Vô hiệu hóa Voucher bằng cách đổi trạng thái / cập nhật ngày sử dụng (nếu
+     * có dùng)
+     */
+    public boolean insertRealPaidBooking(int accountId, Booking draft, int pointsUsed, int rewardId, double finalPrice, String paymentMemo) {
+        Connection cn = null;
+        PreparedStatement pstBooking = null;
+        PreparedStatement pstPoints = null;
+        PreparedStatement pstVoucher = null;
+        ResultSet rs = null;
+
+        // Câu lệnh 1: Chèn lịch hẹn chính thức (Sử dụng RETURN_GENERATED_KEYS để lấy ID tự tăng của bản ghi vừa chèn)
+        String sqlInsertBooking = "INSERT INTO Bookings (CustomerId, VehicleId, ServiceId, BookingDate, "
+                + "SlotNumber, TotalAmount, Note) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        // Câu lệnh 2: Trừ điểm trong bảng CustomerLoyalty (Hoặc bảng lưu thông tin Loyalty của bạn dựa trên AccountId)
+        String sqlUpdatePoints = "UPDATE CustomerLoyalty SET CurrentPoints = CurrentPoints - ? WHERE AccountId = ?";
+
+        // Câu lệnh 3: Cập nhật bảng RewardRedemptions theo sơ đồ DB thực tế của bạn
+        String sqlUpdateReward = "UPDATE RewardRedemptions SET Status = 'Used', UsedBookingId = ?, UsedAt = GETDATE() "
+                + "WHERE CustomerId = ? AND RewardId = ? AND Status = 'Available'"; // Giả định trạng thái chưa dùng là 'Active'
+
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                // TẮT TÍNH NĂNG TỰ ĐỘNG COMMIT ĐỂ KÍCH HOẠT TRANSACTION
+                cn.setAutoCommit(false);
+
+                // --- HÀNH ĐỘNG 1: INSERT BOOKING ---
+                // Thêm Statement.RETURN_GENERATED_KEYS để lấy BookingId tự tăng từ SQL Server sinh ra
+                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);
+                pstBooking.setInt(1, draft.getCustomerId());
+                pstBooking.setInt(2, draft.getVehicleId());
+                pstBooking.setInt(3, draft.getServiceId());
+                pstBooking.setDate(4, java.sql.Date.valueOf(draft.getBookingDate()));
+                pstBooking.setInt(5, draft.getSlotNumber());
+                pstBooking.setDouble(6, finalPrice);
+                pstBooking.setString(7, "Thanh toan QR Code. Ma GD: " + paymentMemo);
+
+                int bookingRows = pstBooking.executeUpdate();
+                if (bookingRows <= 0) {
+                    cn.rollback();
+                    return false;
+                }
+
+                // Lấy ID tự tăng vừa được chèn vào DB của bảng Bookings
+                int generatedBookingId = -1;
+                rs = pstBooking.getGeneratedKeys();
+                if (rs.next()) {
+                    generatedBookingId = rs.getInt(1);
+                }
+
+                if (generatedBookingId == -1) {
+                    cn.rollback();
+                    return false;
+                }
+
+                // --- HÀNH ĐỘNG 2: TRỪ ĐIỂM TÍCH LŨY (Nếu khách có chọn tiêu điểm) ---
+                if (pointsUsed > 0) {
+                    pstPoints = cn.prepareStatement(sqlUpdatePoints);
+                    pstPoints.setInt(1, pointsUsed);
+                    pstPoints.setInt(2, accountId);
+
+                    int pointRows = pstPoints.executeUpdate();
+                    if (pointRows <= 0) {
+                        cn.rollback(); // Không trừ được điểm, hủy giao dịch
+                        return false;
+                    }
+                }
+
+                // --- HÀNH ĐỘNG 3: VÔ HIỆU HÓA REWARD TRONG REWARDREDEMPTIONS ---
+                // Thay vì truyền discountAmount, ta truyền thẳng rewardId nhận từ giao diện/Controller lên
+                if (rewardId > 0) {
+                    pstVoucher = cn.prepareStatement(sqlUpdateReward);
+                    pstVoucher.setInt(1, generatedBookingId); // Gán khóa ngoại liên kết tới Booking vừa tạo thành công ở trên
+                    pstVoucher.setInt(2, draft.getCustomerId());
+                    pstVoucher.setInt(3, rewardId);
+
+                    int voucherRows = pstVoucher.executeUpdate();
+                    if (voucherRows <= 0) {
+                        cn.rollback(); // Không cập nhật được trạng thái đổi thưởng (có thể đã bị dùng từ trước), hủy giao dịch
+                        return false;
+                    }
+                }
+
+                // NẾU TẤT CẢ CÁC BƯỚC ĐỀU THÀNH CÔNG -> HOÀN THÀNH TRANSACTION
+                cn.commit();
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                if (cn != null) {
+                    cn.rollback();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            // Mở lại chế độ AutoCommit mặc định và đóng tài nguyên an toàn
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (cn != null) {
+                    cn.setAutoCommit(true);
+                }
+                if (pstBooking != null) {
+                    pstBooking.close();
+                }
+                if (pstPoints != null) {
+                    pstPoints.close();
+                }
+                if (pstVoucher != null) {
+                    pstVoucher.close();
+                }
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return false;
     }
 }

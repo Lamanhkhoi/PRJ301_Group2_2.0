@@ -104,6 +104,12 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_TAB", "datlich");
                         url = "BookingController";
                         break;
+                    case "checkRealPaymentStatus":
+                        url = "CheckRealPaymentController";
+                        break;
+                    case "executeInsertBooking":
+                        url = "FinalizeBookingController";
+                        break;
 
                     // --- LUỒNG QUẢN LÝ ADMIN BOOKINGS ---
                     case "manageBooking":

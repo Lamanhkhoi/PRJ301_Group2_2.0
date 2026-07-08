@@ -205,6 +205,57 @@ public class CustomerVehicleDAO {
         return result;
     }
 
+    public Vehicle getVehicleById(int id) {
+        Vehicle result = null;
+        Connection cn = null;
+        try {
+            //buoc 1: make connection
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                //buoc2: viet sql
+                String sql = "SELECT [VehicleID]\n"
+                        + "      ,[CustomerID]\n"
+                        + "      ,[LicensePlate]\n"
+                        + "      ,[VehicleBrand]\n"
+                        + "      ,[VehicleModel]\n"
+                        + "      ,[VehicleColor]\n"
+                        + "      ,[IsDefault]\n"
+                        + "      ,[IsActive]\n"
+                        + "      ,[CreatedAt]\n"
+                        + "  FROM [CustomerVehicles]\n"
+                        + "  WHERE VehicleID = ? AND IsActive = 1";
+                PreparedStatement st = cn.prepareStatement(sql);
+                st.setInt(1, id);
+                ResultSet table = st.executeQuery();
+                //buoc 3:doc data trong bien table
+                while (table.next()) {
+                    int vehicleId = table.getInt("VehicleID");
+                    int cusid = table.getInt("CustomerID");
+                    String liPlate = table.getString("LicensePlate");
+                    String brand = table.getString("VehicleBrand");
+                    String model = table.getString("VehicleModel");
+                    String color = table.getString("VehicleColor");
+                    Boolean isDefault = table.getBoolean("IsDefault");
+                    Boolean isActive = table.getBoolean("IsActive");
+                    Date createDate = table.getDate("CreatedAt");
+
+                    result = new Vehicle(vehicleId, cusid, liPlate, brand, model, color, isDefault, isActive, createDate);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return result;
+    }
     //ham search
     public List<Vehicle> searchVehicles(
             int customerId,

@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -108,7 +109,7 @@ public class BookingController extends HttpServlet {
             if (cus == null) {
                 session.setAttribute("ALERT_TYPE", "error");
                 session.setAttribute("ALERT_MSG", "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
-                request.getRequestDispatcher(request.getContextPath() + "/login.jsp"); // Đổi link login của bạn nếu cần
+                request.getRequestDispatcher(request.getContextPath() + "/login_view.jsp"); // Đổi link login của bạn nếu cần
                 return;
             }
 
@@ -167,24 +168,55 @@ public class BookingController extends HttpServlet {
 //            }
 
             // 6. Thực hiện gọi DAO để chèn vào Database
-            boolean isSuccess = bookingDAO.createNewBooking(
-                    cus.getCustomerId(),
-                    vehicleId,
-                    serviceId,
-                    bookingDate,
-                    slotNumber,
-                    service.getPrice()
-            );
+//            boolean isSuccess = bookingDAO.createNewBooking(
+//                    cus.getCustomerId(),
+//                    vehicleId,
+//                    serviceId,
+//                    bookingDate,
+//                    slotNumber,
+//                    service.getPrice()
+//            );
+//
+//            if (isSuccess) {
+//                session.setAttribute("ALERT_TYPE", "success");
+//                session.setAttribute("ALERT_MSG", "Booking thành công!");
+//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=success");
+//            } else {
+//                session.setAttribute("ALERT_TYPE", "fail");
+//                session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");
+//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
+//            }
+            // =========================================================================
+            // CHỖ THAY ĐỔI QUAN TRỌNG: KHÔNG INSERT VÀO DB NỮA MÀ ĐẨY VÀO SESSION
+            // =========================================================================
+            CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
+            
+            // Tạo một đối tượng Booking tạm thời để đóng gói dữ liệu nháp
+            
+            Booking bookingDraft = new Booking();
+            bookingDraft.setCustomerId(cus.getCustomerId());
+            bookingDraft.setVehicleId(vehicleId);
+            bookingDraft.setServiceId(serviceId);
+            bookingDraft.setBookingDate(LocalDate.parse(bookingDate));
+            bookingDraft.setSlotNumber(slotNumber);
+            bookingDraft.setTotalAmount(service.getPrice()); // Lưu giá gốc từ DB vào nháp
+            bookingDraft.setLicensePlate(veDAO.getVehicleById(vehicleId).getLicensePlate());
+            CustomerLoyaltyDAO loyalDAO = new  CustomerLoyaltyDAO();
+            Account account = (Account)session.getAttribute("USER");
+            CustomerLoyalty loyal = loyalDAO.getLoyaltyProfileByAccountId(account.getAccountID());
+            request.setAttribute("LOYAL", loyal);
+            // Gửi cả chuỗi thời gian (ví dụ "08:00-08:30") sang để hiển thị hóa đơn mà không cần truy vấn lại
+            TimeSlotDAO timeDAO = new TimeSlotDAO();
+            Map<Integer, TimeSlot> timeSlotMap = timeDAO.getAllTimeSlots();
+            TimeSlot slot = timeSlotMap.get(slotNumber);
+            session.setAttribute("BOOKING_TIME_TEXT", slot.getStartTime().substring(0, 5) + "-" + slot.getEndTime().substring(0, 5)); 
+            
+            // Đóng gói đối tượng nháp lưu trực tiếp vào Session
+            session.setAttribute("BOOKING_DRAFT", bookingDraft);
 
-            if (isSuccess) {
-                session.setAttribute("ALERT_TYPE", "success");
-                session.setAttribute("ALERT_MSG", "Booking thành công!");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=success");
-            } else {
-                session.setAttribute("ALERT_TYPE", "fail");
-                session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");
-                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
-            }
+            // Chuyển hướng (Redirect) thông qua MainController hoặc trực tiếp sang trang Payment
+            // Nên redirect để trình duyệt thay đổi URL sạch sẽ sang trang thanh toán
+            request.getRequestDispatcher("DashBoard/customer_payment.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace(); // In log ra console để dev kiểm tra hệ thống sập vì lý do gì khác

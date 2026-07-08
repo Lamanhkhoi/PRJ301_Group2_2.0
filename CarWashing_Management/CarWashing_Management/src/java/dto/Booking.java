@@ -1,15 +1,23 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+/**
+ *
+ * @author LENOVO
+ */
 public class Booking {
-
     private int bookingId;
     private int customerId;
     private int vehicleId;
     private int serviceId;
-    private Date bookingDate;
+    private LocalDate bookingDate;
     private int slotNumber;
     private LocalDateTime actualCheckInTime;
     private LocalDateTime completeAt;
@@ -26,7 +34,7 @@ public class Booking {
     public Booking() {
     }
 
-    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, Date bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, String licensePlate, String vehicleBrand, String vehicleModel, String serviceName, LocalDateTime createdAt, LocalDateTime updatedAt, boolean canCancel) {
+    public Booking(int bookingId, int customerId, int vehicleId, int serviceId, LocalDate bookingDate, int slotNumber, LocalDateTime actualCheckInTime, LocalDateTime completeAt, double totalAmount, String bookingStatus, String note, String licensePlate, String vehicleBrand, String vehicleModel, String serviceName, LocalDateTime createdAt, LocalDateTime updatedAt, boolean canCancel) {
         this.bookingId = bookingId;
         this.customerId = customerId;
         this.vehicleId = vehicleId;
@@ -79,11 +87,11 @@ public class Booking {
         this.serviceId = serviceId;
     }
 
-    public Date getBookingDate() {
+    public LocalDate getBookingDate() {
         return bookingDate;
     }
 
-    public void setBookingDate(Date bookingDate) {
+    public void setBookingDate(LocalDate bookingDate) {
         this.bookingDate = bookingDate;
     }
 
@@ -191,5 +199,4 @@ public class Booking {
         this.canCancel = canCancel;
     }
 
-    
 }

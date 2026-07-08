@@ -36,7 +36,7 @@
                 <span>Khuyến Mãi</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/Admin/admin_reward.jsp" data-tab="voucherreward" 
+            <a href="<%=request.getContextPath()%>/MainController?action=rewardManagement" data-tab="voucherreward" 
                class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 <%= "voucherreward".equals(activeTab) ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20" : "hover:bg-slate-800 hover:text-white" %>">
                 <i class="fa-solid fa-gift w-5 text-lg"></i> 
                 <span>Voucher &amp; Reward</span>

@@ -17,7 +17,18 @@ public class RewardDAO {
         List<Reward> list = new ArrayList<>();
 
         String sql
-                = "SELECT * FROM Rewards ORDER BY RewardId DESC";
+                = "SELECT\n"
+                + "    RewardId,\n"
+                + "    RewardName,\n"
+                + "    Description,\n"
+                + "    PointsRequired,\n"
+                + "    DiscountPercent,\n"
+                + "    MinBillAmount,\n"
+                + "    MaxDiscountAmount,\n"
+                + "    IsActive,\n"
+                + "    CreatedAt\n"
+                + "FROM Rewards\n"
+                + "ORDER BY RewardId DESC";
 
         try (
                  Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
@@ -58,4 +69,40 @@ public class RewardDAO {
         return list;
     }
 
+    public boolean insertReward(Reward reward) {
+
+        String sql
+                = "INSERT INTO Rewards "
+                + "(RewardName, Description, PointsRequired, "
+                + "DiscountPercent, MinBillAmount, "
+                + "MaxDiscountAmount, IsActive) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (
+                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setString(1, reward.getRewardName());
+
+            ps.setString(2, reward.getDescription());
+
+            ps.setInt(3, reward.getPointsRequired());
+
+            ps.setDouble(4, reward.getDiscountPercent());
+
+            ps.setDouble(5, reward.getMinBillAmount());
+
+            ps.setDouble(6, reward.getMaxDiscountAmount());
+
+            ps.setBoolean(7, reward.isActive());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        return false;
+    }
 }

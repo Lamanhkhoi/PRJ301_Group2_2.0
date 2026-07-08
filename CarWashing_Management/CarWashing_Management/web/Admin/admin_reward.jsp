@@ -190,37 +190,41 @@
                     </div>
 
                     <%-- TODO BACKEND: bọc <form method="post"> map đúng field của DTO Reward --%>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
-                            <input id="rName" type="text" placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                    <form method="post" action="${pageContext.request.contextPath}/MainController">
+                        <input type="hidden"
+                               name="action"
+                               value="rewardManagement">
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+                            <div class="md:col-span-2">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
+                                <input id="rName" name="rewardName" type="text" placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
+                                <input id="rDesc" name="description" type="text" placeholder="Mô tả ngắn hiển thị trên card của khách" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">Loại reward <span class="text-red-500">*</span></label>
+                                <select id="rType" onchange="toggleDiscountField()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="DISCOUNT">Giảm giá (voucher tiền)</option>
+                                    <option value="FREE_SERVICE">Dịch vụ miễn phí</option>
+                                    <option value="GIFT">Quà tặng hiện vật</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
+                                <input id="rPoints" name="pointsRequired" type="number" min="0" placeholder="VD: 2000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div id="discountField">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Số tiền giảm (VNĐ)</label>
+                                <input id="rDiscount" name="discountPercent" type="number" min="0" placeholder="VD: 20000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
-                            <input id="rDesc" type="text" placeholder="Mô tả ngắn hiển thị trên card của khách" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Loại reward <span class="text-red-500">*</span></label>
-                            <select id="rType" onchange="toggleDiscountField()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                <option value="DISCOUNT">Giảm giá (voucher tiền)</option>
-                                <option value="FREE_SERVICE">Dịch vụ miễn phí</option>
-                                <option value="GIFT">Quà tặng hiện vật</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
-                            <input id="rPoints" type="number" min="0" placeholder="VD: 2000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div id="discountField">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Số tiền giảm (VNĐ)</label>
-                            <input id="rDiscount" type="number" min="0" placeholder="VD: 20000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                    </div>
 
-                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
-                        <button onclick="closeRewardModal()" class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <button onclick="closeRewardModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
-                    </div>
+                        <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+                            <button type="submit" class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
+                        </div>
                 </div>
             </div>
 
@@ -276,7 +280,7 @@
                         document.getElementById('rType').value === 'DISCOUNT' ? 'visible' : 'hidden';
             }
 
-            function function openRewardModal(
+            function openRewardModal(
                     name,
                     desc,
                     points,

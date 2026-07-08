@@ -65,41 +65,13 @@ public class AdminBookingManagement extends HttpServlet {
             boolean isFiltered = !searchLicensePlate.trim().isEmpty();
             BookingDAO dao = new BookingDAO();
 
-            // Lấy toàn bộ 28 khung giờ ca từ DB (bảng TimeSlot)
+            // Lấy toàn bộ 28 khung giờ ca từ DB (bảng TimeSlot) một lần duy nhất, qua TimeSlotDAO
             TimeSlotDAO timeSlotDAO = new TimeSlotDAO();
             Map<Integer, TimeSlot> timeSlotMap = timeSlotDAO.getAllTimeSlots();
-            LocalDate today = LocalDate.now();
-            LocalTime now = LocalTime.now();
 
-            List<Map<String, Object>> allBookingsForCheck = dao.getAdminBookingSlots(dateParam, "");
-            if (allBookingsForCheck != null) {
-                for (Map<String, Object> b : allBookingsForCheck) {
-                    String status = (String) b.get("BookingStatus");
-                    int slotNumber = (Integer) b.get("SlotNumber");
-                    int bookingId = (Integer) b.get("BookingId");
-                    LocalDate bDate = LocalDate.parse(dateParam);
-
-                    boolean isPastDate = bDate.isBefore(today);
-
-                    // Nếu đơn ở trạng thái Pending ở QUÁ KHỨ -> No show
-                    if ("Pending".equals(status)) {
-                        TimeSlot tsInfo = timeSlotMap.get(slotNumber);
-                        LocalTime slotStartTime = (tsInfo != null) ? LocalTime.parse(tsInfo.getStartTime()) : LocalTime.of(8, 0);
-                        LocalTime noShowDeadline = slotStartTime.plusMinutes(1);
-
-                        boolean isTodayAndOverdue = bDate.isEqual(today) && now.isAfter(noShowDeadline);
-
-                        if (isPastDate || isTodayAndOverdue) {
-                            dao.updateBookingStatus(bookingId, "NoShow");
-                        }
-                    }
-
-                    // Nếu đơn CheckedIn ở QUÁ KHỨ -> Completed
-                    if ("CheckedIn".equals(status) && isPastDate) {
-                        dao.updateBookingStatus(bookingId, "Completed");
-                    }
-                }
-            }
+            // QUÉT VÀ CẬP NHẬT TRẠNG THÁI QUÁ HẠN TRƯỚC KHI HIỂN THỊ.
+            // Logic quét (Pending quá giờ -> NoShow, CheckedIn quá khứ -> Completed) đã được
+            dao.scanAndUpdateNoShowStatus(dateParam, timeSlotMap);
 
             // Tiến hành lấy lại dữ liệu mới nhất sau khi quét
             List<Map<String, Object>> rawBookings = dao.getAdminBookingSlots(dateParam, searchLicensePlate);

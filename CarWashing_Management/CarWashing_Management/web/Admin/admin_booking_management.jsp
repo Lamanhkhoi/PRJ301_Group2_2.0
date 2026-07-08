@@ -1,10 +1,10 @@
-<%@page import="dto.TimeSlot"%>
 <%@page import="java.net.URLEncoder"%>
 <%@ include file="../includes/admin-auth-check.jsp" %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.util.Map"%>
 <%@page import="java.util.List"%>
 <%@page import="java.text.DecimalFormat"%>
+<%@page import="dto.TimeSlot"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -126,9 +126,12 @@
                                         <%
                                             boolean dynamicRowHasData = false;
                                             for (int slot = 1; slot <= 28; slot++) {
-                                                // Lấy giờ bắt đầu ca từ bảng TimeSlot (qua timeSlotMap)
+                                                // Lấy giờ bắt đầu ca từ bảng TimeSlot (qua timeSlotMap) thay vì tính bằng thuật toán.
+                                                // Đổi giờ ca sau này chỉ cần sửa dữ liệu trong DB, không cần sửa file JSP này.
                                                 TimeSlot tsInfo = (timeSlotMap != null) ? timeSlotMap.get(slot) : null;
-                                                String timeString = (tsInfo != null) ? java.time.LocalTime.parse(tsInfo.getStartTime()).format(timeFormatter) : "--:--";
+                                                String timeString = (tsInfo != null)
+                                                        ? java.time.LocalTime.parse(tsInfo.getStartTime()).format(timeFormatter)
+                                                        : "--:--";
 
                                                 List<Map<String, Object>> bookingList = (slotMap != null) ? slotMap.get(slot) : null;
                                                 int listSize = (bookingList != null) ? bookingList.size() : 0;

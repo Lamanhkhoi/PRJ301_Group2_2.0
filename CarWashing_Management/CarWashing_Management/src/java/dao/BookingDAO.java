@@ -8,11 +8,9 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class BookingDAO {
@@ -32,7 +30,7 @@ public class BookingDAO {
             rs = pst.executeQuery();
             if (rs.next()) {
                 int currentCars = rs.getInt(1);
-                return currentCars < 3; // Trả về true nếu còn slot trống (< 3)
+                return currentCars < 3;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -198,6 +196,44 @@ public class BookingDAO {
         return false;
     }
 
+    public void scanAndUpdateNoShowStatus(String dateStr, Map<Integer, dto.TimeSlot> timeSlotMap) {
+        List<Map<String, Object>> allBookings = getAdminBookingSlots(dateStr, "");
+        if (allBookings == null) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        LocalDate bDate = LocalDate.parse(dateStr);
+        boolean isPastDate = bDate.isBefore(today);
+
+        for (Map<String, Object> b : allBookings) {
+            String status = (String) b.get("BookingStatus");
+            int slotNumber = (Integer) b.get("SlotNumber");
+            int bookingId = (Integer) b.get("BookingId");
+
+            // Nếu đơn ở trạng thái Pending ở QUÁ KHỨ, hoặc hôm nay đã trễ quá 1 phút -> NoShow
+            if ("Pending".equals(status)) {
+                dto.TimeSlot tsInfo = (timeSlotMap != null) ? timeSlotMap.get(slotNumber) : null;
+                LocalTime slotStartTime = (tsInfo != null)
+                        ? LocalTime.parse(tsInfo.getStartTime())
+                        : LocalTime.of(8, 0);
+                LocalTime noShowDeadline = slotStartTime.plusMinutes(1);
+
+                boolean isTodayAndOverdue = bDate.isEqual(today) && now.isAfter(noShowDeadline);
+
+                if (isPastDate || isTodayAndOverdue) {
+                    updateBookingStatus(bookingId, "NoShow");
+                }
+            }
+
+            // Nếu đơn CheckedIn ở QUÁ KHỨ -> Completed
+            if ("CheckedIn".equals(status) && isPastDate) {
+                updateBookingStatus(bookingId, "Completed");
+            }
+        }
+    }
+
     public List<Map<String, Object>> getAdminBookingSlots(String bookingDate, String searchLicensePlate) {
         List<Map<String, Object>> list = new ArrayList<>();
         Connection cn = null;
@@ -326,7 +362,7 @@ public class BookingDAO {
                     map.put("BookingId", rs.getInt("BookingId"));
                     map.put("SlotNumber", rs.getInt("SlotNumber"));
                     map.put("BookingStatus", rs.getString("BookingStatus"));
-                    map.put("BookingDate", rs.getDate("BookingDate")); // Trả về dạng Date hoặc String tương ứng
+                    map.put("BookingDate", rs.getDate("BookingDate"));
                     map.put("Note", rs.getString("Note"));
                     map.put("TotalAmount", rs.getDouble("TotalAmount"));
                 }

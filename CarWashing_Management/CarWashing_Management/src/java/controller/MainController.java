@@ -55,9 +55,13 @@ public class MainController extends HttpServlet {
                         break;
                     case "adminDashboard":
                         request.setAttribute("ACTIVE_ADMIN", "tongquan");
-                        url = "Admin/admin_dashboard.jsp";
+                        if (request.getAttribute("DASHBOARD_DATA") == null) {
+                            url = "AdminDashboardController";
+                        } else {
+                            url = "Admin/admin_dashboard.jsp";
+                        }
                         break;
-                        
+
                     // --- Luồng History ---
                     case "customerHistory":
                         url = "HistoryController";
@@ -65,8 +69,8 @@ public class MainController extends HttpServlet {
                     case "customerHistoryDashboard":
                         request.setAttribute("ACTIVE_TAB", "lichsu");
                         url = "DashBoard/customer_history.jsp";
-                                break;
-                    
+                        break;
+
                     // --- LUỒNG QUẢN LÝ VEHICLES ---
                     case "customerVehicle":
                         request.setAttribute("ACTIVE_TAB", "cus_vehicle");
@@ -124,11 +128,11 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_ADMIN", "quanly_datlich");
                         url = "UpdateBookingStatus";
                         break;
-                        //xử lý đưa data lên upcoming.jsp
+                    //xử lý đưa data lên upcoming.jsp
                     case "customerUpcoming":
                         url = "UpcomingBookingController";
                         break;
-                        
+
                     case "cancelBooking":
                         url = "CancelBookingController";
                         break;

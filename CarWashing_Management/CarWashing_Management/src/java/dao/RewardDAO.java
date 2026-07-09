@@ -71,33 +71,35 @@ public class RewardDAO {
 
     public boolean insertReward(Reward reward) {
 
+        System.out.println("===== INSERT DAO =====");
+
         String sql
                 = "INSERT INTO Rewards "
-                + "(RewardName, Description, PointsRequired, "
-                + "DiscountPercent, MinBillAmount, "
-                + "MaxDiscountAmount, IsActive) "
+                + "(RewardName, Description, PointsRequired, DiscountPercent, MinBillAmount, MaxDiscountAmount, IsActive) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (
                  Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
 
+            System.out.println(sql);
+
             ps.setString(1, reward.getRewardName());
-
             ps.setString(2, reward.getDescription());
-
             ps.setInt(3, reward.getPointsRequired());
-
             ps.setDouble(4, reward.getDiscountPercent());
-
             ps.setDouble(5, reward.getMinBillAmount());
-
             ps.setDouble(6, reward.getMaxDiscountAmount());
-
             ps.setBoolean(7, reward.isActive());
 
-            return ps.executeUpdate() > 0;
+            int row = ps.executeUpdate();
+
+            System.out.println("Rows affected = " + row);
+
+            return row > 0;
 
         } catch (Exception e) {
+
+            System.out.println("DAO ERROR");
 
             e.printStackTrace();
 

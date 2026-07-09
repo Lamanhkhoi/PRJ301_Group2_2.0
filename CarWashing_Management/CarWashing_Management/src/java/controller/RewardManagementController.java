@@ -42,7 +42,7 @@ public class RewardManagementController extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-
+            System.out.println("===== DO POST =====");
             String rewardName = request.getParameter("rewardName");
             String description = request.getParameter("description");
 
@@ -51,6 +51,33 @@ public class RewardManagementController extends HttpServlet {
 
             double discountPercent = Double.parseDouble(
                     request.getParameter("discountPercent"));
+            if (rewardName == null || rewardName.trim().isEmpty()) {
+
+                request.setAttribute("ERROR",
+                        "Tên Reward không được để trống.");
+
+                doGet(request, response);
+
+                return;
+            }
+            if (pointsRequired < 0) {
+
+                request.setAttribute("ERROR",
+                        "Điểm đổi phải lớn hơn hoặc bằng 0.");
+
+                doGet(request, response);
+
+                return;
+            }
+            if (discountPercent < 0 || discountPercent > 100) {
+
+                request.setAttribute("ERROR",
+                        "Phần trăm giảm phải từ 0 đến 100.");
+
+                doGet(request, response);
+
+                return;
+            }
 
             Reward reward = new Reward();
 
@@ -59,16 +86,51 @@ public class RewardManagementController extends HttpServlet {
             reward.setPointsRequired(pointsRequired);
             reward.setDiscountPercent(discountPercent);
 
-            reward.setMinBillAmount(0);
+            double minBillAmount = Double.parseDouble(
+                    request.getParameter("minBillAmount"));
 
-            reward.setMaxDiscountAmount(0);
+            double maxDiscountAmount = Double.parseDouble(
+                    request.getParameter("maxDiscountAmount"));
 
+            reward.setMinBillAmount(minBillAmount);
+            reward.setMaxDiscountAmount(maxDiscountAmount);
+            if (minBillAmount < 0) {
+                request.setAttribute("ERROR",
+                        "Hóa đơn tối thiểu không hợp lệ.");
+                doGet(request, response);
+                return;
+            }
+
+            if (maxDiscountAmount <= 0) {
+                request.setAttribute("ERROR",
+                        "Giảm tối đa phải lớn hơn 0.");
+                doGet(request, response);
+                return;
+            }
             reward.setActive(true);
+
+            System.out.println("Reward = "
+                    + reward.getRewardName());
+
+            System.out.println("Point = "
+                    + reward.getPointsRequired());
+
+            System.out.println("Discount = "
+                    + reward.getDiscountPercent());
+
+            System.out.println("MinBill = "
+                    + reward.getMinBillAmount());
+
+            System.out.println("MaxDiscount = "
+                    + reward.getMaxDiscountAmount());
+
+            System.out.println("Active = "
+                    + reward.isActive());
 
             RewardDAO dao = new RewardDAO();
 
             boolean result = dao.insertReward(reward);
-
+            System.out.println("Insert = " + result);
             if (result) {
 
                 response.sendRedirect(

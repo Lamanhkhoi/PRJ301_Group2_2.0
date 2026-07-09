@@ -197,7 +197,7 @@
                         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
                             <div class="md:col-span-2">
                                 <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
-                                <input id="rName" name="rewardName" type="text" placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                                <input id="rName" name="rewardName" type="text" required placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
@@ -213,11 +213,36 @@
                             </div>
                             <div>
                                 <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
-                                <input id="rPoints" name="pointsRequired" type="number" min="0" placeholder="VD: 2000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                                <input id="rPoints" name="pointsRequired" type="number" min="0" placeholder="VD: 1000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
                             </div>
                             <div id="discountField">
-                                <label class="block font-semibold text-slate-600 mb-1.5">Số tiền giảm (VNĐ)</label>
-                                <input id="rDiscount" name="discountPercent" type="number" min="0" placeholder="VD: 20000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Phần trăm giảm (%)</label>
+                                <input id="rDiscount" name="discountPercent" type="number" min="0" placeholder="VD: 10 , 20,..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Hóa đơn tối thiểu
+                                </label>
+
+                                <input
+                                    name="minBillAmount"
+                                    type="number"
+                                    min="0"
+                                    placeholder="VD: 100000"
+                                    class="w-full px-4 py-2.5 rounded-xl border">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Giảm tối đa
+                                </label>
+
+                                <input
+                                    name="maxDiscountAmount"
+                                    type="number"
+                                    min="0"
+                                    placeholder="VD: 50000"
+                                    class="w-full px-4 py-2.5 rounded-xl border">
                             </div>
                         </div>
 

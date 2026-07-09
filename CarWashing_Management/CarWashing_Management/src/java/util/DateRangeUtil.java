@@ -6,6 +6,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tiện ích tính khoảng thời gian và các "bucket" (đơn vị chia nhỏ trên trục X)
+ * cho 4 loại filter của Admin Dashboard: Tuần / Tháng / Quý / Năm.
+ *
+ * Dùng chung cho mọi Servlet/DAO của Dashboard -- tránh lặp code tính ngày ở nhiều nơi.
+ * Không đụng tới bảng DB nào, chỉ xử lý thuần logic ngày tháng (java.time).
+ */
 public class DateRangeUtil {
 
     public enum FilterType {
@@ -111,7 +118,7 @@ public class DateRangeUtil {
                     LocalDate weekStart = cursor;
                     LocalDate mondayOfCursorWeek = getMondayOfWeek(cursor);
                     LocalDate weekEndCandidate = mondayOfCursorWeek.plusDays(6);
-
+                    // Cắt bucket cuối cùng lại đúng ranh giới của quý (không vượt quá rangeEnd)
                     LocalDate weekEnd = weekEndCandidate.isAfter(rangeEnd) ? rangeEnd : weekEndCandidate;
 
                     buckets.add(new PeriodBucket("Tuần " + weekIndex, weekStart, weekEnd));
@@ -135,11 +142,52 @@ public class DateRangeUtil {
         return buckets;
     }
 
+    /**
+     * Trả về "ngày tham chiếu" mới sau khi dịch chuyển 1 đơn vị kỳ (trước/sau),
+     * dùng cho 2 nút "Kỳ trước" / "Kỳ sau" trên Dashboard.
+     *
+     * direction: -1 = lùi về kỳ trước, +1 = tiến tới kỳ sau
+     * - WEEK    -> dịch 7 ngày
+     * - MONTH   -> dịch 1 tháng (giữ nguyên ngày trong tháng nếu có thể)
+     * - QUARTER -> dịch 3 tháng
+     * - YEAR    -> dịch 1 năm
+     *
+     * Ngày trả về chỉ cần "rơi vào" kỳ mới -- getRange()/getBuckets() sẽ tự tính lại
+     * đúng ngày đầu/cuối của kỳ chứa ngày này.
+     */
+    public static LocalDate shiftPeriod(FilterType type, LocalDate referenceDate, int direction) {
+        switch (type) {
+            case WEEK:
+                return referenceDate.plusWeeks(direction);
+            case MONTH:
+                return referenceDate.plusMonths(direction);
+            case QUARTER:
+                return referenceDate.plusMonths(3L * direction);
+            case YEAR:
+                return referenceDate.plusYears(direction);
+            default:
+                throw new IllegalArgumentException("FilterType không hợp lệ: " + type);
+        }
+    }
+
+    /**
+     * Trả về "ngày tham chiếu" của kỳ hiện tại (dùng cho nút "Hôm nay" trên Dashboard).
+     */
+    public static LocalDate today() {
+        return LocalDate.now();
+    }
+
+    /**
+     * Trả về ngày Thứ 2 của tuần chứa "date" (tuần bắt đầu từ Thứ 2 -> Chủ Nhật).
+     */
     public static LocalDate getMondayOfWeek(LocalDate date) {
         long daysFromMonday = date.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue();
         return date.minusDays(daysFromMonday);
     }
 
+    /**
+     * Đổi DayOfWeek sang nhãn tiếng Việt: Thứ 2, Thứ 3, ..., Thứ 7, Chủ Nhật.
+     */
     public static String getVietnameseWeekdayLabel(DayOfWeek dayOfWeek) {
         switch (dayOfWeek) {
             case MONDAY:
@@ -160,6 +208,10 @@ public class DateRangeUtil {
         }
     }
 
+    /**
+     * 1 đơn vị chia nhỏ trên trục X của biểu đồ (VD: 1 ngày, 1 tuần, hoặc 1 tháng),
+     * kèm theo khoảng ngày [start, end] (inclusive) tương ứng để DAO dùng lọc dữ liệu.
+     */
     public static class PeriodBucket {
         private final String label;
         private final LocalDate start;
@@ -183,6 +235,7 @@ public class DateRangeUtil {
             return end;
         }
 
+        /** Số ngày trong bucket này (inclusive), dùng để kiểm tra nhanh nếu cần. */
         public long getDayCount() {
             return ChronoUnit.DAYS.between(start, end) + 1;
         }

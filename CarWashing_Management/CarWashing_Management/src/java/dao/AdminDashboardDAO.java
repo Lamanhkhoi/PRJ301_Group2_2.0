@@ -20,19 +20,26 @@ import util.DateRangeUtil;
 import util.DateRangeUtil.FilterType;
 import util.DateRangeUtil.PeriodBucket;
 
+/**
+ * DAO tổng hợp dữ liệu cho trang Admin Dashboard (Người 4).
+ * Mỗi hàm public phụ trách đúng 1 khối trong AdminDashboardData, tự viết SQL
+ * thẳng lên các bảng liên quan -- không phụ thuộc DAO của Người 1/2/3.
+ *
+ * Riêng phần Recent Bookings tái sử dụng TimeSlotDAO đã có để xác định slot hiện tại.
+ */
 public class AdminDashboardDAO {
 
     private static final DateTimeFormatter TIME_LABEL_FORMAT = DateTimeFormatter.ofPattern("H:mm");
 
     // ================================================================
-    // 1. KPI CARDS
+    // 1. KPI CARDS -- luôn cố định "Hôm nay", không phụ thuộc filter
     // ================================================================
     public void loadTodayKpi(AdminDashboardData data) {
         Connection cn = null;
         PreparedStatement pst = null;
         ResultSet rs = null;
 
-        String today = LocalDate.now().toString();
+        String today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).toString();
 
         String sql = "SELECT "
                 + "  (SELECT ISNULL(SUM(p.FinalAmount), 0) FROM Payments p "
@@ -65,10 +72,10 @@ public class AdminDashboardDAO {
     }
 
     // ================================================================
-    // 2. REVENUE CHART 
+    // 2. REVENUE CHART -- theo filter, 1 điểm / bucket (SUM FinalAmount, IsPaid=1)
     // ================================================================
-    public void loadRevenueChart(AdminDashboardData data, FilterType filterType) {
-        List<PeriodBucket> buckets = DateRangeUtil.getBuckets(filterType, LocalDate.now());
+    public void loadRevenueChart(AdminDashboardData data, FilterType filterType, LocalDate referenceDate) {
+        List<PeriodBucket> buckets = DateRangeUtil.getBuckets(filterType, referenceDate);
         List<ChartPoint> chart = new ArrayList<>();
 
         String sql = "SELECT ISNULL(SUM(p.FinalAmount), 0) AS Revenue "
@@ -101,10 +108,10 @@ public class AdminDashboardDAO {
     }
 
     // ================================================================
-    // 3. BOOKING TREND
+    // 3. BOOKING TREND -- theo filter, 1 điểm / bucket (COUNT tất cả booking theo BookingDate)
     // ================================================================
-    public void loadBookingTrend(AdminDashboardData data, FilterType filterType) {
-        List<PeriodBucket> buckets = DateRangeUtil.getBuckets(filterType, LocalDate.now());
+    public void loadBookingTrend(AdminDashboardData data, FilterType filterType, LocalDate referenceDate) {
+        List<PeriodBucket> buckets = DateRangeUtil.getBuckets(filterType, referenceDate);
         List<ChartPoint> chart = new ArrayList<>();
 
         String sql = "SELECT COUNT(*) AS BookingCount FROM Bookings WHERE BookingDate BETWEEN ? AND ?";
@@ -135,10 +142,11 @@ public class AdminDashboardDAO {
     }
 
     // ================================================================
-    // 4. PAYMENT OVERVIEW
+    // 4. PAYMENT OVERVIEW -- theo filter, tổng cho CẢ khoảng (không chia bucket)
+    // Paid = IsPaid=1 | Pending = IsPaid=0 và chưa Cancelled/NoShow | Cancel = Cancelled/NoShow
     // ================================================================
-    public void loadPaymentOverview(AdminDashboardData data, FilterType filterType) {
-        LocalDate[] range = DateRangeUtil.getRange(filterType, LocalDate.now());
+    public void loadPaymentOverview(AdminDashboardData data, FilterType filterType, LocalDate referenceDate) {
+        LocalDate[] range = DateRangeUtil.getRange(filterType, referenceDate);
         String start = range[0].toString();
         String end = range[1].toString();
 
@@ -178,12 +186,13 @@ public class AdminDashboardDAO {
     }
 
     // ================================================================
-    // 5. TOP SERVICES
+    // 5. TOP SERVICES -- theo filter, hiển thị TẤT CẢ gói dịch vụ (kể cả 0 lượt đặt)
     // ================================================================
-    public void loadTopServices(AdminDashboardData data, FilterType filterType) {
-        LocalDate[] range = DateRangeUtil.getRange(filterType, LocalDate.now());
+    public void loadTopServices(AdminDashboardData data, FilterType filterType, LocalDate referenceDate) {
+        LocalDate[] range = DateRangeUtil.getRange(filterType, referenceDate);
         List<ServiceStat> stats = new ArrayList<>();
 
+        // LEFT JOIN từ WashServices để không bỏ sót gói nào chưa có lượt đặt trong khoảng lọc
         String sql = "SELECT ws.ServiceName, COUNT(b.BookingId) AS BookingCount "
                 + "FROM WashServices ws "
                 + "LEFT JOIN Bookings b ON b.ServiceId = ws.ServiceId AND b.BookingDate BETWEEN ? AND ? "
@@ -212,18 +221,21 @@ public class AdminDashboardDAO {
     }
 
     // ================================================================
-    // 6. RECENT BOOKINGS
+    // 6. RECENT BOOKINGS -- real-time, KHÔNG theo filter
+    // Slot hiện tại = slot mà giờ hiện tại (now) rơi vào [StartTime, EndTime)
+    // Tái sử dụng TimeSlotDAO để lấy đủ 28 slot, không viết lại logic giờ ở đây.
     // ================================================================
     public void loadRecentBookings(AdminDashboardData data) {
         TimeSlotDAO timeSlotDAO = new TimeSlotDAO();
         Map<Integer, TimeSlot> timeSlotMap = timeSlotDAO.getAllTimeSlots();
 
-        LocalTime now = LocalTime.now();
-        String today = LocalDate.now().toString();
+        LocalTime now = LocalTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        String today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).toString();
 
         int currentSlotNumber = -1;
         int nextSlotNumber = -1;
 
+        // Duyệt 28 slot theo thứ tự để tìm slot chứa "now"
         for (int slotNo = 1; slotNo <= 28; slotNo++) {
             TimeSlot slot = timeSlotMap.get(slotNo);
             if (slot == null) {
@@ -238,6 +250,8 @@ public class AdminDashboardDAO {
             }
         }
 
+        // Ngoài giờ hoạt động (trước ca 1 hoặc sau ca 28): không có slot hiện tại.
+        // Trước giờ mở cửa -> slot kế tiếp là Ca 1. Sau giờ đóng cửa -> không có slot kế tiếp.
         if (currentSlotNumber == -1) {
             TimeSlot firstSlot = timeSlotMap.get(1);
             if (firstSlot != null && now.isBefore(LocalTime.parse(firstSlot.getStartTime()))) {
@@ -312,9 +326,10 @@ public class AdminDashboardDAO {
 
     // ================================================================
     // 7. PROMOTION / MEMBERSHIP
+    // Voucher Used & New Members theo filter | Members = tổng all-time, không lọc
     // ================================================================
-    public void loadPromotionMembership(AdminDashboardData data, FilterType filterType) {
-        LocalDate[] range = DateRangeUtil.getRange(filterType, LocalDate.now());
+    public void loadPromotionMembership(AdminDashboardData data, FilterType filterType, LocalDate referenceDate) {
+        LocalDate[] range = DateRangeUtil.getRange(filterType, referenceDate);
         String start = range[0].toString();
         String end = range[1].toString();
 
@@ -348,6 +363,9 @@ public class AdminDashboardDAO {
         }
     }
 
+    // ================================================================
+    // Đóng kết nối DB dùng chung cho mọi hàm ở trên
+    // ================================================================
     private void closeAll(Connection cn, PreparedStatement pst, ResultSet rs) {
         try {
             if (rs != null) {

@@ -8,12 +8,11 @@
 <%@page import="dto.AdminDashboardData.RecentBooking"%>
 <%!
     // Chuyển List<ChartPoint> thành 2 mảng JSON (labels, values) để nạp vào Chart.js.
+    // Viết thủ công (không dùng thư viện JSON ngoài) vì dữ liệu chỉ gồm số và nhãn tiếng Việt đơn giản.
     private String chartLabelsJson(List<ChartPoint> points) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < points.size(); i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
+            if (i > 0) sb.append(",");
             sb.append("\"").append(points.get(i).getLabel().replace("\"", "\\\"")).append("\"");
         }
         return sb.append("]").toString();
@@ -22,9 +21,7 @@
     private String chartValuesJson(List<ChartPoint> points) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < points.size(); i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
+            if (i > 0) sb.append(",");
             sb.append(points.get(i).getValue());
         }
         return sb.append("]").toString();
@@ -33,9 +30,7 @@
     private String serviceLabelsJson(List<ServiceStat> stats) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < stats.size(); i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
+            if (i > 0) sb.append(",");
             sb.append("\"").append(stats.get(i).getServiceName().replace("\"", "\\\"")).append("\"");
         }
         return sb.append("]").toString();
@@ -44,47 +39,31 @@
     private String serviceValuesJson(List<ServiceStat> stats) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < stats.size(); i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
+            if (i > 0) sb.append(",");
             sb.append(stats.get(i).getBookingCount());
         }
         return sb.append("]").toString();
     }
 
     private String statusBadgeClass(String status) {
-        if (status == null) {
-            return "bg-slate-100 text-slate-600";
-        }
+        if (status == null) return "bg-slate-100 text-slate-600";
         switch (status) {
-            case "Pending":
-                return "bg-amber-100 text-amber-700";
-            case "CheckedIn":
-                return "bg-blue-100 text-blue-700";
-            case "Completed":
-                return "bg-emerald-100 text-emerald-700";
-            case "NoShow":
-                return "bg-rose-100 text-rose-700";
-            default:
-                return "bg-slate-100 text-slate-600";
+            case "Pending": return "bg-amber-100 text-amber-700";
+            case "CheckedIn": return "bg-blue-100 text-blue-700";
+            case "Completed": return "bg-emerald-100 text-emerald-700";
+            case "NoShow": return "bg-rose-100 text-rose-700";
+            default: return "bg-slate-100 text-slate-600";
         }
     }
 
     private String statusLabel(String status) {
-        if (status == null) {
-            return "--";
-        }
+        if (status == null) return "--";
         switch (status) {
-            case "Pending":
-                return "Chờ xử lý";
-            case "CheckedIn":
-                return "Đang rửa";
-            case "Completed":
-                return "Hoàn tất";
-            case "NoShow":
-                return "Không đến";
-            default:
-                return status;
+            case "Pending": return "Chờ xử lý";
+            case "CheckedIn": return "Đang rửa";
+            case "Completed": return "Hoàn tất";
+            case "NoShow": return "Không đến";
+            default: return status;
         }
     }
 %>
@@ -97,18 +76,14 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <style>body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F1F5F9;
-        }</style>
+        <style>body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }</style>
     </head>
     <body class="text-slate-800 relative">
 
-        <%            AdminDashboardData data = (AdminDashboardData) request.getAttribute("DASHBOARD_DATA");
+        <%
+            AdminDashboardData data = (AdminDashboardData) request.getAttribute("DASHBOARD_DATA");
             String selectedFilter = (String) request.getAttribute("SELECTED_FILTER");
-            if (selectedFilter == null) {
-                selectedFilter = "week";
-            }
+            if (selectedFilter == null) selectedFilter = "week";
             DecimalFormat money = new DecimalFormat("###,###,###");
         %>
 
@@ -128,7 +103,7 @@
                             <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-400 mb-3"></i>
                             <p class="text-slate-500">Không tải được dữ liệu Dashboard. Vui lòng tải lại trang.</p>
                         </div>
-                        <% } else {%>
+                        <% } else { %>
 
                         <!-- ============ CÂU HỎI 1: HÔM NAY KIẾM ĐƯỢC BAO NHIÊU? ============ -->
                         <section>
@@ -143,7 +118,7 @@
                                         <i class="fa-solid fa-sack-dollar"></i>
                                     </div>
                                     <p class="text-xs text-slate-500">Doanh Thu Hôm Nay</p>
-                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= money.format(data.getTodayRevenue())%>đ</p>
+                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= money.format(data.getTodayRevenue()) %>đ</p>
                                 </div>
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -151,7 +126,7 @@
                                         <i class="fa-solid fa-calendar-day"></i>
                                     </div>
                                     <p class="text-xs text-slate-500">Lượt Đặt Hôm Nay</p>
-                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getTodayBookings()%></p>
+                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getTodayBookings() %></p>
                                 </div>
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -159,7 +134,7 @@
                                         <i class="fa-solid fa-circle-check"></i>
                                     </div>
                                     <p class="text-xs text-slate-500">Đơn Hoàn Tất</p>
-                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getCompletedOrdersToday()%></p>
+                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getCompletedOrdersToday() %></p>
                                 </div>
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -167,7 +142,7 @@
                                         <i class="fa-solid fa-ban"></i>
                                     </div>
                                     <p class="text-xs text-slate-500">Đơn Hủy / Không Đến</p>
-                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getCancelledBookingsToday()%></p>
+                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getCancelledBookingsToday() %></p>
                                 </div>
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -175,7 +150,7 @@
                                         <i class="fa-solid fa-user-plus"></i>
                                     </div>
                                     <p class="text-xs text-slate-500">Khách Mới Hôm Nay</p>
-                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getNewCustomersToday()%></p>
+                                    <p class="text-xl font-bold text-slate-800 mt-1"><%= data.getNewCustomersToday() %></p>
                                 </div>
 
                             </div>
@@ -183,24 +158,52 @@
 
                         <!-- ============ CÂU HỎI 2: CỬA HÀNG CÓ VẤN ĐỀ GÌ KHÔNG? ============ -->
                         <section>
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2 flex-1">
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Tình Hình Kinh Doanh</span>
-                                    <span class="h-px flex-1 bg-slate-200"></span>
-                                </div>
-                                <form method="post" action="MainController" class="flex bg-white border border-slate-200 rounded-xl p-1 ml-4 shadow-sm">
-                                    <input type="hidden" name="action" value="adminDashboard">
-                                    <% String[][] filters = {{"week", "Tuần"}, {"month", "Tháng"}, {"quarter", "Quý"}, {"year", "Năm"}}; %>
-                                    <% for (String[] f : filters) {
-                                            boolean active = f[0].equals(selectedFilter);
-                                    %>
-                                    <button type="submit" name="filterType" value="<%= f[0]%>"
-                                            class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors <%= active ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-slate-100"%>">
-                                        <%= f[1]%>
-                                    </button>
-                                    <% }%>
-                                </form>
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Tình Hình Kinh Doanh</span>
+                                <span class="h-px flex-1 bg-slate-200"></span>
                             </div>
+
+                            <!-- Thanh bộ lọc thời gian: chọn ngày tham chiếu + kỳ trước/sau + loại kỳ -->
+                            <form id="dashboardFilterForm" method="post" action="MainController"
+                                  class="bg-white border border-slate-200 rounded-xl shadow-sm p-3 mb-4 flex flex-wrap items-center gap-3">
+                                <input type="hidden" name="action" value="adminDashboard">
+                                <input type="hidden" id="filterTypeInput" name="filterType" value="<%= selectedFilter %>">
+                                <input type="hidden" id="navigateInput" name="navigate" value="">
+
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="dashboardNavigate('prev')"
+                                            class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                                    </button>
+                                    <input type="date" name="referenceDate" value="<%= data.getReferenceDate() %>"
+                                           onchange="document.getElementById('navigateInput').value=''; document.getElementById('dashboardFilterForm').submit();"
+                                           class="text-sm border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600">
+                                    <button type="button" onclick="dashboardNavigate('next')"
+                                            class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                                    </button>
+                                    <button type="button" onclick="dashboardNavigate('today')"
+                                            class="ml-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100">
+                                        Hôm nay
+                                    </button>
+                                </div>
+
+                                <span class="text-sm text-slate-400 font-medium"><%= data.getRangeLabel() %></span>
+
+                                <span class="flex-1"></span>
+
+                                <div class="flex bg-slate-100 rounded-xl p-1">
+                                    <% String[][] filters = {{"week","Tuần"},{"month","Tháng"},{"quarter","Quý"},{"year","Năm"}}; %>
+                                    <% for (String[] f : filters) {
+                                        boolean active = f[0].equals(selectedFilter);
+                                    %>
+                                    <button type="button" onclick="dashboardSetFilter('<%= f[0] %>')"
+                                            class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors <%= active ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-white" %>">
+                                        <%= f[1] %>
+                                    </button>
+                                    <% } %>
+                                </div>
+                            </form>
 
                             <!-- Revenue Chart + Booking Trend -->
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
@@ -234,7 +237,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500">Voucher Đã Dùng</p>
-                                        <p class="text-lg font-bold text-slate-800"><%= data.getVoucherUsedCount()%></p>
+                                        <p class="text-lg font-bold text-slate-800"><%= data.getVoucherUsedCount() %></p>
                                     </div>
                                 </div>
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
@@ -243,7 +246,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500">Tổng Thành Viên</p>
-                                        <p class="text-lg font-bold text-slate-800"><%= data.getTotalMembers()%></p>
+                                        <p class="text-lg font-bold text-slate-800"><%= data.getTotalMembers() %></p>
                                     </div>
                                 </div>
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
@@ -252,7 +255,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500">Thành Viên Mới</p>
-                                        <p class="text-lg font-bold text-slate-800"><%= data.getNewMembersCount()%></p>
+                                        <p class="text-lg font-bold text-slate-800"><%= data.getNewMembersCount() %></p>
                                     </div>
                                 </div>
                             </div>
@@ -268,43 +271,43 @@
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                                     <p class="text-sm font-semibold text-slate-700 mb-1">Ca Hiện Tại</p>
-                                    <p class="text-xs text-slate-400 mb-3"><%= data.getCurrentSlotLabel()%></p>
+                                    <p class="text-xs text-slate-400 mb-3"><%= data.getCurrentSlotLabel() %></p>
                                     <% List<RecentBooking> curList = data.getCurrentSlotBookings(); %>
                                     <% if (curList == null || curList.isEmpty()) { %>
                                     <p class="text-sm text-slate-400 italic py-4 text-center">Không có booking nào trong ca này.</p>
                                     <% } else { %>
                                     <div class="space-y-2">
-                                        <% for (RecentBooking rb : curList) {%>
+                                        <% for (RecentBooking rb : curList) { %>
                                         <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50">
                                             <div>
-                                                <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName()%> · <%= rb.getLicensePlate()%></p>
-                                                <p class="text-xs text-slate-400"><%= rb.getServiceName()%></p>
+                                                <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName() %> · <%= rb.getLicensePlate() %></p>
+                                                <p class="text-xs text-slate-400"><%= rb.getServiceName() %></p>
                                             </div>
-                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus())%>">
-                                                <%= statusLabel(rb.getBookingStatus())%>
+                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus()) %>">
+                                                <%= statusLabel(rb.getBookingStatus()) %>
                                             </span>
                                         </div>
                                         <% } %>
                                     </div>
-                                    <% }%>
+                                    <% } %>
                                 </div>
 
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
                                     <p class="text-sm font-semibold text-slate-700 mb-1">Ca Kế Tiếp</p>
-                                    <p class="text-xs text-slate-400 mb-3"><%= data.getNextSlotLabel()%></p>
+                                    <p class="text-xs text-slate-400 mb-3"><%= data.getNextSlotLabel() %></p>
                                     <% List<RecentBooking> nextList = data.getNextSlotBookings(); %>
                                     <% if (nextList == null || nextList.isEmpty()) { %>
                                     <p class="text-sm text-slate-400 italic py-4 text-center">Không có booking nào trong ca này.</p>
                                     <% } else { %>
                                     <div class="space-y-2">
-                                        <% for (RecentBooking rb : nextList) {%>
+                                        <% for (RecentBooking rb : nextList) { %>
                                         <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50">
                                             <div>
-                                                <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName()%> · <%= rb.getLicensePlate()%></p>
-                                                <p class="text-xs text-slate-400"><%= rb.getServiceName()%></p>
+                                                <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName() %> · <%= rb.getLicensePlate() %></p>
+                                                <p class="text-xs text-slate-400"><%= rb.getServiceName() %></p>
                                             </div>
-                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus())%>">
-                                                <%= statusLabel(rb.getBookingStatus())%>
+                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus()) %>">
+                                                <%= statusLabel(rb.getBookingStatus()) %>
                                             </span>
                                         </div>
                                         <% } %>
@@ -324,34 +327,47 @@
 
         <% if (data != null) { %>
         <script>
-            const revenueLabels = <%= chartLabelsJson(data.getRevenueChart())%>;
-            const revenueValues = <%= chartValuesJson(data.getRevenueChart())%>;
-            const bookingLabels = <%= chartLabelsJson(data.getBookingTrend())%>;
-            const bookingValues = <%= chartValuesJson(data.getBookingTrend())%>;
-            const serviceLabels = <%= serviceLabelsJson(data.getTopServices())%>;
-            const serviceValues = <%= serviceValuesJson(data.getTopServices())%>;
-            const paidCount = <%= data.getPaidCount()%>;
-            const pendingCount = <%= data.getPendingCount()%>;
-            const cancelCount = <%= data.getCancelCount()%>;
+            // 2 hàm nhỏ dùng cho thanh bộ lọc: đổi loại kỳ (Tuần/Tháng/Quý/Năm) hoặc
+            // dịch chuyển kỳ (Kỳ trước/Kỳ sau/Hôm nay). Vẫn là 1 lượt submit form POST
+            // bình thường (reload lại trang), không dùng fetch/AJAX.
+            function dashboardSetFilter(type) {
+                document.getElementById('filterTypeInput').value = type;
+                document.getElementById('navigateInput').value = '';
+                document.getElementById('dashboardFilterForm').submit();
+            }
+            function dashboardNavigate(direction) {
+                document.getElementById('navigateInput').value = direction;
+                document.getElementById('dashboardFilterForm').submit();
+            }
+
+            const revenueLabels = <%= chartLabelsJson(data.getRevenueChart()) %>;
+            const revenueValues = <%= chartValuesJson(data.getRevenueChart()) %>;
+            const bookingLabels = <%= chartLabelsJson(data.getBookingTrend()) %>;
+            const bookingValues = <%= chartValuesJson(data.getBookingTrend()) %>;
+            const serviceLabels = <%= serviceLabelsJson(data.getTopServices()) %>;
+            const serviceValues = <%= serviceValuesJson(data.getTopServices()) %>;
+            const paidCount = <%= data.getPaidCount() %>;
+            const pendingCount = <%= data.getPendingCount() %>;
+            const cancelCount = <%= data.getCancelCount() %>;
 
             new Chart(document.getElementById('revenueChart'), {
                 type: 'line',
                 data: {
                     labels: revenueLabels,
                     datasets: [{
-                            label: 'Doanh thu',
-                            data: revenueValues,
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 3
-                        }]
+                        label: 'Doanh thu',
+                        data: revenueValues,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 3
+                    }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: {legend: {display: false}},
-                    scales: {y: {beginAtZero: true, ticks: {callback: v => v.toLocaleString('vi-VN')}}}
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('vi-VN') } } }
                 }
             });
 
@@ -360,16 +376,16 @@
                 data: {
                     labels: bookingLabels,
                     datasets: [{
-                            label: 'Số lượt đặt',
-                            data: bookingValues,
-                            backgroundColor: '#7c3aed',
-                            borderRadius: 6
-                        }]
+                        label: 'Số lượt đặt',
+                        data: bookingValues,
+                        backgroundColor: '#7c3aed',
+                        borderRadius: 6
+                    }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: {legend: {display: false}},
-                    scales: {y: {beginAtZero: true, ticks: {precision: 0}}}
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
 
@@ -378,13 +394,13 @@
                 data: {
                     labels: ['Đã thanh toán', 'Đang chờ', 'Đã hủy'],
                     datasets: [{
-                            data: [paidCount, pendingCount, cancelCount],
-                            backgroundColor: ['#16a34a', '#f59e0b', '#e11d48']
-                        }]
+                        data: [paidCount, pendingCount, cancelCount],
+                        backgroundColor: ['#16a34a', '#f59e0b', '#e11d48']
+                    }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: {legend: {position: 'bottom', labels: {boxWidth: 10, font: {size: 11}}}}
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
                 }
             });
 
@@ -393,20 +409,20 @@
                 data: {
                     labels: serviceLabels,
                     datasets: [{
-                            label: 'Lượt đặt',
-                            data: serviceValues,
-                            backgroundColor: '#2563eb',
-                            borderRadius: 6
-                        }]
+                        label: 'Lượt đặt',
+                        data: serviceValues,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 6
+                    }]
                 },
                 options: {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
-                    plugins: {legend: {display: false}},
-                    scales: {x: {beginAtZero: true, ticks: {precision: 0}}}
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
                 }
             });
         </script>
-        <% }%>
+        <% } %>
     </body>
 </html>

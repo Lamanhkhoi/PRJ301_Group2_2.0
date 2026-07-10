@@ -45,7 +45,7 @@ public class RewardManagementController extends HttpServlet {
     ===========================*/
         if ("toggle".equals(action)) {
 
-            int rewardId = Integer.parseInt(request.getParameter("id"));
+            int rewardId = Integer.parseInt(request.getParameter("rewardId"));
 
             boolean active
                     = Boolean.parseBoolean(request.getParameter("active"));
@@ -130,9 +130,11 @@ public class RewardManagementController extends HttpServlet {
 
                 return;
             }
-
+            String rewardIdStr = request.getParameter("rewardId");
             Reward reward = new Reward();
-
+            if (rewardIdStr != null && !rewardIdStr.isEmpty()) {
+                reward.setRewardId(Integer.parseInt(rewardIdStr));
+            }
             reward.setRewardName(rewardName);
             reward.setDescription(description);
             reward.setPointsRequired(pointsRequired);
@@ -187,7 +189,17 @@ public class RewardManagementController extends HttpServlet {
             System.out.println("Active = "
                     + reward.isActive());
 
-            boolean result = dao.insertReward(reward);
+            boolean result;
+
+            if (reward.getRewardId() > 0) {
+
+                result = dao.updateReward(reward);
+
+            } else {
+
+                result = dao.insertReward(reward);
+
+            }
             System.out.println("Insert result = " + result);
             if (result) {
 

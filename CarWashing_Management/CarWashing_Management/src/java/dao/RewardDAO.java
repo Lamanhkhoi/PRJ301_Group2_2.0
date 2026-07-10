@@ -149,7 +149,7 @@ public class RewardDAO {
 
         String sql
                 = "SELECT * FROM Rewards "
-                + "WHERE RewardName LIKE ? "
+                + "WHERE IsActive = 1 "
                 + "ORDER BY RewardId DESC";
 
         try (
@@ -181,5 +181,39 @@ public class RewardDAO {
         }
 
         return list;
+    }
+
+    public boolean updateReward(Reward reward) {
+
+        String sql
+                = "UPDATE Rewards "
+                + "SET RewardName = ?, "
+                + "Description = ?, "
+                + "PointsRequired = ?, "
+                + "DiscountPercent = ?, "
+                + "MinBillAmount = ?, "
+                + "MaxDiscountAmount = ?, "
+                + "IsActive = ? "
+                + "WHERE RewardId = ?";
+
+        try (
+                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setString(1, reward.getRewardName());
+            ps.setString(2, reward.getDescription());
+            ps.setInt(3, reward.getPointsRequired());
+            ps.setDouble(4, reward.getDiscountPercent());
+            ps.setDouble(5, reward.getMinBillAmount());
+            ps.setDouble(6, reward.getMaxDiscountAmount());
+            ps.setBoolean(7, reward.isActive());
+            ps.setInt(8, reward.getRewardId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

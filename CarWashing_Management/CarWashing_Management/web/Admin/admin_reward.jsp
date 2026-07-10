@@ -153,29 +153,33 @@
                                         </td>
 
                                         <td class="py-4 px-6 text-right">
-
+                                            <!-- Edit -->
                                             <button
+                                                onclick="openRewardModal(
+                                                                '<%=r.getRewardName()%>',
+                                                                '<%=r.getDescription()%>',
+                                                <%=r.getPointsRequired()%>,
+                                                <%=r.getDiscountPercent()%>,
+                                                <%=r.getMinBillAmount()%>,
+                                                <%=r.getMaxDiscountAmount()%>,
+                                                <%=r.getRewardId()%>
+                                                        )"
                                                 class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
-                                                <td class="py-4 px-6 text-right">
 
-                                                    <!-- Edit -->
-                                                    <button
-                                                        class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
+                                                <i class="fa-solid fa-pen-to-square"></i>
 
-                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                            </button>
 
-                                                    </button>
+                                            <!-- Delete -->
+                                            <button
+                                                onclick="openDeleteModal(<%=r.getRewardId()%>, '<%=r.getRewardName()%>')"
+                                                class="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50">
 
-                                                    <!-- Delete -->
-                                                    <button
-                                                        onclick="openDeleteModal(<%=r.getRewardId()%>, '<%=r.getRewardName()%>')"
-                                                        class="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50">
+                                                <i class="fa-solid fa-trash"></i>
 
-                                                        <i class="fa-solid fa-trash"></i>
+                                            </button>
 
-                                                    </button>
-
-                                                </td>
+                                        </td>
 
                                     </tr>
 
@@ -208,6 +212,7 @@
 
                     <%-- TODO BACKEND: bọc <form method="post"> map đúng field của DTO Reward --%>
                     <form method="post"action="${pageContext.request.contextPath}/RewardManagementController">
+                        <input type="hidden" id="rewardId" name="rewardId">
                         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
                             <div class="md:col-span-2">
                                 <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
@@ -239,6 +244,7 @@
                                 </label>
 
                                 <input
+                                    id="rMinBill"
                                     name="minBillAmount"
                                     type="number"
                                     min="0"
@@ -252,6 +258,7 @@
                                 </label>
 
                                 <input
+                                    id="rMaxDiscount"
                                     name="maxDiscountAmount"
                                     type="number"
                                     min="0"
@@ -311,22 +318,19 @@
 
                 const on =
                         btn.classList.contains("bg-emerald-500");
-
                 location.href =
                         "RewardManagementController?action=toggle&rewardId="
                         + id
                         + "&active="
                         + (!on);
-
             }
 
             // ===== Modal Tạo / Sửa =====
             const rModal = document.getElementById('rewardModal');
             const rContent = document.getElementById('rewardModalContent');
-
             function toggleDiscountField() {
                 document.getElementById('discountField').style.display =
-                        document.getElementById('rType').value === 'DISCOUNT' ? 'visible' : 'hidden';
+                        document.getElementById('rType').value === 'DISCOUNT' ? 'block' : 'none';
             }
 
             function openRewardModal(
@@ -335,14 +339,24 @@
                     points,
                     discount,
                     minBill,
-                    maxDiscount) {
-                const isEdit = name !== undefined;
+                    maxDiscount,
+                    rewardId) {
+                if (rewardId === null) {
+                    document.getElementById("rewardId").value = "";
+                }
+                const isEdit = rewardId !== null;
+                if (!isEdit) {
+                    document.querySelector("#rewardModal form").reset();}
                 document.getElementById('rewardModalTitle').textContent = isEdit ? 'Sửa reward' : 'Tạo reward mới';
                 document.getElementById('rName').value = isEdit ? name : '';
                 document.getElementById('rDesc').value = isEdit ? desc : '';
 //                document.getElementById('rType').value = isEdit ? type : 'DISCOUNT';
+                document.getElementById("rMinBill").value = isEdit ? minBill : "";
+                document.getElementById("rMaxDiscount").value = isEdit ? maxDiscount : "";
                 document.getElementById('rPoints').value = isEdit ? points : '';
                 document.getElementById('rDiscount').value = isEdit ? discount : '';
+                document.getElementById("rewardId").value =
+                        rewardId === null ? "" : rewardId;
                 toggleDiscountField();
                 rModal.classList.remove('hidden');
                 setTimeout(() => {
@@ -359,7 +373,6 @@
                 if (e.target === rModal)
                     closeRewardModal();
             });
-
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
             const dContent = document.getElementById('deleteModalContent');
@@ -367,11 +380,8 @@
             function openDeleteModal(id, name) {
 
                 deleteId = id;
-
                 document.getElementById("delName").innerHTML = name;
-
                 dModal.classList.remove("hidden");
-
                 setTimeout(() => {
                     dModal.classList.remove("opacity-0");
                     dContent.classList.replace("scale-95", "scale-100");
@@ -381,7 +391,6 @@
 
                 location.href =
                         "RewardManagementController?action=delete&rewardId=" + deleteId;
-
             }
             function closeDeleteModal() {
                 dModal.classList.add('opacity-0');

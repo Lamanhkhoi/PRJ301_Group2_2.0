@@ -1,5 +1,5 @@
 package dao;
-
+ 
 import dbutils.DBContext;
 import dto.LoyaltyPointTransaction;
 import java.sql.Connection;
@@ -7,7 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-
+ 
 /**
  * DAO cho bảng LoyaltyPointTransactions - phục vụ mục "Lịch sử điểm" trong
  * customer_loyalty.jsp (khối có filter chip Tất cả/Cộng điểm/Trừ điểm/Hết hạn
@@ -28,7 +28,7 @@ import java.util.List;
  * đã hỗ trợ sẵn giá trị đó rồi, không cần sửa gì thêm ở đây.
  */
 public class LoyaltyPointTransactionDAO {
-
+ 
     /**
      * Lấy 1 trang lịch sử điểm, đã tính sẵn số dư sau mỗi giao dịch.
      *
@@ -41,11 +41,11 @@ public class LoyaltyPointTransactionDAO {
         List<LoyaltyPointTransaction> list = new ArrayList<>();
         if (page < 1) page = 1;
         int offset = (page - 1) * pageSize;
-
+ 
         Connection cn = null;
         PreparedStatement pst = null;
         ResultSet rs = null;
-
+ 
         // BƯỚC 1 (CTE "Running"): tính số dư lũy kế trên TOÀN BỘ lịch sử của accountId,
         //          CHƯA lọc theo loại giao dịch ở bước này - để số dư luôn đúng thực tế.
         // BƯỚC 2 (SELECT ngoài): mới lọc theo filterType để hiển thị, rồi phân trang.
@@ -60,7 +60,7 @@ public class LoyaltyPointTransactionDAO {
                 + "WHERE (? = 'ALL' OR TransactionType = ?) "
                 + "ORDER BY CreatedAt DESC, TransactionId DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-
+ 
         try {
             cn = DBContext.getConnection();
             pst = cn.prepareStatement(sql);
@@ -70,25 +70,25 @@ public class LoyaltyPointTransactionDAO {
             pst.setInt(4, offset);
             pst.setInt(5, pageSize);
             rs = pst.executeQuery();
-
+ 
             while (rs.next()) {
                 LoyaltyPointTransaction t = new LoyaltyPointTransaction();
                 t.setTransactionId(rs.getInt("TransactionId"));
                 t.setAccountId(rs.getInt("AccountId"));
-
+ 
                 int bookingId = rs.getInt("BookingId");
                 t.setBookingId(rs.wasNull() ? null : bookingId);
-
+ 
                 int redemptionId = rs.getInt("RedemptionId");
                 t.setRedemptionId(rs.wasNull() ? null : redemptionId);
-
+ 
                 t.setPointsChange(rs.getInt("PointsChange"));
                 t.setTransactionType(rs.getString("TransactionType"));
                 t.setExpiresAt(rs.getTimestamp("ExpiresAt"));
                 t.setDescription(rs.getString("Description"));
                 t.setCreatedAt(rs.getTimestamp("CreatedAt"));
                 t.setBalanceAfter(rs.getInt("BalanceAfter"));
-
+ 
                 list.add(t);
             }
         } catch (Exception e) {
@@ -100,7 +100,7 @@ public class LoyaltyPointTransactionDAO {
         }
         return list;
     }
-
+ 
     /**
      * Đếm tổng số dòng khớp filter - dùng để tính tổng số trang cho phần phân trang.
      * filterType quy ước giống hệt getHistory().
@@ -110,10 +110,10 @@ public class LoyaltyPointTransactionDAO {
         Connection cn = null;
         PreparedStatement pst = null;
         ResultSet rs = null;
-
+ 
         String sql = "SELECT COUNT(*) AS Total FROM LoyaltyPointTransactions "
                 + "WHERE AccountId = ? AND (? = 'ALL' OR TransactionType = ?)";
-
+ 
         try {
             cn = DBContext.getConnection();
             pst = cn.prepareStatement(sql);
@@ -121,9 +121,52 @@ public class LoyaltyPointTransactionDAO {
             pst.setString(2, filterType);
             pst.setString(3, filterType);
             rs = pst.executeQuery();
-
+ 
             if (rs.next()) {
                 total = rs.getInt("Total");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception e) {}
+            try { if (pst != null) pst.close(); } catch (Exception e) {}
+            try { if (cn != null) cn.close(); } catch (Exception e) {}
+        }
+        return total;
+    }
+ 
+    /**
+     * Tính XẤP XỈ số điểm sắp hết hạn trong N ngày tới.
+     *
+     * GIỚI HẠN CẦN BIẾT: hàm này chỉ cộng PointsChange của các dòng "Earn" có
+     * ExpiresAt rơi trong khoảng [now, now+days], KHÔNG kiểm tra xem số điểm
+     * đó có còn thật sự nằm trong túi khách hay đã bị tiêu (Redeem) mất rồi.
+     * Vì bảng LoyaltyPointTransactions chỉ lưu số dư thay đổi (delta), không
+     * lưu theo từng "lô điểm" nào còn lại bao nhiêu, nên không thể tính chính
+     * xác 100% nếu không dựng thêm cơ chế trừ theo FIFO (lô cũ hết trước).
+     * Con số này chỉ mang tính CẢNH BÁO GẦN ĐÚNG cho khách, không dùng để
+     * tính toán số học chính xác ở bất kỳ đâu khác.
+     */
+    public int getExpiringSoonPoints(int accountId, int days) {
+        int total = 0;
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+ 
+        String sql = "SELECT ISNULL(SUM(PointsChange), 0) AS ExpiringSoon "
+                + "FROM LoyaltyPointTransactions "
+                + "WHERE AccountId = ? AND TransactionType = 'Earn' "
+                + "AND ExpiresAt IS NOT NULL "
+                + "AND ExpiresAt BETWEEN SYSDATETIME() AND DATEADD(DAY, ?, SYSDATETIME())";
+ 
+        try {
+            cn = DBContext.getConnection();
+            pst = cn.prepareStatement(sql);
+            pst.setInt(1, accountId);
+            pst.setInt(2, days);
+            rs = pst.executeQuery();
+            if (rs.next()) {
+                total = rs.getInt("ExpiringSoon");
             }
         } catch (Exception e) {
             e.printStackTrace();

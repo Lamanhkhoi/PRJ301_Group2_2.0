@@ -34,6 +34,8 @@ public class CustomerLoyaltyDAO {
                     // Lưu ý: Đặt tên hàm set tương ứng với cấu trúc thuộc tính DTO của bạn
                     loyalty.setAccountId(rs1.getInt("AccountId"));
                     loyalty.setCurrentPoints(rs1.getInt("CurrentPoints"));
+                    loyalty.setLifetimeEarnedPoints(rs1.getInt("LifetimeEarnedPoints"));
+                    loyalty.setLifetimeRedeemedPoints(rs1.getInt("LifetimeRedeemedPoints"));
                     
                     // Ép kiểu DECIMAL từ Database về int theo yêu cầu của bạn
                     loyalty.setTotalSpent((int) rs1.getDouble("TotalSpent"));
@@ -54,6 +56,8 @@ public class CustomerLoyaltyDAO {
                     loyalty = new CustomerLoyalty();
                     loyalty.setAccountId(accountId);
                     loyalty.setCurrentPoints(0);
+                    loyalty.setLifetimeEarnedPoints(0);
+                    loyalty.setLifetimeRedeemedPoints(0);
                     loyalty.setTotalSpent(0);
                     loyalty.setTotalWashCount(0);
 

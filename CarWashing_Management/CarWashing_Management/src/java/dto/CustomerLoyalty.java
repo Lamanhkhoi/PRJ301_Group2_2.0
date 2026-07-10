@@ -7,6 +7,8 @@ public class CustomerLoyalty implements Serializable {
     private int accountId;
     private int currentTierId;
     private int currentPoints;
+    private int lifetimeEarnedPoints;
+    private int lifetimeRedeemedPoints;
     private double totalSpent;
     private int totalWashCount;
     private LoyaltyTier currentTierDetails; // Hai đối tượng chứa toàn bộ thông tin 
@@ -43,6 +45,14 @@ public class CustomerLoyalty implements Serializable {
         return currentPoints;
     }
 
+    public int getLifetimeEarnedPoints() {
+        return lifetimeEarnedPoints;
+    }
+
+    public int getLifetimeRedeemedPoints() {
+        return lifetimeRedeemedPoints;
+    }
+
     public double getTotalSpent() {
         return totalSpent;
     }
@@ -73,6 +83,14 @@ public class CustomerLoyalty implements Serializable {
 
     public void setCurrentPoints(int currentPoints) {
         this.currentPoints = currentPoints;
+    }
+
+    public void setLifetimeEarnedPoints(int lifetimeEarnedPoints) {
+        this.lifetimeEarnedPoints = lifetimeEarnedPoints;
+    }
+
+    public void setLifetimeRedeemedPoints(int lifetimeRedeemedPoints) {
+        this.lifetimeRedeemedPoints = lifetimeRedeemedPoints;
     }
 
     public void setTotalSpent(double totalSpent) {

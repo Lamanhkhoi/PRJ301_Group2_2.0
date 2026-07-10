@@ -94,7 +94,10 @@
                                             boolean on = r.isActive();
                                     %>
 
-                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50">
+                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50"
+                                        data-name="<%= r.getRewardName().toLowerCase()%>"
+                                        data-type="DISCOUNT"
+                                        data-id="<%= r.getRewardId()%>">
 
                                         <td class="py-4 px-6">
 
@@ -137,7 +140,7 @@
                                         <td class="py-4 px-4 text-center">
 
                                             <button
-                                                onclick="toggleActive(this)"
+                                                onclick="toggleActive(this,<%=r.getRewardId()%>)"
                                                 class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition
                                                 <%= on ? "bg-emerald-500" : "bg-slate-300"%>">
 
@@ -153,12 +156,26 @@
 
                                             <button
                                                 class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
+                                                <td class="py-4 px-6 text-right">
 
-                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                    <!-- Edit -->
+                                                    <button
+                                                        class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
 
-                                            </button>
+                                                        <i class="fa-solid fa-pen-to-square"></i>
 
-                                        </td>
+                                                    </button>
+
+                                                    <!-- Delete -->
+                                                    <button
+                                                        onclick="openDeleteModal(<%=r.getRewardId()%>, '<%=r.getRewardName()%>')"
+                                                        class="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50">
+
+                                                        <i class="fa-solid fa-trash"></i>
+
+                                                    </button>
+
+                                                </td>
 
                                     </tr>
 
@@ -166,7 +183,7 @@
                                         }
                                     %>
                                     <tr id="rwEmpty" class="hidden">
-                                        <td colspan="6" class="py-12 text-center text-slate-400 text-sm">
+                                        <td colspan="7" class="py-12 text-center text-slate-400 text-sm">
                                             <i class="fa-regular fa-folder-open text-2xl block mb-2"></i> Không tìm thấy reward phù hợp
                                         </td>
                                     </tr>
@@ -247,6 +264,7 @@
                             <button type="button" onclick="closeRewardModal()"class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
                         </div>
+                    </form>
                 </div>
             </div>
 
@@ -262,7 +280,12 @@
                     </div>
                     <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3">
                         <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition">Xóa</button>
+                        <button onclick="deleteReward()"
+                                class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white">
+
+                            Xóa
+
+                        </button>
                     </div>
                 </div>
             </div>
@@ -284,13 +307,17 @@
             }
 
             // ===== Toggle bật/tắt (demo UI) =====
-            function toggleActive(btn) {
-                const knob = btn.querySelector('span');
-                const on = btn.classList.contains('bg-emerald-500');
-                btn.classList.toggle('bg-emerald-500', !on);
-                btn.classList.toggle('bg-slate-300', on);
-                knob.classList.toggle('translate-x-6', !on);
-                knob.classList.toggle('translate-x-1', on);
+            function toggleActive(btn, id) {
+
+                const on =
+                        btn.classList.contains("bg-emerald-500");
+
+                location.href =
+                        "RewardManagementController?action=toggle&rewardId="
+                        + id
+                        + "&active="
+                        + (!on);
+
             }
 
             // ===== Modal Tạo / Sửa =====
@@ -298,7 +325,7 @@
             const rContent = document.getElementById('rewardModalContent');
 
             function toggleDiscountField() {
-                document.getElementById('discountField').style.visibility =
+                document.getElementById('discountField').style.display =
                         document.getElementById('rType').value === 'DISCOUNT' ? 'visible' : 'hidden';
             }
 
@@ -336,13 +363,25 @@
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
             const dContent = document.getElementById('deleteModalContent');
-            function openDeleteModal(name) {
-                document.getElementById('delName').textContent = name;
-                dModal.classList.remove('hidden');
+            let deleteId = 0;
+            function openDeleteModal(id, name) {
+
+                deleteId = id;
+
+                document.getElementById("delName").innerHTML = name;
+
+                dModal.classList.remove("hidden");
+
                 setTimeout(() => {
-                    dModal.classList.remove('opacity-0');
-                    dContent.classList.replace('scale-95', 'scale-100');
+                    dModal.classList.remove("opacity-0");
+                    dContent.classList.replace("scale-95", "scale-100");
                 }, 10);
+            }
+            function deleteReward() {
+
+                location.href =
+                        "RewardManagementController?action=delete&rewardId=" + deleteId;
+
             }
             function closeDeleteModal() {
                 dModal.classList.add('opacity-0');

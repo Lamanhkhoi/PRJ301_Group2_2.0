@@ -25,7 +25,53 @@ public class RewardManagementController extends HttpServlet {
 
         RewardDAO dao = new RewardDAO();
 
-        List<Reward> rewardList = dao.getAllRewards();
+        String action = request.getParameter("action");
+
+        /* ==========================
+       XÓA MỀM
+    ===========================*/
+        if ("delete".equals(action)) {
+
+            int rewardId = Integer.parseInt(request.getParameter("rewardId"));
+
+            dao.deleteReward(rewardId);
+
+            response.sendRedirect("MainController?action=rewardManagement");
+            return;
+        }
+
+        /* ==========================
+       BẬT / TẮT ACTIVE
+    ===========================*/
+        if ("toggle".equals(action)) {
+
+            int rewardId = Integer.parseInt(request.getParameter("id"));
+
+            boolean active
+                    = Boolean.parseBoolean(request.getParameter("active"));
+
+            dao.updateStatus(rewardId, active);
+
+            response.sendRedirect("MainController?action=rewardManagement");
+            return;
+        }
+
+        /* ==========================
+       SEARCH
+    ===========================*/
+        String keyword = request.getParameter("keyword");
+
+        List<Reward> rewardList;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+
+            rewardList = dao.searchReward(keyword);
+
+        } else {
+
+            rewardList = dao.getAllRewards();
+
+        }
 
         request.setAttribute("rewardList", rewardList);
 
@@ -33,7 +79,6 @@ public class RewardManagementController extends HttpServlet {
 
         request.getRequestDispatcher("/Admin/admin_reward.jsp")
                 .forward(request, response);
-
     }
 
     @Override
@@ -42,6 +87,7 @@ public class RewardManagementController extends HttpServlet {
             throws ServletException, IOException {
 
         try {
+            RewardDAO dao = new RewardDAO();
             System.out.println("===== DO POST =====");
             String rewardName = request.getParameter("rewardName");
             String description = request.getParameter("description");
@@ -140,8 +186,6 @@ public class RewardManagementController extends HttpServlet {
 
             System.out.println("Active = "
                     + reward.isActive());
-
-            RewardDAO dao = new RewardDAO();
 
             boolean result = dao.insertReward(reward);
             System.out.println("Insert result = " + result);

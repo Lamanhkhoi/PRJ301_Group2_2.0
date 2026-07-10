@@ -106,4 +106,80 @@ public class RewardDAO {
         }
     }
 
+    public boolean updateStatus(int rewardId, boolean active) {
+
+        String sql = "UPDATE Rewards SET IsActive = ? WHERE RewardId = ?";
+
+        try (
+                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setBoolean(1, active);
+            ps.setInt(2, rewardId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean deleteReward(int rewardId) {
+
+        String sql = "UPDATE Rewards SET IsActive = 0 WHERE RewardId = ?";
+
+        try (
+                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setInt(1, rewardId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public List<Reward> searchReward(String keyword) {
+
+        List<Reward> list = new ArrayList<>();
+
+        String sql
+                = "SELECT * FROM Rewards "
+                + "WHERE RewardName LIKE ? "
+                + "ORDER BY RewardId DESC";
+
+        try (
+                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setString(1, "%" + keyword + "%");
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                Reward r = new Reward();
+
+                r.setRewardId(rs.getInt("RewardId"));
+                r.setRewardName(rs.getString("RewardName"));
+                r.setDescription(rs.getString("Description"));
+                r.setPointsRequired(rs.getInt("PointsRequired"));
+                r.setDiscountPercent(rs.getDouble("DiscountPercent"));
+                r.setMinBillAmount(rs.getDouble("MinBillAmount"));
+                r.setMaxDiscountAmount(rs.getDouble("MaxDiscountAmount"));
+                r.setActive(rs.getBoolean("IsActive"));
+                r.setCreatedAt(rs.getTimestamp("CreatedAt"));
+
+                list.add(r);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 }

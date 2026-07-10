@@ -99,12 +99,11 @@ public class RewardDAO {
 
         } catch (Exception e) {
 
-            System.out.println("DAO ERROR");
-
+            System.out.println("========== SQL ERROR ==========");
             e.printStackTrace();
 
+            return false;
         }
-
-        return false;
     }
+
 }

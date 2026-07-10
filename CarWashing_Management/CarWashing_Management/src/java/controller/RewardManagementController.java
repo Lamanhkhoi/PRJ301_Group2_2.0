@@ -45,12 +45,18 @@ public class RewardManagementController extends HttpServlet {
             System.out.println("===== DO POST =====");
             String rewardName = request.getParameter("rewardName");
             String description = request.getParameter("description");
-
+            System.out.println("pointsRequired raw = "
+                    + request.getParameter("pointsRequired"));
             int pointsRequired = Integer.parseInt(
                     request.getParameter("pointsRequired"));
 
-            double discountPercent = Double.parseDouble(
-                    request.getParameter("discountPercent"));
+            String discountStr = request.getParameter("discountPercent");
+
+            double discountPercent = 0;
+
+            if (discountStr != null && !discountStr.trim().isEmpty()) {
+                discountPercent = Double.parseDouble(discountStr);
+            }
             if (rewardName == null || rewardName.trim().isEmpty()) {
 
                 request.setAttribute("ERROR",
@@ -86,11 +92,19 @@ public class RewardManagementController extends HttpServlet {
             reward.setPointsRequired(pointsRequired);
             reward.setDiscountPercent(discountPercent);
 
-            double minBillAmount = Double.parseDouble(
-                    request.getParameter("minBillAmount"));
+            String minBillStr = request.getParameter("minBillAmount");
+            String maxDiscountStr = request.getParameter("maxDiscountAmount");
 
-            double maxDiscountAmount = Double.parseDouble(
-                    request.getParameter("maxDiscountAmount"));
+            double minBillAmount = 0;
+            double maxDiscountAmount = 0;
+
+            if (minBillStr != null && !minBillStr.trim().isEmpty()) {
+                minBillAmount = Double.parseDouble(minBillStr);
+            }
+
+            if (maxDiscountStr != null && !maxDiscountStr.trim().isEmpty()) {
+                maxDiscountAmount = Double.parseDouble(maxDiscountStr);
+            }
 
             reward.setMinBillAmount(minBillAmount);
             reward.setMaxDiscountAmount(maxDiscountAmount);
@@ -130,7 +144,7 @@ public class RewardManagementController extends HttpServlet {
             RewardDAO dao = new RewardDAO();
 
             boolean result = dao.insertReward(reward);
-            System.out.println("Insert = " + result);
+            System.out.println("Insert result = " + result);
             if (result) {
 
                 response.sendRedirect(

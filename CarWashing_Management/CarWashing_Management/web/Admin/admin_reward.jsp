@@ -190,10 +190,7 @@
                     </div>
 
                     <%-- TODO BACKEND: bọc <form method="post"> map đúng field của DTO Reward --%>
-                    <form method="post" action="${pageContext.request.contextPath}/MainController">
-                        <input type="hidden"
-                               name="action"
-                               value="rewardManagement">
+                    <form method="post"action="${pageContext.request.contextPath}/RewardManagementController">
                         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
                             <div class="md:col-span-2">
                                 <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
@@ -213,7 +210,7 @@
                             </div>
                             <div>
                                 <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
-                                <input id="rPoints" name="pointsRequired" type="number" min="0" placeholder="VD: 1000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                                <input id="rPoints"name="pointsRequired" type="number" min="1" required value="100"class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
                             </div>
                             <div id="discountField">
                                 <label class="block font-semibold text-slate-600 mb-1.5">Phần trăm giảm (%)</label>
@@ -247,7 +244,7 @@
                         </div>
 
                         <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
-                            <button type="submit" class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
+                            <button type="button" onclick="closeRewardModal()"class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
                         </div>
                 </div>

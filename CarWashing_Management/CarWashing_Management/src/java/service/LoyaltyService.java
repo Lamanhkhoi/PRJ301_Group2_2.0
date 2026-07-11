@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 /**
  * LOYALTY ENGINE - phụ trách: Point, Tier, tích/trừ điểm, đền bù hủy lịch, đổi thưởng.
  *
- * 3 hàm chính trong file này là các "cửa" mà module khác (Payment - Người 1,
+ * 4 hàm chính trong file này là các "cửa" mà module khác (Payment - Người 1,
  * Booking Management - Người 4) sẽ gọi vào. Không ai được tự ý INSERT/UPDATE
  * trực tiếp vào CustomerLoyalty / LoyaltyPointTransactions / RewardRedemptions
  * ngoài các hàm này, để đảm bảo logic điểm luôn nhất quán.
@@ -344,6 +344,79 @@ public class LoyaltyService {
                     cn.close();
                 }
             } catch (Exception e) {}
+        }
+    }
+
+    /**
+     * Chạy ĐỊNH KỲ (batch - vd cron hàng đêm/hàng tháng, KHÔNG chạy real-time
+     * ngay sau mỗi booking - theo đúng quyết định của nhóm) để xét lại hạng
+     * cho TẤT CẢ khách hàng cùng lúc, cả lên hạng lẫn xuống hạng.
+     *
+     * KHÔNG dùng CustomerLoyalty.TotalWashCount/TotalSpent để xét hạng - 2 cột
+     * này đang cộng dồn CẢ ĐỜI và hiện KHÔNG có bất kỳ đoạn code nào cập nhật
+     * chúng (có thể là cột chưa hoàn thiện từ thiết kế ban đầu - nhãn UI ghi
+     * "Trong Năm" nhưng tên cột lại nghe như cả đời, đang mâu thuẫn - cần
+     * người phụ trách Dashboard xác nhận lại). Hàm này tính lại TRỰC TIẾP từ
+     * Bookings + Payments trong đúng N tháng gần nhất mỗi lần chạy, để việc
+     * xuống hạng phản ánh đúng hoạt động GẦN ĐÂY như đã chốt, không phụ
+     * thuộc 2 cột đó.
+     *
+     * Chỉ tính booking đã BookingStatus='Completed' VÀ đã thanh toán
+     * (Payments.IsPaid=1). Lọc theo cửa sổ thời gian dùng CompletedAt (thời
+     * điểm rửa xong THẬT), không dùng BookingDate (chỉ là ngày đặt lịch dự
+     * kiến, có thể khác ngày rửa thật). Số tiền tính vào ngưỡng chi tiêu là
+     * Payments.FinalAmount (số tiền THẬT SỰ thu được sau khi trừ voucher/
+     * khuyến mãi), không phải Bookings.TotalAmount (giá gốc trước giảm).
+     *
+     * KHÔNG TỰ ĐỘNG LỊCH CHẠY - hàm này chỉ thực thi khi được gọi. Cần quyết
+     * định riêng cơ chế gọi định kỳ (nút bấm tay của Admin, hay 1 scheduled
+     * task) - đây là quyết định hạ tầng, chưa thuộc phạm vi hàm này.
+     *
+     * @param windowMonths số tháng nhìn lại (khuyến nghị 12, khớp hạn dùng điểm)
+     * @return số tài khoản có hạng bị thay đổi trong lần chạy này,
+     *         hoặc -1 nếu có lỗi khi chạy (phân biệt với 0 = chạy ổn nhưng không ai đổi hạng)
+     */
+    public int recalculateAllTiers(int windowMonths) {
+        Connection cn = null;
+        PreparedStatement pst = null;
+
+        String sql = "WITH TierCalc AS ( "
+                + "    SELECT cl.AccountId, cl.CurrentTierId, "
+                + "           COALESCE(( "
+                + "               SELECT TOP 1 t.TierId FROM LoyaltyTiers t "
+                + "               WHERE recent.RecentWashCount >= t.MinWashCount "
+                + "                  OR recent.RecentSpent    >= t.MinTotalSpent "
+                + "               ORDER BY t.MinWashCount DESC, t.MinTotalSpent DESC "
+                + "           ), 0) AS NewTierId "
+                + "    FROM CustomerLoyalty cl "
+                + "    JOIN Customers cust ON cust.AccountId = cl.AccountId "
+                + "    CROSS APPLY ( "
+                + "        SELECT ISNULL(COUNT(b.BookingId), 0) AS RecentWashCount, "
+                + "               ISNULL(SUM(p.FinalAmount), 0) AS RecentSpent "
+                + "        FROM Bookings b "
+                + "        JOIN Payments p ON p.BookingId = b.BookingId AND p.IsPaid = 1 "
+                + "        WHERE b.CustomerId = cust.CustomerId "
+                + "          AND b.BookingStatus = N'Completed' "
+                + "          AND b.CompletedAt >= DATEADD(MONTH, ?, SYSDATETIME()) "
+                + "    ) recent "
+                + ") "
+                + "UPDATE CustomerLoyalty "
+                + "SET CurrentTierId = tc.NewTierId, LastTierUpdatedAt = SYSDATETIME() "
+                + "FROM CustomerLoyalty cl "
+                + "JOIN TierCalc tc ON tc.AccountId = cl.AccountId "
+                + "WHERE tc.NewTierId <> tc.CurrentTierId";
+
+        try {
+            cn = DBContext.getConnection();
+            pst = cn.prepareStatement(sql);
+            pst.setInt(1, -windowMonths); // DATEADD lùi về quá khứ nên truyền số âm
+            return pst.executeUpdate(); // = số dòng CurrentTierId thực sự đổi
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        } finally {
+            try { if (pst != null) pst.close(); } catch (Exception e) {}
+            try { if (cn != null) cn.close(); } catch (Exception e) {}
         }
     }
 }

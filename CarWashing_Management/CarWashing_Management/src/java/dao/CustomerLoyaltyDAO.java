@@ -37,9 +37,13 @@ public class CustomerLoyaltyDAO {
                     loyalty.setLifetimeEarnedPoints(rs1.getInt("LifetimeEarnedPoints"));
                     loyalty.setLifetimeRedeemedPoints(rs1.getInt("LifetimeRedeemedPoints"));
                     
-                    // Ép kiểu DECIMAL từ Database về int theo yêu cầu của bạn
-                    loyalty.setTotalSpent((int) rs1.getDouble("TotalSpent"));
-                    loyalty.setTotalWashCount(rs1.getInt("TotalWashCount"));
+                    // ĐÃ SỬA: KHÔNG đọc TotalSpent/TotalWashCount từ cột DB nữa (2 cột này đứng yên,
+                    // không có code nào cập nhật - xem ghi chú dưới). Tính lại bằng rolling-window
+                    // 12 tháng NGAY BÊN DƯỚI, gán đè vào 2 field này để "hạng kế tiếp" và "% tiến
+                    // trình" phía dưới dùng ĐÚNG CÙNG con số đã quyết định CurrentTierId, tránh
+                    // tình trạng badge ghi "Gold" nhưng thanh tiến trình lại tính theo số liệu khác.
+                    loyalty.setTotalSpent(0);   // sẽ gán đè lại ngay sau khối này
+                    loyalty.setTotalWashCount(0);
 
                     // Đọc cấu hình chi tiết đặc quyền từ bảng LoyaltyTiers
                     LoyaltyTier currentTier = new LoyaltyTier();
@@ -67,6 +71,40 @@ public class CustomerLoyaltyDAO {
                     defaultTier.setBookingWindowDays(7); 
                     defaultTier.setHasPriorityQueue(false);
                     loyalty.setCurrentTierDetails(defaultTier);
+                }
+
+                // LỆNH 1.5: Tính lại "hoạt động gần đây" (rolling-window 12 tháng) TRỰC TIẾP từ
+                // Bookings + Payments - THAY THẾ cho CustomerLoyalty.TotalWashCount/TotalSpent
+                // (2 cột đó hiện không có bất kỳ code nào cập nhật, chỉ là số seed đứng yên).
+                // Công thức PHẢI KHỚP với LoyaltyService.recalculateAllTiers(12) để badge hạng và
+                // % tiến trình luôn đồng nhất với nhau. LƯU Ý: số "12" đang lặp lại ở 2 file khác
+                // nhau (đây và LoyaltyService) - nếu sau này đổi độ dài cửa sổ, nhớ sửa CẢ HAI chỗ,
+                // tốt nhất nên tách ra 1 hằng số dùng chung.
+                if (loyalty != null) {
+                    String sqlRecent = "SELECT ISNULL(COUNT(b.BookingId), 0) AS RecentWashCount, "
+                            + "       ISNULL(SUM(p.FinalAmount), 0) AS RecentSpent "
+                            + "FROM Customers cust "
+                            + "LEFT JOIN Bookings b ON b.CustomerId = cust.CustomerId "
+                            + "    AND b.BookingStatus = N'Completed' "
+                            + "    AND b.CompletedAt >= DATEADD(MONTH, -12, SYSDATETIME()) "
+                            + "LEFT JOIN Payments p ON p.BookingId = b.BookingId AND p.IsPaid = 1 "
+                            + "WHERE cust.AccountId = ?";
+                    PreparedStatement ps3 = null;
+                    ResultSet rs3 = null;
+                    try {
+                        ps3 = conn.prepareStatement(sqlRecent);
+                        ps3.setInt(1, accountId);
+                        rs3 = ps3.executeQuery();
+                        if (rs3.next()) {
+                            loyalty.setTotalWashCount(rs3.getInt("RecentWashCount"));
+                            loyalty.setTotalSpent((int) rs3.getDouble("RecentSpent"));
+                        }
+                        // Nếu không có dòng nào (accountId không có Customers tương ứng - hiếm gặp,
+                        // vd tài khoản Admin lỡ có CustomerLoyalty) -> giữ nguyên 0 đã set ở trên.
+                    } finally {
+                        try { if (rs3 != null) rs3.close(); } catch (SQLException e) {}
+                        try { if (ps3 != null) ps3.close(); } catch (SQLException e) {}
+                    }
                 }
 
                 // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)

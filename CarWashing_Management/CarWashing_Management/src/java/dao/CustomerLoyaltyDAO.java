@@ -47,6 +47,7 @@ public class CustomerLoyaltyDAO {
 
                     // Đọc cấu hình chi tiết đặc quyền từ bảng LoyaltyTiers
                     LoyaltyTier currentTier = new LoyaltyTier();
+                    currentTier.setTierId(rs1.getInt("TierId")); // cần để tìm ĐÚNG hạng kế tiếp theo thứ bậc, không suy ngược từ ngưỡng
                     currentTier.setTierName(rs1.getString("TierName"));
                     currentTier.setBonusPointRate(rs1.getDouble("BonusPointRate"));
                     currentTier.setBookingWindowDays(rs1.getInt("BookingWindowDays"));
@@ -66,6 +67,7 @@ public class CustomerLoyaltyDAO {
                     loyalty.setTotalWashCount(0);
 
                     LoyaltyTier defaultTier = new LoyaltyTier();
+                    defaultTier.setTierId(0); // Member luôn là TierId=0 theo schema
                     defaultTier.setTierName("Member"); // Chỉ dùng tiếng Anh theo thống nhất
                     defaultTier.setBonusPointRate(0.0);
                     defaultTier.setBookingWindowDays(7); 
@@ -108,18 +110,27 @@ public class CustomerLoyaltyDAO {
                 }
 
                 // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)
+                // ĐÃ SỬA BUG: bản cũ tìm hạng kế tiếp bằng cách so ngưỡng thô (kể cả bản
+                // AND đã thử trước đó) - dù có thể đúng với dữ liệu hiện tại (4 hạng tăng
+                // ngưỡng đồng đều), nhưng KHÔNG chắc đúng nếu Người 3 (phụ trách cấu hình
+                // Tier) sau này chỉnh ngưỡng không tăng đều giữa 2 tiêu chí. Sửa dứt điểm:
+                // không suy ngược từ ngưỡng nữa, tìm THẲNG TierId liền kề phía trên TierId
+                // hiện tại - đúng tuyệt đối trong MỌI trường hợp, bất kể ngưỡng cấu hình ra sao.
                 if (loyalty != null) {
+                    int currentTierId = (loyalty.getCurrentTierDetails() != null)
+                            ? loyalty.getCurrentTierDetails().getTierId() : 0;
+
                     String sqlNext = "SELECT TOP 1 * FROM LoyaltyTiers "
-                                   + "WHERE MinTotalSpent > ? OR MinWashCount > ? "
-                                   + "ORDER BY MinTotalSpent ASC, MinWashCount ASC";
-                    
+                                   + "WHERE TierId > ? "
+                                   + "ORDER BY TierId ASC";
+
                     ps2 = conn.prepareStatement(sqlNext);
-                    ps2.setDouble(1, loyalty.getTotalSpent());
-                    ps2.setInt(2, loyalty.getTotalWashCount());
+                    ps2.setInt(1, currentTierId);
                     rs2 = ps2.executeQuery();
 
                     if (rs2.next()) {
                         LoyaltyTier nextTier = new LoyaltyTier();
+                        nextTier.setTierId(rs2.getInt("TierId"));
                         nextTier.setTierName(rs2.getString("TierName"));
                         nextTier.setBonusPointRate(rs2.getDouble("BonusPointRate"));
                         nextTier.setBookingWindowDays(rs2.getInt("BookingWindowDays"));

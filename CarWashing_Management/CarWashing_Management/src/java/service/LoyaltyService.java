@@ -9,12 +9,12 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * LOYALTY ENGINE - phụ trách: Point, Tier, tích/trừ điểm, đền bù hủy lịch.
+ * LOYALTY ENGINE - phụ trách: Point, Tier, tích/trừ điểm, đền bù hủy lịch, đổi thưởng.
  *
- * 2 hàm chính trong file này là 2 "cửa" mà module khác (Payment - Người 1,
+ * 3 hàm chính trong file này là các "cửa" mà module khác (Payment - Người 1,
  * Booking Management - Người 4) sẽ gọi vào. Không ai được tự ý INSERT/UPDATE
  * trực tiếp vào CustomerLoyalty / LoyaltyPointTransactions / RewardRedemptions
- * ngoài 2 hàm này, để đảm bảo logic điểm luôn nhất quán.
+ * ngoài các hàm này, để đảm bảo logic điểm luôn nhất quán.
  *
  * *** LƯU Ý DB: cần đã chạy migration_loosen_points_check.sql trước khi dùng
  * handleBookingCancelled(), vì hàm này insert PointsRequired = 0 và PointsUsed = 0. ***
@@ -183,7 +183,18 @@ public class LoyaltyService {
             pstUpdateLoyalty.setInt(1, totalPoints);
             pstUpdateLoyalty.setInt(2, totalPoints);
             pstUpdateLoyalty.setInt(3, accountId);
-            pstUpdateLoyalty.executeUpdate();
+            int rowsUpdated = pstUpdateLoyalty.executeUpdate();
+
+            // QUAN TRỌNG: nếu 0 dòng bị ảnh hưởng nghĩa là AccountId này chưa có hồ sơ
+            // trong CustomerLoyalty (vd tài khoản Admin, hoặc khách chưa được khởi tạo
+            // hồ sơ loyalty). Không được coi đây là thành công - nếu không sẽ ghi "khống"
+            // vào sổ cái LoyaltyPointTransactions trong khi số dư thật không hề nhích.
+            if (rowsUpdated == 0) {
+                cn.rollback();
+                System.err.println("earnPoints() THẤT BẠI: AccountId=" + accountId
+                        + " không có dòng trong CustomerLoyalty. Đã rollback, không ghi gì cả.");
+                return false;
+            }
 
             cn.commit();
             return true;
@@ -199,6 +210,134 @@ public class LoyaltyService {
         } finally {
             try { if (pstEarn != null) pstEarn.close(); } catch (Exception e) {}
             try { if (pstUpdateLoyalty != null) pstUpdateLoyalty.close(); } catch (Exception e) {}
+            try {
+                if (cn != null) {
+                    cn.setAutoCommit(true);
+                    cn.close();
+                }
+            } catch (Exception e) {}
+        }
+    }
+
+    /**
+     * Đổi 1 reward trong catalog lấy voucher - do khách chủ động bấm "Đổi ngay"
+     * ở customer_rewards.jsp. KHÁC handleBookingCancelled() (hệ thống tự cấp,
+     * không tốn điểm thật) - hàm này TRỪ ĐIỂM THẬT của khách.
+     *
+     * Luồng transaction (lỗi bước nào rollback hết):
+     *   1. Đọc lại Reward + CurrentPoints TRỰC TIẾP TỪ DB để kiểm tra (không tin
+     *      số điểm/trạng thái phía client gửi lên - client có thể bị sửa hoặc cũ).
+     *   2. Cấp voucher trước (INSERT RewardRedemptions, lấy RedemptionId vừa tạo).
+     *   3. Trừ điểm + ghi sổ cái 'Redeem' (gắn kèm RedemptionId ở bước 2 để
+     *      audit trail nối được voucher với đúng giao dịch trừ điểm nào).
+     *
+     * @param accountId  dùng để trừ điểm (CustomerLoyalty/LoyaltyPointTransactions khóa theo AccountId)
+     * @param customerId dùng để gắn chủ sở hữu voucher (RewardRedemptions khóa theo CustomerId - KHÁC accountId)
+     * @param rewardId   reward khách muốn đổi
+     * @return "OK" nếu thành công, hoặc thông báo lỗi cụ thể để hiển thị cho khách
+     */
+    public String redeemReward(int accountId, int customerId, int rewardId) {
+        Connection cn = null;
+        PreparedStatement pstCheckReward = null, pstCheckPoints = null,
+                pstInsertRedemption = null, pstDeduct = null, pstLog = null;
+        ResultSet rsReward = null, rsPoints = null, rsGeneratedKey = null;
+
+        try {
+            cn = DBContext.getConnection();
+            cn.setAutoCommit(false);
+
+            // ===== BƯỚC 1a: Đọc lại Reward THẬT từ DB =====
+            pstCheckReward = cn.prepareStatement(
+                    "SELECT PointsRequired, IsActive FROM Rewards WHERE RewardId = ?");
+            pstCheckReward.setInt(1, rewardId);
+            rsReward = pstCheckReward.executeQuery();
+            if (!rsReward.next()) {
+                cn.rollback();
+                return "Phần thưởng không tồn tại";
+            }
+            int pointsRequired = rsReward.getInt("PointsRequired");
+            boolean isActive = rsReward.getBoolean("IsActive");
+            if (!isActive) {
+                cn.rollback();
+                return "Phần thưởng này hiện không còn khả dụng";
+            }
+
+            // ===== BƯỚC 1b: Đọc lại điểm hiện có THẬT từ DB =====
+            pstCheckPoints = cn.prepareStatement(
+                    "SELECT CurrentPoints FROM CustomerLoyalty WHERE AccountId = ?");
+            pstCheckPoints.setInt(1, accountId);
+            rsPoints = pstCheckPoints.executeQuery();
+            if (!rsPoints.next()) {
+                cn.rollback();
+                return "Tài khoản chưa có hồ sơ điểm thưởng";
+            }
+            int currentPoints = rsPoints.getInt("CurrentPoints");
+            if (currentPoints < pointsRequired) {
+                cn.rollback();
+                return "Không đủ điểm để đổi";
+            }
+
+            // ===== BƯỚC 2: Cấp voucher trước, lấy RedemptionId vừa sinh =====
+            pstInsertRedemption = cn.prepareStatement(
+                    "INSERT INTO RewardRedemptions (CustomerId, RewardId, PointsUsed, Status) "
+                            + "VALUES (?, ?, ?, N'Available')",
+                    Statement.RETURN_GENERATED_KEYS);
+            pstInsertRedemption.setInt(1, customerId);
+            pstInsertRedemption.setInt(2, rewardId);
+            pstInsertRedemption.setInt(3, pointsRequired);
+            if (pstInsertRedemption.executeUpdate() == 0) {
+                cn.rollback();
+                return "Không thể tạo voucher";
+            }
+            rsGeneratedKey = pstInsertRedemption.getGeneratedKeys();
+            if (!rsGeneratedKey.next()) {
+                cn.rollback();
+                return "Không thể tạo voucher";
+            }
+            int newRedemptionId = rsGeneratedKey.getInt(1);
+
+            // ===== BƯỚC 3: Trừ điểm + ghi sổ cái (gắn RedemptionId để audit trail đầy đủ) =====
+            pstDeduct = cn.prepareStatement(
+                    "UPDATE CustomerLoyalty SET CurrentPoints = CurrentPoints - ?, "
+                            + "LifetimeRedeemedPoints = LifetimeRedeemedPoints + ?, UpdatedAt = SYSDATETIME() "
+                            + "WHERE AccountId = ?");
+            pstDeduct.setInt(1, pointsRequired);
+            pstDeduct.setInt(2, pointsRequired);
+            pstDeduct.setInt(3, accountId);
+            if (pstDeduct.executeUpdate() == 0) {
+                cn.rollback();
+                return "Không thể trừ điểm (tài khoản không hợp lệ)";
+            }
+
+            pstLog = cn.prepareStatement(
+                    "INSERT INTO LoyaltyPointTransactions (AccountId, RedemptionId, PointsChange, TransactionType, Description) "
+                            + "VALUES (?, ?, ?, N'Redeem', ?)");
+            pstLog.setInt(1, accountId);
+            pstLog.setInt(2, newRedemptionId);
+            pstLog.setInt(3, -pointsRequired);
+            pstLog.setString(4, "Đổi thưởng #" + rewardId + " (Redemption #" + newRedemptionId + ")");
+            pstLog.executeUpdate();
+
+            cn.commit();
+            return "OK";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                if (cn != null) cn.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return "Có lỗi hệ thống, vui lòng thử lại";
+        } finally {
+            try { if (rsReward != null) rsReward.close(); } catch (Exception e) {}
+            try { if (rsPoints != null) rsPoints.close(); } catch (Exception e) {}
+            try { if (rsGeneratedKey != null) rsGeneratedKey.close(); } catch (Exception e) {}
+            try { if (pstCheckReward != null) pstCheckReward.close(); } catch (Exception e) {}
+            try { if (pstCheckPoints != null) pstCheckPoints.close(); } catch (Exception e) {}
+            try { if (pstInsertRedemption != null) pstInsertRedemption.close(); } catch (Exception e) {}
+            try { if (pstDeduct != null) pstDeduct.close(); } catch (Exception e) {}
+            try { if (pstLog != null) pstLog.close(); } catch (Exception e) {}
             try {
                 if (cn != null) {
                     cn.setAutoCommit(true);

@@ -34,13 +34,20 @@ public class CustomerLoyaltyDAO {
                     // Lưu ý: Đặt tên hàm set tương ứng với cấu trúc thuộc tính DTO của bạn
                     loyalty.setAccountId(rs1.getInt("AccountId"));
                     loyalty.setCurrentPoints(rs1.getInt("CurrentPoints"));
+                    loyalty.setLifetimeEarnedPoints(rs1.getInt("LifetimeEarnedPoints"));
+                    loyalty.setLifetimeRedeemedPoints(rs1.getInt("LifetimeRedeemedPoints"));
                     
-                    // Ép kiểu DECIMAL từ Database về int theo yêu cầu của bạn
-                    loyalty.setTotalSpent((int) rs1.getDouble("TotalSpent"));
-                    loyalty.setTotalWashCount(rs1.getInt("TotalWashCount"));
+                    // ĐÃ SỬA: KHÔNG đọc TotalSpent/TotalWashCount từ cột DB nữa (2 cột này đứng yên,
+                    // không có code nào cập nhật - xem ghi chú dưới). Tính lại bằng rolling-window
+                    // 12 tháng NGAY BÊN DƯỚI, gán đè vào 2 field này để "hạng kế tiếp" và "% tiến
+                    // trình" phía dưới dùng ĐÚNG CÙNG con số đã quyết định CurrentTierId, tránh
+                    // tình trạng badge ghi "Gold" nhưng thanh tiến trình lại tính theo số liệu khác.
+                    loyalty.setTotalSpent(0);   // sẽ gán đè lại ngay sau khối này
+                    loyalty.setTotalWashCount(0);
 
                     // Đọc cấu hình chi tiết đặc quyền từ bảng LoyaltyTiers
                     LoyaltyTier currentTier = new LoyaltyTier();
+                    currentTier.setTierId(rs1.getInt("TierId")); // cần để tìm ĐÚNG hạng kế tiếp theo thứ bậc, không suy ngược từ ngưỡng
                     currentTier.setTierName(rs1.getString("TierName"));
                     currentTier.setBonusPointRate(rs1.getDouble("BonusPointRate"));
                     currentTier.setBookingWindowDays(rs1.getInt("BookingWindowDays"));
@@ -54,10 +61,13 @@ public class CustomerLoyaltyDAO {
                     loyalty = new CustomerLoyalty();
                     loyalty.setAccountId(accountId);
                     loyalty.setCurrentPoints(0);
+                    loyalty.setLifetimeEarnedPoints(0);
+                    loyalty.setLifetimeRedeemedPoints(0);
                     loyalty.setTotalSpent(0);
                     loyalty.setTotalWashCount(0);
 
                     LoyaltyTier defaultTier = new LoyaltyTier();
+                    defaultTier.setTierId(0); // Member luôn là TierId=0 theo schema
                     defaultTier.setTierName("Member"); // Chỉ dùng tiếng Anh theo thống nhất
                     defaultTier.setBonusPointRate(0.0);
                     defaultTier.setBookingWindowDays(7); 
@@ -65,19 +75,62 @@ public class CustomerLoyaltyDAO {
                     loyalty.setCurrentTierDetails(defaultTier);
                 }
 
-                // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)
+                // LỆNH 1.5: Tính lại "hoạt động gần đây" (rolling-window 12 tháng) TRỰC TIẾP từ
+                // Bookings + Payments - THAY THẾ cho CustomerLoyalty.TotalWashCount/TotalSpent
+                // (2 cột đó hiện không có bất kỳ code nào cập nhật, chỉ là số seed đứng yên).
+                // Công thức PHẢI KHỚP với LoyaltyService.recalculateAllTiers(12) để badge hạng và
+                // % tiến trình luôn đồng nhất với nhau. LƯU Ý: số "12" đang lặp lại ở 2 file khác
+                // nhau (đây và LoyaltyService) - nếu sau này đổi độ dài cửa sổ, nhớ sửa CẢ HAI chỗ,
+                // tốt nhất nên tách ra 1 hằng số dùng chung.
                 if (loyalty != null) {
+                    String sqlRecent = "SELECT ISNULL(COUNT(b.BookingId), 0) AS RecentWashCount, "
+                            + "       ISNULL(SUM(p.FinalAmount), 0) AS RecentSpent "
+                            + "FROM Customers cust "
+                            + "LEFT JOIN Bookings b ON b.CustomerId = cust.CustomerId "
+                            + "    AND b.BookingStatus = N'Completed' "
+                            + "    AND b.CompletedAt >= DATEADD(MONTH, -12, SYSDATETIME()) "
+                            + "LEFT JOIN Payments p ON p.BookingId = b.BookingId AND p.IsPaid = 1 "
+                            + "WHERE cust.AccountId = ?";
+                    PreparedStatement ps3 = null;
+                    ResultSet rs3 = null;
+                    try {
+                        ps3 = conn.prepareStatement(sqlRecent);
+                        ps3.setInt(1, accountId);
+                        rs3 = ps3.executeQuery();
+                        if (rs3.next()) {
+                            loyalty.setTotalWashCount(rs3.getInt("RecentWashCount"));
+                            loyalty.setTotalSpent((int) rs3.getDouble("RecentSpent"));
+                        }
+                        // Nếu không có dòng nào (accountId không có Customers tương ứng - hiếm gặp,
+                        // vd tài khoản Admin lỡ có CustomerLoyalty) -> giữ nguyên 0 đã set ở trên.
+                    } finally {
+                        try { if (rs3 != null) rs3.close(); } catch (SQLException e) {}
+                        try { if (ps3 != null) ps3.close(); } catch (SQLException e) {}
+                    }
+                }
+
+                // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)
+                // ĐÃ SỬA BUG: bản cũ tìm hạng kế tiếp bằng cách so ngưỡng thô (kể cả bản
+                // AND đã thử trước đó) - dù có thể đúng với dữ liệu hiện tại (4 hạng tăng
+                // ngưỡng đồng đều), nhưng KHÔNG chắc đúng nếu Người 3 (phụ trách cấu hình
+                // Tier) sau này chỉnh ngưỡng không tăng đều giữa 2 tiêu chí. Sửa dứt điểm:
+                // không suy ngược từ ngưỡng nữa, tìm THẲNG TierId liền kề phía trên TierId
+                // hiện tại - đúng tuyệt đối trong MỌI trường hợp, bất kể ngưỡng cấu hình ra sao.
+                if (loyalty != null) {
+                    int currentTierId = (loyalty.getCurrentTierDetails() != null)
+                            ? loyalty.getCurrentTierDetails().getTierId() : 0;
+
                     String sqlNext = "SELECT TOP 1 * FROM LoyaltyTiers "
-                                   + "WHERE MinTotalSpent > ? OR MinWashCount > ? "
-                                   + "ORDER BY MinTotalSpent ASC, MinWashCount ASC";
-                    
+                                   + "WHERE TierId > ? "
+                                   + "ORDER BY TierId ASC";
+
                     ps2 = conn.prepareStatement(sqlNext);
-                    ps2.setDouble(1, loyalty.getTotalSpent());
-                    ps2.setInt(2, loyalty.getTotalWashCount());
+                    ps2.setInt(1, currentTierId);
                     rs2 = ps2.executeQuery();
 
                     if (rs2.next()) {
                         LoyaltyTier nextTier = new LoyaltyTier();
+                        nextTier.setTierId(rs2.getInt("TierId"));
                         nextTier.setTierName(rs2.getString("TierName"));
                         nextTier.setBonusPointRate(rs2.getDouble("BonusPointRate"));
                         nextTier.setBookingWindowDays(rs2.getInt("BookingWindowDays"));

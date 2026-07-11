@@ -1,42 +1,71 @@
 <%@page import="java.util.*"%>
+<%@page import="java.text.SimpleDateFormat"%>
+<%@page import="dto.Account"%>
+<%@page import="dto.Customer"%>
+<%@page import="dto.CustomerLoyalty"%>
+<%@page import="dto.LoyaltyTier"%>
+<%@page import="dto.LoyaltyPointTransaction"%>
+<%@page import="dao.CustomerLoyaltyDAO"%>
+<%@page import="dao.LoyaltyPointTransactionDAO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%--
     ============================================================
     TRANG: ĐIỂM THƯỞNG (Customer) - customer_loyalty.jsp
-    Bố cục: Thẻ thành viên lớn (logo theo tier) -> Lịch sử cộng/trừ điểm (filter + bảng)
-    TODO BACKEND (người phụ trách chức năng):
-      1. Mở comment dòng include auth-check bên dưới khi gắn Controller.
-      2. Thay MOCK DATA:
-         - loyalty (điểm, hạng, tên, biển số) -> CustomerLoyaltyDAO + Customer trong session
-         - pointHistory -> bảng PointTransaction trong DB mới (chưa có DTO, tạo sau)
-      3. Filter hiện chạy bằng JS trên mock data; khi có backend có thể giữ nguyên JS
-         (lọc client-side) hoặc chuyển thành query param cho Controller.
+    Bố cục: Thẻ thành viên lớn (logo theo tier) -> Lịch sử cộng/trừ điểm (filter + phân trang)
+
+    QUAN TRỌNG - đổi cách filter/phân trang hoạt động so với bản mock trước:
+    Bản mock cũ lọc bằng JS trên 1 mảng cứng có sẵn (tức thời, không tải lại trang).
+    Bản này lọc/phân trang THẬT qua DB (LoyaltyPointTransactionDAO dùng OFFSET/FETCH),
+    nên các nút filter và số trang giờ là <a href> điều hướng qua query string
+    (?filter=Earn&page=2), tức là SẼ TẢI LẠI TRANG mỗi lần bấm - không còn tức thời
+    như JS nữa. Đây là đánh đổi cần thiết vì DB chỉ trả về đúng 1 trang dữ liệu
+    mỗi lần gọi, không tải hết lịch sử về trình duyệt.
     ============================================================
 --%>
-<%-- <%@ include file="../includes/auth-check.jsp" %> --%>
+<%@ include file="../includes/auth-check.jsp" %>
 <%
     request.setAttribute("ACTIVE_TAB", "diemthuong");
 
-    // ================= MOCK DATA - XÓA KHI GẮN BACKEND =================
-    String customerName = "Nguyễn Văn Lâm";  // cus.getFullName()
-    String plateNumber = "51G-123.45";       // vehicle.getPlateNumber()
-    String tierName = "Bạc";                 // loyalty.getCurrentTierDetails().getTierName()
-    String tierIcon = "fa-shield-halved";    // logo theo tier: Member fa-user | Bạc fa-shield-halved | Vàng fa-crown | Bạch Kim fa-gem
-    int currentPoints = 1250;                // loyalty.getCurrentPoints()
-    int expiringSoon = 120;                  // số điểm sắp hết hạn trong 30 ngày (query riêng)
+    int accountId = userAcc.getAccountID();
+    String customerName = userAcc.getFullname(); // Tên nằm ở Account, KHÔNG phải Customer (Customer.java không có field tên)
 
-    // Lịch sử điểm: {Ngày, Nội dung, Điểm thay đổi, Số dư sau GD, loại: EARN/REDEEM/EXPIRE}
-    Object[][] pointHistory = {
-        {"05/07/2026", "Rửa xe gói Deluxe (+10% ưu đãi hạng Bạc)", 165, 1250, "EARN"},
-        {"28/06/2026", "Đổi voucher Phiếu mua hàng 20.000 VNĐ", -2000, 1085, "REDEEM"},
-        {"20/06/2026", "Rửa xe gói Basic", 80, 3085, "EARN"},
-        {"15/06/2026", "Điểm hết hạn (tích lũy từ 06/2025)", -40, 3005, "EXPIRE"},
-        {"02/06/2026", "Rửa xe gói Premium (+10% ưu đãi hạng Bạc)", 220, 3045, "EARN"},
-        {"25/05/2026", "Đổi voucher Miễn phí wax xe", -300, 2825, "REDEEM"},
-        {"18/05/2026", "Khuyến mãi tặng điểm sinh nhật", 50, 3125, "EARN"},
-        {"10/05/2026", "Rửa xe gói Deluxe", 150, 3075, "EARN"}
-    };
-    // ====================================================================
+    // ===== Hồ sơ loyalty thật: hạng + điểm hiện có =====
+    CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+    CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(accountId);
+    LoyaltyTier currentTier = loyalty.getCurrentTierDetails();
+
+    String tierName = (currentTier != null) ? currentTier.getTierName() : "Member";
+    int currentPoints = loyalty.getCurrentPoints();
+
+    // Map tên hạng (DB lưu tiếng Anh: Member/Silver/Gold/Platinum) sang icon + nhãn tiếng Việt hiển thị
+    String tierIcon, tierLabel;
+    switch (tierName) {
+        case "Silver":   tierIcon = "fa-shield-halved"; tierLabel = "Bạc";       break;
+        case "Gold":     tierIcon = "fa-crown";          tierLabel = "Vàng";      break;
+        case "Platinum": tierIcon = "fa-gem";            tierLabel = "Bạch Kim";  break;
+        default:         tierIcon = "fa-user";           tierLabel = "Member";
+    }
+
+    // ===== Điểm sắp hết hạn trong 30 ngày (XẤP XỈ - xem giới hạn trong DAO) =====
+    LoyaltyPointTransactionDAO txDAO = new LoyaltyPointTransactionDAO();
+    int expiringSoon = txDAO.getExpiringSoonPoints(accountId, 30);
+
+    // ===== Filter + phân trang lấy từ query string, có giá trị mặc định an toàn =====
+    String filter = request.getParameter("filter");
+    if (filter == null || filter.trim().isEmpty()) filter = "ALL";
+
+    int pageNum = 1;
+    try { pageNum = Integer.parseInt(request.getParameter("page")); } catch (Exception e) { /* giữ mặc định 1 */ }
+    if (pageNum < 1) pageNum = 1;
+
+    final int PAGE_SIZE = 5;
+    List<LoyaltyPointTransaction> pointHistory = txDAO.getHistory(accountId, filter, pageNum, PAGE_SIZE);
+    int totalRows = txDAO.countHistory(accountId, filter);
+    int totalPages = (int) Math.ceil(totalRows / (double) PAGE_SIZE);
+    if (totalPages < 1) totalPages = 1;
+    if (pageNum > totalPages) pageNum = totalPages; // tự kéo về trang hợp lệ nếu gõ tay số trang quá lớn
+
+    SimpleDateFormat dateFmt = new SimpleDateFormat("dd/MM/yyyy");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -83,11 +112,9 @@
                                     </div>
                                     <div>
                                         <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Hạng hiện tại</p>
-                                        <h2 class="text-2xl font-extrabold mt-0.5">Thành viên <%= tierName %></h2>
+                                        <h2 class="text-2xl font-extrabold mt-0.5">Thành viên <%= tierLabel %></h2>
                                         <p class="text-sm text-slate-400 mt-1">
                                             <i class="fa-regular fa-user mr-1"></i><%= customerName %>
-                                            <span class="mx-2 text-slate-600">|</span>
-                                            <i class="fa-solid fa-car mr-1"></i><%= plateNumber %>
                                         </p>
                                     </div>
                                 </div>
@@ -115,10 +142,18 @@
                             <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
                                 <h3 class="text-lg font-bold text-slate-800">Lịch sử điểm</h3>
                                 <div class="flex gap-2" id="historyFilter">
-                                    <button data-filter="ALL" class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-emerald-500 text-white">Tất cả</button>
-                                    <button data-filter="EARN" class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-slate-100 text-slate-500 hover:bg-slate-200">Cộng điểm</button>
-                                    <button data-filter="REDEEM" class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-slate-100 text-slate-500 hover:bg-slate-200">Trừ điểm</button>
-                                    <button data-filter="EXPIRE" class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-slate-100 text-slate-500 hover:bg-slate-200">Hết hạn</button>
+                                    <%
+                                        // 4 chip filter -> map value thật khớp CHECK constraint DB ("Earn"/"Redeem"/"Expire")
+                                        String[][] filters = {{"ALL", "Tất cả"}, {"Earn", "Cộng điểm"}, {"Redeem", "Trừ điểm"}, {"Expire", "Hết hạn"}};
+                                        for (String[] f : filters) {
+                                            boolean active = filter.equals(f[0]);
+                                            String cls = active
+                                                    ? "bg-emerald-500 text-white"
+                                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200";
+                                    %>
+                                    <a href="customer_loyalty.jsp?filter=<%= f[0] %>&page=1"
+                                       class="px-4 py-1.5 rounded-full text-xs font-semibold transition <%= cls %>"><%= f[1] %></a>
+                                    <% } %>
                                 </div>
                             </div>
 
@@ -131,36 +166,57 @@
                                         <th class="py-3 px-6 font-bold text-right">Số dư</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm" id="historyBody">
-                                    <% for (Object[] h : pointHistory) {
-                                        int delta = (Integer) h[2];
-                                        String type = (String) h[4];
-                                        String deltaClass = "EARN".equals(type) ? "text-emerald-600" : ("EXPIRE".equals(type) ? "text-slate-400" : "text-red-500");
-                                        String iconClass = "EARN".equals(type) ? "fa-circle-plus text-emerald-400" : ("EXPIRE".equals(type) ? "fa-hourglass-end text-slate-300" : "fa-circle-minus text-red-400");
-                                    %>
-                                    <tr class="history-row border-b border-slate-100 hover:bg-slate-50 transition" data-type="<%= type %>">
-                                        <td class="py-3.5 px-6 text-slate-500 whitespace-nowrap"><%= h[0] %></td>
-                                        <td class="py-3.5 px-6 text-slate-700">
-                                            <i class="fa-solid <%= iconClass %> mr-2"></i><%= h[1] %>
-                                        </td>
-                                        <td class="py-3.5 px-6 text-right font-bold <%= deltaClass %>"><%= (delta > 0 ? "+" : "") + String.format("%,d", delta) %></td>
-                                        <td class="py-3.5 px-6 text-right text-slate-600 font-medium"><%= String.format("%,d", (Integer) h[3]) %></td>
-                                    </tr>
-                                    <% } %>
-                                    <tr id="emptyRow" class="hidden">
+                                <tbody class="text-sm">
+                                    <% if (pointHistory.isEmpty()) { %>
+                                    <tr>
                                         <td colspan="4" class="py-10 text-center text-slate-400 text-sm">
                                             <i class="fa-regular fa-folder-open text-2xl block mb-2"></i> Không có giao dịch nào trong mục này
                                         </td>
                                     </tr>
+                                    <% } %>
+                                    <% for (LoyaltyPointTransaction t : pointHistory) {
+                                        int delta = t.getPointsChange();
+                                        String type = t.getTransactionType(); // "Earn" / "Redeem" / "Expire" / "AdminAdjust"
+                                        boolean isExpire = "Expire".equals(type);
+                                        String deltaClass = isExpire ? "text-slate-400" : (delta > 0 ? "text-emerald-600" : "text-red-500");
+                                        String iconClass = isExpire ? "fa-hourglass-end text-slate-300" : (delta > 0 ? "fa-circle-plus text-emerald-400" : "fa-circle-minus text-red-400");
+                                    %>
+                                    <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                                        <td class="py-3.5 px-6 text-slate-500 whitespace-nowrap"><%= dateFmt.format(t.getCreatedAt()) %></td>
+                                        <td class="py-3.5 px-6 text-slate-700">
+                                            <i class="fa-solid <%= iconClass %> mr-2"></i><%= t.getDescription() %>
+                                        </td>
+                                        <td class="py-3.5 px-6 text-right font-bold <%= deltaClass %>"><%= (delta > 0 ? "+" : "") + String.format("%,d", delta) %></td>
+                                        <td class="py-3.5 px-6 text-right text-slate-600 font-medium"><%= String.format("%,d", t.getBalanceAfter()) %></td>
+                                    </tr>
+                                    <% } %>
                                 </tbody>
                             </table>
 
-                            <%-- TODO BACKEND: phân trang thật (offset/limit). Hiện tại là UI tĩnh minh họa. --%>
+                            <%-- Phân trang thật - điều hướng qua query string, giữ nguyên filter đang chọn --%>
                             <div class="px-6 py-4 flex items-center justify-end gap-1.5 text-sm">
-                                <button class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                                <button class="w-8 h-8 rounded-lg bg-emerald-500 text-white font-bold">1</button>
-                                <button class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition">2</button>
-                                <button class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                                <% if (pageNum > 1) { %>
+                                <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= pageNum - 1 %>"
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-left text-xs"></i></a>
+                                <% } else { %>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300"><i class="fa-solid fa-chevron-left text-xs"></i></span>
+                                <% } %>
+
+                                <% for (int p = 1; p <= totalPages; p++) { %>
+                                    <% if (p == pageNum) { %>
+                                    <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold"><%= p %></span>
+                                    <% } else { %>
+                                    <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= p %>"
+                                       class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><%= p %></a>
+                                    <% } %>
+                                <% } %>
+
+                                <% if (pageNum < totalPages) { %>
+                                <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= pageNum + 1 %>"
+                                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-right text-xs"></i></a>
+                                <% } else { %>
+                                <span class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300"><i class="fa-solid fa-chevron-right text-xs"></i></span>
+                                <% } %>
                             </div>
                         </div>
 
@@ -168,26 +224,5 @@
                 </div>
             </main>
         </div>
-
-        <script>
-            // Filter lịch sử điểm theo loại giao dịch (client-side trên mock data)
-            const chips = document.querySelectorAll('.filter-chip');
-            const rows = document.querySelectorAll('.history-row');
-            const emptyRow = document.getElementById('emptyRow');
-
-            chips.forEach(chip => chip.addEventListener('click', () => {
-                chips.forEach(c => c.className = 'filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-slate-100 text-slate-500 hover:bg-slate-200');
-                chip.className = 'filter-chip px-4 py-1.5 rounded-full text-xs font-semibold transition bg-emerald-500 text-white';
-
-                const f = chip.dataset.filter;
-                let visible = 0;
-                rows.forEach(r => {
-                    const show = (f === 'ALL' || r.dataset.type === f);
-                    r.classList.toggle('hidden', !show);
-                    if (show) visible++;
-                });
-                emptyRow.classList.toggle('hidden', visible > 0);
-            }));
-        </script>
     </body>
 </html>

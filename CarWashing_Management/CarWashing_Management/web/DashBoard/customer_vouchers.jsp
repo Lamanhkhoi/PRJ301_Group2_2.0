@@ -1,36 +1,44 @@
 <%@page import="java.util.*"%>
+<%@page import="java.text.SimpleDateFormat"%>
+<%@page import="dto.RewardRedemption"%>
+<%@page import="dao.RewardRedemptionDAO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%--
     ============================================================
     TRANG: VOUCHER CỦA TÔI (Customer) - customer_vouchers.jsp
     Bố cục: 3 tab Khả dụng / Đã dùng / Hết hạn -> Lưới voucher kiểu "vé xé" (mã code + nút copy)
-    TODO BACKEND (người phụ trách chức năng):
-      1. Mở comment dòng include auth-check bên dưới khi gắn Controller.
-      2. Thay MOCK DATA: vouchers -> bảng CustomerVoucher trong DB mới
-         (sinh ra khi khách đổi reward thành công; status: AVAILABLE/USED/EXPIRED).
-      3. Tab đang lọc client-side bằng JS trên mock data, có thể giữ nguyên khi có backend.
+
+    ĐÃ GẮN BACKEND THẬT - không còn mock data.
+
+    LƯU Ý QUAN TRỌNG - việc còn thiếu ở tầng hệ thống (không thuộc phạm vi trang này):
+    Bảng RewardRedemptions KHÔNG có cột ngày hết hạn cho voucher (khác với điểm
+    thưởng có ExpiresAt). Trạng thái "Expired" tồn tại trong CHECK constraint
+    nhưng CHƯA CÓ cơ chế nào (cron job / kiểm tra định kỳ) tự động chuyển
+    Available -> Expired theo thời gian. Trang này chỉ hiển thị đúng những gì
+    DB có (RedeemedAt, UsedAt), không tự bịa ngày hết hạn giả.
+
+    Vì số lượng voucher của 1 khách thường không nhiều (không như lịch sử điểm
+    có thể hàng trăm dòng/năm), trang này tải hết 1 lần rồi lọc tab bằng JS
+    phía client cho mượt, không cần phân trang server như customer_loyalty.jsp.
     ============================================================
 --%>
-<%-- <%@ include file="../includes/auth-check.jsp" %> --%>
+<%@ include file="../includes/auth-check.jsp" %>
 <%
     request.setAttribute("ACTIVE_TAB", "vouchercuatoi");
 
-    // ================= MOCK DATA - XÓA KHI GẮN BACKEND =================
-    // {Tên voucher, Loại hiển thị, Mã code, HSD hoặc ngày dùng, Trạng thái}
-    String[][] vouchers = {
-        {"Phiếu mua hàng 20.000 VNĐ", "Giảm giá", "SW-8F3K2", "HSD: 31/08/2026", "AVAILABLE"},
-        {"Miễn phí wax xe", "Dịch vụ miễn phí", "SW-2QW9Z", "HSD: 15/09/2026", "AVAILABLE"},
-        {"Phiếu mua hàng 10.000 VNĐ", "Giảm giá", "SW-11ABC", "Đã dùng: 02/07/2026", "USED"},
-        {"Nâng cấp gói Deluxe", "Dịch vụ miễn phí", "SW-73PLM", "Đã dùng: 20/06/2026", "USED"},
-        {"Miễn phí wax xe", "Dịch vụ miễn phí", "SW-90XYT", "Hết hạn: 30/05/2026", "EXPIRED"}
-    };
+    int customerId = cus.getCustomerId();
+
+    RewardRedemptionDAO redemptionDAO = new RewardRedemptionDAO();
+    List<RewardRedemption> vouchers = redemptionDAO.getMyRedemptions(customerId, "ALL");
+
     int cntAvail = 0, cntUsed = 0, cntExpired = 0;
-    for (String[] v : vouchers) {
-        if ("AVAILABLE".equals(v[4])) cntAvail++;
-        else if ("USED".equals(v[4])) cntUsed++;
-        else cntExpired++;
+    for (RewardRedemption rr : vouchers) {
+        if ("Available".equals(rr.getStatus())) cntAvail++;
+        else if ("Used".equals(rr.getStatus())) cntUsed++;
+        else if ("Expired".equals(rr.getStatus())) cntExpired++;
     }
-    // ====================================================================
+
+    SimpleDateFormat dateFmt = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -78,25 +86,32 @@
 
                         <%-- ===== TABS TRẠNG THÁI ===== --%>
                         <div class="flex gap-6 border-b border-slate-200 mb-8" id="voucherTabs">
-                            <button data-tab="AVAILABLE" class="v-tab pb-3 text-sm font-bold border-b-2 border-emerald-500 text-slate-800 transition">
+                            <button data-tab="Available" class="v-tab pb-3 text-sm font-bold border-b-2 border-emerald-500 text-slate-800 transition">
                                 Khả dụng <span class="ml-1 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full"><%= cntAvail %></span>
                             </button>
-                            <button data-tab="USED" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
+                            <button data-tab="Used" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
                                 Đã dùng <span class="ml-1 bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-full"><%= cntUsed %></span>
                             </button>
-                            <button data-tab="EXPIRED" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
+                            <button data-tab="Expired" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
                                 Hết hạn <span class="ml-1 bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-full"><%= cntExpired %></span>
                             </button>
                         </div>
 
                         <%-- ===== LƯỚI VOUCHER "VÉ XÉ" ===== --%>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="voucherGrid">
-                            <% for (String[] v : vouchers) {
-                                boolean avail = "AVAILABLE".equals(v[4]);
-                                boolean used = "USED".equals(v[4]);
-                                String typeBadge = "Giảm giá".equals(v[1]) ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700";
+                            <% if (vouchers.isEmpty()) { %>
+                                <%-- Không render gì - để khối empty state bên dưới tự hiện qua JS --%>
+                            <% } %>
+                            <% for (RewardRedemption rr : vouchers) {
+                                boolean avail = "Available".equals(rr.getStatus());
+                                boolean used = "Used".equals(rr.getStatus());
+                                String timeLabel = avail
+                                        ? "Đổi lúc: " + dateFmt.format(rr.getRedeemedAt())
+                                        : used
+                                            ? "Đã dùng lúc: " + (rr.getUsedAt() != null ? dateFmt.format(rr.getUsedAt()) : dateFmt.format(rr.getRedeemedAt()))
+                                            : "Đổi lúc: " + dateFmt.format(rr.getRedeemedAt());
                             %>
-                            <div class="voucher-item <%= avail ? "" : "hidden" %>" data-status="<%= v[4] %>">
+                            <div class="voucher-item <%= avail ? "" : "hidden" %>" data-status="<%= rr.getStatus() %>">
                                 <div class="flex bg-white rounded-2xl border <%= avail ? "border-slate-200 shadow-sm hover:shadow-md" : "border-slate-100 grayscale opacity-60" %> transition overflow-hidden relative">
                                     <% if (!avail) { %>
                                     <span class="absolute top-3 right-3 z-10 text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded border <%= used ? "text-slate-400 border-slate-300" : "text-red-400 border-red-300" %> rotate-6">
@@ -104,15 +119,17 @@
                                     </span>
                                     <% } %>
                                     <div class="flex-1 p-5">
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full <%= typeBadge %>"><%= v[1] %></span>
-                                        <h3 class="font-bold text-slate-800 mt-3"><%= v[0] %></h3>
-                                        <p class="text-xs text-slate-500 mt-1.5"><i class="fa-regular fa-clock mr-1"></i><%= v[3] %></p>
+                                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                                            Giảm <%= new java.text.DecimalFormat("0.#").format(rr.getDiscountPercent()) %>% &middot; Tối đa <%= String.format("%,.0f", rr.getMaxDiscountAmount()) %>đ
+                                        </span>
+                                        <h3 class="font-bold text-slate-800 mt-3"><%= rr.getRewardName() %></h3>
+                                        <p class="text-xs text-slate-500 mt-1.5"><i class="fa-regular fa-clock mr-1"></i><%= timeLabel %></p>
                                     </div>
                                     <div class="ticket-divider w-36 bg-slate-50 flex flex-col items-center justify-center gap-2 p-3">
                                         <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Mã voucher</p>
-                                        <p class="font-mono font-bold text-slate-700 <%= avail ? "" : "line-through" %>"><%= v[2] %></p>
+                                        <p class="font-mono font-bold text-slate-700 <%= avail ? "" : "line-through" %>"><%= rr.getVoucherCode() %></p>
                                         <% if (avail) { %>
-                                        <button onclick="copyCode(this, '<%= v[2] %>')"
+                                        <button onclick="copyCode(this, '<%= rr.getVoucherCode() %>')"
                                                 class="copy-btn text-xs font-bold text-emerald-600 border border-emerald-300 hover:bg-emerald-50 rounded-lg px-3 py-1.5 transition">
                                             <i class="fa-regular fa-copy mr-1"></i>Copy
                                         </button>
@@ -123,8 +140,8 @@
                             <% } %>
                         </div>
 
-                        <%-- Empty state khi tab không có voucher --%>
-                        <div id="voucherEmpty" class="hidden text-center py-16 text-slate-400">
+                        <%-- Empty state khi tab không có voucher (kể cả khi tổng khách chưa đổi gì) --%>
+                        <div id="voucherEmpty" class="<%= cntAvail > 0 ? "hidden" : "" %> text-center py-16 text-slate-400">
                             <i class="fa-solid fa-ticket text-4xl mb-3 block"></i>
                             <p class="text-sm font-medium">Không có voucher nào trong mục này</p>
                             <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp" class="inline-block mt-3 text-sm font-bold text-emerald-600 hover:text-emerald-700">
@@ -138,7 +155,7 @@
         </div>
 
         <script>
-            // ===== Chuyển tab trạng thái =====
+            // ===== Chuyển tab trạng thái (client-side, dữ liệu đã tải hết 1 lần) =====
             const tabs = document.querySelectorAll('.v-tab');
             const items = document.querySelectorAll('.voucher-item');
             const empty = document.getElementById('voucherEmpty');

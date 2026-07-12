@@ -61,10 +61,10 @@ public class RewardDAO {
     /**
      * Dành RIÊNG cho catalog đổi thưởng của khách hàng (customer_rewards.jsp).
      * KHÁC getAllRewards() ở chỗ chỉ lấy IsActive = 1 - để ẩn khỏi mắt khách
-     * những reward đang tắt, và đặc biệt là các reward hệ thống tự cấp khi
-     * đền bù hủy lịch (LoyaltyService.handleBookingCancelled tạo với IsActive=0,
-     * PointsRequired=0 - khách KHÔNG được thấy để tự đổi những dòng này).
-     * Sắp theo điểm cần thấp -> cao cho dễ nhìn.
+     * những reward đang tắt, và đặc biệt là các reward hệ thống tự cấp khi đền
+     * bù hủy lịch (LoyaltyService.handleBookingCancelled tạo với IsActive=0,
+     * PointsRequired=0 - khách KHÔNG được thấy để tự đổi những dòng này). Sắp
+     * theo điểm cần thấp -> cao cho dễ nhìn.
      */
     public List<Reward> getActiveRewards() {
 
@@ -110,6 +110,69 @@ public class RewardDAO {
         }
 
         return list;
+    }
+
+    public double calculateVoucherDiscount(int redemptionId, double basePrice) {
+        if (redemptionId <= 0) {
+            return 0.0;
+        }
+
+        Connection cn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        // Truy vấn lấy cấu hình giảm giá của Voucher từ bảng Rewards thông qua lượt đổi RewardRedemptions
+        String sql = "SELECT r.DiscountPercent, r.MinBillAmount, r.MaxDiscountAmount "
+                + "FROM RewardRedemptions rr "
+                + "JOIN Rewards r ON rr.RewardId = r.RewardId "
+                + "WHERE rr.RedemptionId = ? AND rr.Status = 'Available'";
+
+        try {
+            cn = DBContext.getConnection();
+            if (cn != null) {
+                pst = cn.prepareStatement(sql);
+                pst.setInt(1, redemptionId);
+                rs = pst.executeQuery();
+
+                if (rs.next()) {
+                    double minBillAmount = rs.getDouble("MinBillAmount");
+                    double discountPercent = rs.getDouble("DiscountPercent");
+                    double maxDiscountAmount = rs.getDouble("MaxDiscountAmount");
+
+                    // Điều kiện 1: Đơn hàng không đủ giá trị tối thiểu để áp dụng mã
+                    if (basePrice < minBillAmount) {
+                        return 0.0;
+                    }
+
+                    // Điều kiện 2: Tính số tiền giảm theo %
+                    double calculatedDiscount = basePrice * (discountPercent / 100.0);
+
+                    // Điều kiện 3: Giới hạn số tiền giảm tối đa nếu vượt ngưỡng
+                    if (calculatedDiscount > maxDiscountAmount) {
+                        calculatedDiscount = maxDiscountAmount;
+                    }
+
+                    return calculatedDiscount;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pst != null) {
+                    pst.close();
+                }
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return 0.0;
     }
 
 }

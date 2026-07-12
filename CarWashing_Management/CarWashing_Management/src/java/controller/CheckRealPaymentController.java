@@ -19,18 +19,24 @@ public class CheckRealPaymentController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         String memo = request.getParameter("memo");
-        String amount = request.getParameter("amount");
         String status = "PENDING";
 
+        // JSP hiện tại chỉ gửi memo, không gửi amount -> chỉ cần kiểm tra thiếu memo
+        if (memo == null || memo.trim().isEmpty()) {
+            try (PrintWriter out = response.getWriter()) {
+                out.print("{\"status\": \"ERROR\", \"message\": \"Thiếu mã giao dịch\"}");
+                out.flush();
+            }
+            return;
+        }
+
         try {
-            // GỌI API TRA CỨU BIẾN ĐỘNG SỐ DƯ THẬT TỪ SEPAY / PAYOS
-            // Ví dụ minh họa gọi API tra cứu của SePay:
-            String apiKey = "DUKPLR0BT65AIOVGL58PTLSKBEWAMFHKBV2PZENEDNX7182S1WI07G3UAOUHTXRF"; 
-//            String apiURL = "https://api.sepay.vn/user/v1/transactions?limit=10"; // Lấy 10 giao dịch mới nhất
-            String apiURL = "https://my.sepay.vn/userapi/transactions/list?limit=10";
-            
+            // GỌI API TRA CỨU BIẾN ĐỘNG SỐ DƯ THẬT TỪ SEPAY
+            String apiKey = "DUKPLR0BT65AIOVGL58PTLSKBEWAMFHKBV2PZENEDNX7182S1WI07G3UAOUHTXRF";
+            String apiURL = "https://my.sepay.vn/userapi/transactions/list?limit=10"; // Lấy 10 giao dịch mới nhất
+
             URL url = new URL(apiURL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -47,14 +53,25 @@ public class CheckRealPaymentController extends HttpServlet {
                 }
                 in.close();
 
-                // Dùng cơ chế đọc chuỗi String (hoặc thư viện Gson/Jackson) để phân tích dữ liệu trả về từ Ngân hàng
                 String jsonResult = apiResponse.toString();
-                
-                // Kiểm tra xem trong danh sách lịch sử giao dịch mới nhất, có giao dịch nào chứa nội dung 'memo' 
-                // và trùng khớp số tiền 'amount' chuyển khoản hay không
-                if (jsonResult.contains(memo) && jsonResult.contains(amount)) {
-                    status = "SUCCESS"; // Phát hiện dòng tiền thật chạy vào tài khoản!
+
+                // Tách chuỗi JSON thành từng giao dịch riêng lẻ (mỗi object trong mảng "transactions"
+                // cách nhau bởi "},{"), để kiểm tra memo trên ĐÚNG 1 giao dịch, tránh khớp rải rác
+                String[] transactionBlocks = jsonResult.split("\\},\\s*\\{");
+
+                for (String block : transactionBlocks) {
+                    // Kiểm tra xem trong nội dung giao dịch có chứa đúng mã memo hay không
+                    if (block.contains(memo)) {
+                        status = "SUCCESS"; // Phát hiện dòng tiền thật chạy vào tài khoản!
+                        break;
+                    }
                 }
+
+                if (!"SUCCESS".equals(status)) {
+                    System.out.println("Chưa tìm thấy giao dịch khớp memo=" + memo);
+                }
+            } else {
+                System.out.println("SePay API trả về lỗi HTTP: " + responseCode);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -71,6 +88,7 @@ public class CheckRealPaymentController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         processRequest(request, response);
     }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         processRequest(request, response);

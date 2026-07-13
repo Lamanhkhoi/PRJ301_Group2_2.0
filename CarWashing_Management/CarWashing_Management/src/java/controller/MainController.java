@@ -136,6 +136,10 @@ public class MainController extends HttpServlet {
                     case "cancelBooking":
                         url = "CancelBookingController";
                         break;
+                    case "rewardManagement":
+                        request.setAttribute("ACTIVE_ADMIN", "voucherreward");
+                        url = "RewardManagementController";
+                        break;
                 }
             }
         } catch (Exception e) {

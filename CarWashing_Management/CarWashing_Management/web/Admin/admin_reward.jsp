@@ -94,7 +94,10 @@
                                             boolean on = r.isActive();
                                     %>
 
-                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50">
+                                    <tr class="reward-row border-b border-slate-100 hover:bg-slate-50"
+                                        data-name="<%= r.getRewardName().toLowerCase()%>"
+                                        data-type="DISCOUNT"
+                                        data-id="<%= r.getRewardId()%>">
 
                                         <td class="py-4 px-6">
 
@@ -137,7 +140,7 @@
                                         <td class="py-4 px-4 text-center">
 
                                             <button
-                                                onclick="toggleActive(this)"
+                                                onclick="toggleActive(this,<%=r.getRewardId()%>)"
                                                 class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition
                                                 <%= on ? "bg-emerald-500" : "bg-slate-300"%>">
 
@@ -150,11 +153,29 @@
                                         </td>
 
                                         <td class="py-4 px-6 text-right">
-
+                                            <!-- Edit -->
                                             <button
+                                                onclick="openRewardModal(
+                                                                '<%=r.getRewardName()%>',
+                                                                '<%=r.getDescription()%>',
+                                                <%=r.getPointsRequired()%>,
+                                                <%=r.getDiscountPercent()%>,
+                                                <%=r.getMinBillAmount()%>,
+                                                <%=r.getMaxDiscountAmount()%>,
+                                                <%=r.getRewardId()%>
+                                                        )"
                                                 class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50">
 
                                                 <i class="fa-solid fa-pen-to-square"></i>
+
+                                            </button>
+
+                                            <!-- Delete -->
+                                            <button
+                                                onclick="openDeleteModal(<%=r.getRewardId()%>, '<%=r.getRewardName()%>')"
+                                                class="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50">
+
+                                                <i class="fa-solid fa-trash"></i>
 
                                             </button>
 
@@ -166,7 +187,7 @@
                                         }
                                     %>
                                     <tr id="rwEmpty" class="hidden">
-                                        <td colspan="6" class="py-12 text-center text-slate-400 text-sm">
+                                        <td colspan="7" class="py-12 text-center text-slate-400 text-sm">
                                             <i class="fa-regular fa-folder-open text-2xl block mb-2"></i> Không tìm thấy reward phù hợp
                                         </td>
                                     </tr>
@@ -190,37 +211,67 @@
                     </div>
 
                     <%-- TODO BACKEND: bọc <form method="post"> map đúng field của DTO Reward --%>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
-                            <input id="rName" type="text" placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
-                            <input id="rDesc" type="text" placeholder="Mô tả ngắn hiển thị trên card của khách" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Loại reward <span class="text-red-500">*</span></label>
-                            <select id="rType" onchange="toggleDiscountField()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                <option value="DISCOUNT">Giảm giá (voucher tiền)</option>
-                                <option value="FREE_SERVICE">Dịch vụ miễn phí</option>
-                                <option value="GIFT">Quà tặng hiện vật</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
-                            <input id="rPoints" type="number" min="0" placeholder="VD: 2000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div id="discountField">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Số tiền giảm (VNĐ)</label>
-                            <input id="rDiscount" type="number" min="0" placeholder="VD: 20000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                    </div>
+                    <form method="post"action="${pageContext.request.contextPath}/RewardManagementController">
+                        <input type="hidden" id="rewardId" name="rewardId">
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+                            <div class="md:col-span-2">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Tên reward <span class="text-red-500">*</span></label>
+                                <input id="rName" name="rewardName" type="text" required placeholder="VD: Phiếu mua hàng 20.000 VNĐ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
+                                <input id="rDesc" name="description" type="text" placeholder="Mô tả ngắn hiển thị trên card của khách" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">Loại reward <span class="text-red-500">*</span></label>
+                                <select id="rType" onchange="toggleDiscountField()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="DISCOUNT">Giảm giá (voucher tiền)</option>
+                                    <option value="FREE_SERVICE">Dịch vụ miễn phí</option>
+                                    <option value="GIFT">Quà tặng hiện vật</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">Điểm cần đổi <span class="text-red-500">*</span></label>
+                                <input id="rPoints"name="pointsRequired" type="number" min="1" required value="100"class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+                            </div>
+                            <div id="discountField">
+                                <label class="block font-semibold text-slate-600 mb-1.5">Phần trăm giảm (%)</label>
+                                <input id="rDiscount" name="discountPercent" type="number" min="0" placeholder="VD: 10 , 20,..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Hóa đơn tối thiểu
+                                </label>
 
-                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
-                        <button onclick="closeRewardModal()" class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <button onclick="closeRewardModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
-                    </div>
+                                <input
+                                    id="rMinBill"
+                                    name="minBillAmount"
+                                    type="number"
+                                    min="0"
+                                    placeholder="VD: 100000"
+                                    class="w-full px-4 py-2.5 rounded-xl border">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Giảm tối đa
+                                </label>
+
+                                <input
+                                    id="rMaxDiscount"
+                                    name="maxDiscountAmount"
+                                    type="number"
+                                    min="0"
+                                    placeholder="VD: 50000"
+                                    class="w-full px-4 py-2.5 rounded-xl border">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+                            <button type="button" onclick="closeRewardModal()"class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu reward</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -236,7 +287,12 @@
                     </div>
                     <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3">
                         <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition">Xóa</button>
+                        <button onclick="deleteReward()"
+                                class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white">
+
+                            Xóa
+
+                        </button>
                     </div>
                 </div>
             </div>
@@ -258,38 +314,49 @@
             }
 
             // ===== Toggle bật/tắt (demo UI) =====
-            function toggleActive(btn) {
-                const knob = btn.querySelector('span');
-                const on = btn.classList.contains('bg-emerald-500');
-                btn.classList.toggle('bg-emerald-500', !on);
-                btn.classList.toggle('bg-slate-300', on);
-                knob.classList.toggle('translate-x-6', !on);
-                knob.classList.toggle('translate-x-1', on);
+            function toggleActive(btn, id) {
+
+                const on =
+                        btn.classList.contains("bg-emerald-500");
+                location.href =
+                        "RewardManagementController?action=toggle&rewardId="
+                        + id
+                        + "&active="
+                        + (!on);
             }
 
             // ===== Modal Tạo / Sửa =====
             const rModal = document.getElementById('rewardModal');
             const rContent = document.getElementById('rewardModalContent');
-
             function toggleDiscountField() {
-                document.getElementById('discountField').style.visibility =
-                        document.getElementById('rType').value === 'DISCOUNT' ? 'visible' : 'hidden';
+                document.getElementById('discountField').style.display =
+                        document.getElementById('rType').value === 'DISCOUNT' ? 'block' : 'none';
             }
 
-            function function openRewardModal(
+            function openRewardModal(
                     name,
                     desc,
                     points,
                     discount,
                     minBill,
-                    maxDiscount) {
-                const isEdit = name !== undefined;
+                    maxDiscount,
+                    rewardId) {
+                if (rewardId === null) {
+                    document.getElementById("rewardId").value = "";
+                }
+                const isEdit = rewardId !== null;
+                if (!isEdit) {
+                    document.querySelector("#rewardModal form").reset();}
                 document.getElementById('rewardModalTitle').textContent = isEdit ? 'Sửa reward' : 'Tạo reward mới';
                 document.getElementById('rName').value = isEdit ? name : '';
                 document.getElementById('rDesc').value = isEdit ? desc : '';
 //                document.getElementById('rType').value = isEdit ? type : 'DISCOUNT';
+                document.getElementById("rMinBill").value = isEdit ? minBill : "";
+                document.getElementById("rMaxDiscount").value = isEdit ? maxDiscount : "";
                 document.getElementById('rPoints').value = isEdit ? points : '';
                 document.getElementById('rDiscount').value = isEdit ? discount : '';
+                document.getElementById("rewardId").value =
+                        rewardId === null ? "" : rewardId;
                 toggleDiscountField();
                 rModal.classList.remove('hidden');
                 setTimeout(() => {
@@ -306,17 +373,24 @@
                 if (e.target === rModal)
                     closeRewardModal();
             });
-
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
             const dContent = document.getElementById('deleteModalContent');
-            function openDeleteModal(name) {
-                document.getElementById('delName').textContent = name;
-                dModal.classList.remove('hidden');
+            let deleteId = 0;
+            function openDeleteModal(id, name) {
+
+                deleteId = id;
+                document.getElementById("delName").innerHTML = name;
+                dModal.classList.remove("hidden");
                 setTimeout(() => {
-                    dModal.classList.remove('opacity-0');
-                    dContent.classList.replace('scale-95', 'scale-100');
+                    dModal.classList.remove("opacity-0");
+                    dContent.classList.replace("scale-95", "scale-100");
                 }, 10);
+            }
+            function deleteReward() {
+
+                location.href =
+                        "RewardManagementController?action=delete&rewardId=" + deleteId;
             }
             function closeDeleteModal() {
                 dModal.classList.add('opacity-0');

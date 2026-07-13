@@ -1,31 +1,42 @@
 <%@page import="java.util.*"%>
+<%@page import="dto.Promotion"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+
 <%--
     ============================================================
     TRANG: QUẢN LÝ KHUYẾN MÃI (Admin) - admin_promotion.jsp
     Bố cục: Toolbar (search + filter + nút Tạo) -> Bảng danh sách -> Modal Tạo/Sửa -> Modal Xóa
-    LƯU Ý: Banner ở trang Ưu Đãi của Customer lấy từ field "Ảnh banner" của chương trình này.
+
+    LƯU Ý:
+    Banner ở trang Ưu Đãi của Customer lấy từ field "Ảnh banner"
+    của chương trình này.
+
     TODO BACKEND (người phụ trách chức năng):
       1. Mở comment dòng include admin-auth-check bên dưới khi gắn Controller.
-      2. DB đang làm lại nên CHƯA có DTO Promotion -> mock bằng mảng String bên dưới.
-         Khi có DTO Promotion thì thay bằng List<Promotion> từ PromotionDAO.
-      3. Form trong modal: gắn action POST tới Controller (create/update),
-         toggle -> Controller đổi isActive, nút xóa -> Controller delete (nên soft delete).
+      2. Form trong modal:
+            + create
+            + update
+      3. Toggle:
+            + đổi IsActive
+      4. Delete:
+            + soft delete hoặc hard delete
     ============================================================
 --%>
+
 <%-- <%@ include file="../includes/admin-auth-check.jsp" %> --%>
+
 <%
     request.setAttribute("ACTIVE_ADMIN", "khuyenmai");
 
-    // ================= MOCK DATA - THAY BẰNG List<Promotion> KHI CÓ DTO =================
-    // {id, Tên, Mô tả, Loại (PERCENT/AMOUNT/POINT), Giá trị, Hạng áp dụng, Từ ngày, Đến ngày, Đang bật, URL banner}
-    String[][] promos = {
-        {"1", "Giảm 20% mùa hè", "Áp dụng mọi gói rửa xe", "PERCENT", "20", "Silver+", "2026-07-01", "2026-07-31", "true", "banner_summer.png"},
-        {"2", "Tặng 50 P sinh nhật", "Quà sinh nhật cho khách thân thiết", "POINT", "50", "Gold+", "2026-01-01", "2026-12-31", "false", ""},
-        {"3", "Combo rửa + wax -15%", "Tuần lễ vàng, áp dụng mọi hạng", "PERCENT", "15", "Tất cả", "2026-07-10", "2026-07-20", "true", "banner_combo.png"},
-        {"4", "Giảm 30.000đ gói Premium", "Chỉ áp dụng thứ 2 - thứ 4", "AMOUNT", "30000", "Platinum", "2026-08-01", "2026-08-31", "true", ""}
-    };
-    // =====================================================================================
+    List<Promotion> promos
+            = (List<Promotion>) request.getAttribute("PROMOTION_LIST");
+
+    if (promos == null) {
+        promos = new ArrayList<>();
+    }
+
+    java.text.SimpleDateFormat sdf
+            = new java.text.SimpleDateFormat("yyyy-MM-dd");
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -35,7 +46,10 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }</style>
+        <style>body {
+                font-family: 'Inter', sans-serif;
+                background-color: #F1F5F9;
+            }</style>
     </head>
     <body class="text-slate-800 relative">
 
@@ -89,40 +103,124 @@
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm" id="promoBody">
-                                    <% for (String[] p : promos) {
-                                        boolean on = "true".equals(p[8]);
-                                        String valueLabel = "PERCENT".equals(p[3]) ? "Giảm " + p[4] + "%"
-                                                          : "AMOUNT".equals(p[3]) ? "Giảm " + String.format("%,d", Integer.parseInt(p[4])) + "đ"
-                                                          : "Tặng " + p[4] + " P";
-                                        String tierBadge = "Tất cả".equals(p[5]) ? "bg-slate-100 text-slate-600"
-                                                         : p[5].startsWith("Silver") ? "bg-blue-100 text-blue-700"
-                                                         : p[5].startsWith("Gold") ? "bg-amber-100 text-amber-700" : "bg-purple-100 text-purple-700";
+
+                                    <%
+                                        for (Promotion p : promos) {
+
+                                            boolean on = p.isActive();
+
+                                            String valueLabel
+                                                    = "Giảm " + p.getDiscountPercent() + "%";
+
+                                            String tierBadge
+                                                    = "bg-slate-100 text-slate-600";
+
+                                            String start
+                                                    = sdf.format(p.getStartDate());
+
+                                            String end
+                                                    = sdf.format(p.getEndDate());
+
+                                            String name
+                                                    = p.getPromotionName()
+                                                            .replace("'", "\\'");
+
+                                            String desc
+                                                    = p.getDescription() == null
+                                                    ? ""
+                                                    : p.getDescription()
+                                                            .replace("'", "\\'");
                                     %>
-                                    <tr class="promo-row border-b border-slate-100 hover:bg-slate-50 transition" data-name="<%= p[1].toLowerCase() %>" data-on="<%= on %>">
+                                    <tr class="promo-row border-b border-slate-100 hover:bg-slate-50 transition"
+                                        data-name="<%=name.toLowerCase()%>"
+                                        data-on="<%=on%>">
+
                                         <td class="py-4 px-6">
-                                            <p class="font-bold text-slate-800"><%= p[1] %></p>
-                                            <p class="text-xs text-slate-400 mt-0.5"><%= p[2] %></p>
+
+                                            <p class="font-bold text-slate-800">
+                                                <%=p.getPromotionName()%>
+                                            </p>
+
+                                            <p class="text-xs text-slate-400 mt-0.5">
+                                                <%=p.getDescription()%>
+                                            </p>
+
                                         </td>
-                                        <td class="py-4 px-4 font-semibold text-slate-700"><%= valueLabel %></td>
-                                        <td class="py-4 px-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full <%= tierBadge %>"><%= p[5] %></span></td>
-                                        <td class="py-4 px-4 text-slate-500 text-xs whitespace-nowrap"><%= p[6] %> <i class="fa-solid fa-arrow-right-long mx-1 text-slate-300"></i> <%= p[7] %></td>
+
+                                        <td class="py-4 px-4 font-semibold text-slate-700">
+                                            <%=valueLabel%>
+                                        </td>
+
+                                        <td class="py-4 px-4">
+
+                                            <span class="text-xs font-bold px-2.5 py-1 rounded-full <%=tierBadge%>">
+                                                Áp dụng chung
+                                            </span>
+
+                                        </td>
+
+                                        <td class="py-4 px-4 text-slate-500 text-xs whitespace-nowrap">
+
+                                            <%=start%>
+
+                                            <i class="fa-solid fa-arrow-right-long mx-1 text-slate-300"></i>
+
+                                            <%=end%>
+
+                                        </td>
+
                                         <td class="py-4 px-4 text-center">
-                                            <%-- TODO BACKEND: onclick gọi Controller đổi isActive rồi reload --%>
-                                            <button onclick="toggleActive(this)" class="toggle-btn relative inline-flex h-6 w-11 items-center rounded-full transition <%= on ? "bg-emerald-500" : "bg-slate-300" %>">
-                                                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition <%= on ? "translate-x-6" : "translate-x-1" %>"></span>
+
+                                            <button
+                                                onclick="location.href = '<%=request.getContextPath()%>/PromotionManagementController?action=toggle&id=<%=p.getPromotionId()%>'"
+                                                class="relative inline-flex h-6 w-11 items-center rounded-full transition
+                                                <%=on ? "bg-emerald-500" : "bg-slate-300"%>">
+
+                                                <span
+                                                    class="inline-block h-4 w-4 rounded-full bg-white shadow transition
+                                                    <%=on ? "translate-x-6" : "translate-x-1"%>">
+                                                </span>
+
                                             </button>
+
                                         </td>
+
                                         <td class="py-4 px-6 text-right whitespace-nowrap">
-                                            <button onclick='openPromoModal(<%= "[\"" + String.join("\",\"", p) + "\"]" %>)'
-                                                    class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50 transition" title="Sửa">
+
+                                            <button
+                                                onclick="openPromoModal([
+                                                            '<%=p.getPromotionId()%>',
+                                                            '<%=name%>',
+                                                            '<%=desc%>',
+                                                            '<%=p.getDiscountPercent()%>',
+                                                            '<%=p.getMinBillAmount()%>',
+                                                            '<%=p.getMaxDiscountAmount()%>',
+                                                            '<%=start%>',
+                                                            '<%=end%>'
+                                                        ])"
+                                                class="w-9 h-9 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                                                title="Sửa">
+
                                                 <i class="fa-solid fa-pen-to-square"></i>
+
                                             </button>
-                                            <button onclick="openDeleteModal('<%= p[1] %>')" class="w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 transition" title="Xóa">
+
+                                            <button
+                                                onclick="openDeleteModal('<%=name%>',<%=p.getPromotionId()%>)"
+                                                class="w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 transition"
+                                                title="Xóa">
+
                                                 <i class="fa-solid fa-trash-can"></i>
+
                                             </button>
+
                                         </td>
+
                                     </tr>
-                                    <% } %>
+
+                                    <%
+                                        }
+                                    %>
                                     <tr id="promoEmpty" class="hidden">
                                         <td colspan="6" class="py-12 text-center text-slate-400 text-sm">
                                             <i class="fa-regular fa-folder-open text-2xl block mb-2"></i> Không tìm thấy chương trình phù hợp
@@ -137,68 +235,186 @@
             </main>
 
             <%-- ===== MODAL TẠO / SỬA KHUYẾN MÃI ===== --%>
-            <div id="promoModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0">
-                <div id="promoModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
+
+            <div id="promoModal"
+                 class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0">
+
+                <div id="promoModalContent"
+                     class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
+
                     <div class="bg-slate-50 px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa-solid fa-bullhorn"></i></div>
-                            <h3 id="promoModalTitle" class="text-lg font-bold text-slate-800">Tạo khuyến mãi mới</h3>
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                <i class="fa-solid fa-bullhorn"></i>
+                            </div>
+
+                            <h3 id="promoModalTitle"
+                                class="text-lg font-bold text-slate-800">
+                                Tạo khuyến mãi mới
+                            </h3>
                         </div>
-                        <button onclick="closePromoModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+
+                        <button type="button"
+                                onclick="closePromoModal()"
+                                class="text-slate-400 hover:text-red-500 transition">
+                            <i class="fa-solid fa-xmark text-2xl"></i>
+                        </button>
+
                     </div>
 
-                    <%-- TODO BACKEND: bọc <form method="post" action="..."> và thêm input hidden promoId --%>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Tên chương trình <span class="text-red-500">*</span></label>
-                            <input id="fName" type="text" placeholder="VD: Giảm 20% mùa hè" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Mô tả</label>
-                            <textarea id="fDesc" rows="2" placeholder="Mô tả ngắn hiển thị trên banner của khách" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition resize-none"></textarea>
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Loại ưu đãi <span class="text-red-500">*</span></label>
-                            <select id="fType" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                <option value="PERCENT">Giảm theo %</option>
-                                <option value="AMOUNT">Giảm số tiền (VNĐ)</option>
-                                <option value="POINT">Tặng điểm thưởng</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Giá trị <span class="text-red-500">*</span></label>
-                            <input id="fValue" type="number" min="0" placeholder="VD: 20" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-600 mb-1.5">Áp dụng cho hạng</label>
-                            <select id="fTier" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                <option>Tất cả</option>
-                                <option>Silver+</option>
-                                <option>Gold+</option>
-                                <option>Platinum</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block font-semibold text-slate-600 mb-1.5">Từ ngày</label>
-                                <input id="fStart" type="date" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-slate-600">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-slate-600 mb-1.5">Đến ngày</label>
-                                <input id="fEnd" type="date" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-slate-600">
-                            </div>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block font-semibold text-slate-600 mb-1.5">Ảnh banner (hiển thị ở trang Ưu Đãi của khách)</label>
-                            <input id="fBanner" type="text" placeholder="URL hoặc tên file ảnh, VD: banner_summer.png" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
-                        </div>
-                    </div>
+                    <form method="post"
+                          action="<%=request.getContextPath()%>/MainController">
 
-                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
-                        <button onclick="closePromoModal()" class="px-6 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <button onclick="closePromoModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-check mr-1"></i> Lưu chương trình</button>
-                    </div>
+                        <input type="hidden"
+                               name="action"
+                               id="promoAction"
+                               value="create">
+
+                        <input type="hidden"
+                               name="promotionId"
+                               id="promotionId">
+
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+
+                            <div class="md:col-span-2">
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Tên chương trình
+                                </label>
+
+                                <input
+                                    id="fName"
+                                    name="promotionName"
+                                    type="text"
+                                    required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                            <div class="md:col-span-2">
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Mô tả
+                                </label>
+
+                                <textarea
+                                    id="fDesc"
+                                    name="description"
+                                    rows="3"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200"></textarea>
+
+                            </div>
+
+                            <div>
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    % Giảm
+                                </label>
+
+                                <input
+                                    id="fValue"
+                                    name="discountPercent"
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                            <div>
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Hóa đơn tối thiểu
+                                </label>
+
+                                <input
+                                    id="fMinBill"
+                                    name="minBillAmount"
+                                    type="number"
+                                    value="0"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                            <div>
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Giảm tối đa
+                                </label>
+
+                                <input
+                                    id="fMaxDiscount"
+                                    name="maxDiscountAmount"
+                                    type="number"
+                                    required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                            <div>
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Từ ngày
+                                </label>
+
+                                <input
+                                    id="fStart"
+                                    name="startDate"
+                                    type="date"
+                                    required
+                                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                            <div>
+
+                                <label class="block font-semibold text-slate-600 mb-1.5">
+                                    Đến ngày
+                                </label>
+
+                                <input
+                                    id="fEnd"
+                                    name="endDate"
+                                    type="date"
+                                    required
+                                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200">
+
+                            </div>
+
+                        </div>
+
+                        <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+
+                            <button
+                                type="button"
+                                onclick="closePromoModal()"
+                                class="px-6 py-2.5 rounded-xl border border-slate-300">
+
+                                Hủy
+
+                            </button>
+
+                            <button
+                                id="btnSavePromotion"
+                                type="submit"
+                                class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition">
+
+                                <i class="fa-solid fa-check mr-1"></i>
+
+                                <span id="btnSaveText">
+                                    Lưu chương trình
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
                 </div>
+
             </div>
 
             <%-- ===== MODAL XÁC NHẬN XÓA ===== --%>
@@ -231,7 +447,8 @@
                     const okStatus = st === 'ALL' || (st === 'ON') === (r.dataset.on === 'true');
                     const show = okName && okStatus;
                     r.classList.toggle('hidden', !show);
-                    if (show) visible++;
+                    if (show)
+                        visible++;
                 });
                 document.getElementById('promoEmpty').classList.toggle('hidden', visible > 0);
             }
@@ -248,29 +465,108 @@
             }
 
             // ===== Modal Tạo / Sửa =====
+
             const pModal = document.getElementById('promoModal');
             const pContent = document.getElementById('promoModalContent');
 
+            function clearForm() {
+
+                document.getElementById("promoAction").value = "create";
+
+                document.getElementById("promotionId").value = "";
+
+                document.getElementById("promoModalTitle").innerHTML =
+                        "Tạo khuyến mãi mới";
+
+                document.getElementById("btnSaveText").innerHTML =
+                        "Lưu chương trình";
+
+                document.getElementById("fName").value = "";
+
+                document.getElementById("fDesc").value = "";
+
+                document.getElementById("fValue").value = "";
+
+                document.getElementById("fMinBill").value = "0";
+
+                document.getElementById("fMaxDiscount").value = "";
+
+                document.getElementById("fStart").value = "";
+
+                document.getElementById("fEnd").value = "";
+
+            }
+
             function openPromoModal(data) {
-                const isEdit = Array.isArray(data);
-                document.getElementById('promoModalTitle').textContent = isEdit ? 'Sửa khuyến mãi' : 'Tạo khuyến mãi mới';
-                document.getElementById('fName').value = isEdit ? data[1] : '';
-                document.getElementById('fDesc').value = isEdit ? data[2] : '';
-                document.getElementById('fType').value = isEdit ? data[3] : 'PERCENT';
-                document.getElementById('fValue').value = isEdit ? data[4] : '';
-                document.getElementById('fTier').value = isEdit ? data[5] : 'Tất cả';
-                document.getElementById('fStart').value = isEdit ? data[6] : '';
-                document.getElementById('fEnd').value = isEdit ? data[7] : '';
-                document.getElementById('fBanner').value = isEdit ? data[9] : '';
-                pModal.classList.remove('hidden');
-                setTimeout(() => { pModal.classList.remove('opacity-0'); pContent.classList.replace('scale-95', 'scale-100'); }, 10);
+
+                clearForm();
+
+                if (Array.isArray(data)) {
+
+                    document.getElementById("promoAction").value = "update";
+
+                    document.getElementById("promotionId").value = data[0];
+
+                    document.getElementById("promoModalTitle").innerHTML =
+                            "Cập nhật khuyến mãi";
+
+                    document.getElementById("btnSaveText").innerHTML =
+                            "Cập nhật";
+
+                    document.getElementById("fName").value = data[1];
+
+                    document.getElementById("fDesc").value = data[2];
+
+                    document.getElementById("fValue").value = data[3];
+
+                    document.getElementById("fMinBill").value = data[4];
+
+                    document.getElementById("fMaxDiscount").value = data[5];
+
+                    document.getElementById("fStart").value = data[6];
+
+                    document.getElementById("fEnd").value = data[7];
+                }
+
+                pModal.classList.remove("hidden");
+
+                setTimeout(function () {
+
+                    pModal.classList.remove("opacity-0");
+
+                    pContent.classList.remove("scale-95");
+
+                    pContent.classList.add("scale-100");
+
+                }, 10);
+
             }
+
             function closePromoModal() {
-                pModal.classList.add('opacity-0');
-                pContent.classList.replace('scale-100', 'scale-95');
-                setTimeout(() => pModal.classList.add('hidden'), 300);
+
+                pModal.classList.add("opacity-0");
+
+                pContent.classList.remove("scale-100");
+
+                pContent.classList.add("scale-95");
+
+                setTimeout(function () {
+
+                    pModal.classList.add("hidden");
+
+                }, 300);
+
             }
-            pModal.addEventListener('click', e => { if (e.target === pModal) closePromoModal(); });
+
+            pModal.addEventListener("click", function (e) {
+
+                if (e.target === pModal) {
+
+                    closePromoModal();
+
+                }
+
+            });
 
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
@@ -278,14 +574,20 @@
             function openDeleteModal(name) {
                 document.getElementById('delName').textContent = name;
                 dModal.classList.remove('hidden');
-                setTimeout(() => { dModal.classList.remove('opacity-0'); dContent.classList.replace('scale-95', 'scale-100'); }, 10);
+                setTimeout(() => {
+                    dModal.classList.remove('opacity-0');
+                    dContent.classList.replace('scale-95', 'scale-100');
+                }, 10);
             }
             function closeDeleteModal() {
                 dModal.classList.add('opacity-0');
                 dContent.classList.replace('scale-100', 'scale-95');
                 setTimeout(() => dModal.classList.add('hidden'), 300);
             }
-            dModal.addEventListener('click', e => { if (e.target === dModal) closeDeleteModal(); });
+            dModal.addEventListener('click', e => {
+                if (e.target === dModal)
+                    closeDeleteModal();
+            });
         </script>
     </body>
 </html>

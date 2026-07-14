@@ -10,7 +10,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.annotation.WebServlet;
 
+@WebServlet(name = "PromotionManagementController", urlPatterns = {"/PromotionManagementController"})
 public class PromotionManagementController extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request,
@@ -21,7 +23,7 @@ public class PromotionManagementController extends HttpServlet {
 
         PromotionDAO dao = new PromotionDAO();
 
-        String action = request.getParameter("action");
+        String action = request.getParameter("promotionAction");
 
         try {
 
@@ -72,7 +74,8 @@ public class PromotionManagementController extends HttpServlet {
                 dao.insertPromotion(p);
 
                 response.sendRedirect(
-                        "PromotionManagementController?action=list");
+                        request.getContextPath()
+                        + "/MainController?action=promotionManagement");
 
                 return;
             }
@@ -110,7 +113,8 @@ public class PromotionManagementController extends HttpServlet {
                 dao.updatePromotion(p);
 
                 response.sendRedirect(
-                        "PromotionManagementController?action=list");
+                        request.getContextPath()
+                        + "/MainController?action=promotionManagement");
 
                 return;
             }
@@ -129,7 +133,8 @@ public class PromotionManagementController extends HttpServlet {
                 }
 
                 response.sendRedirect(
-                        "PromotionManagementController?action=list");
+                        request.getContextPath()
+                        + "/MainController?action=promotionManagement");
 
                 return;
             }

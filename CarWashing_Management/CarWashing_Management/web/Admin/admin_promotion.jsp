@@ -172,7 +172,7 @@
                                         <td class="py-4 px-4 text-center">
 
                                             <button
-                                                onclick="location.href = '<%=request.getContextPath()%>/PromotionManagementController?action=toggle&id=<%=p.getPromotionId()%>'"
+                                                onclick="location.href = '<%=request.getContextPath()%>/MainController?action=promotionManagement&promotionAction=toggle&id=<%=p.getPromotionId()%>'"
                                                 class="relative inline-flex h-6 w-11 items-center rounded-full transition
                                                 <%=on ? "bg-emerald-500" : "bg-slate-300"%>">
 
@@ -263,11 +263,14 @@
 
                     </div>
 
-                    <form method="post"
-                          action="<%=request.getContextPath()%>/MainController">
+                    <form method="post" action="<%=request.getContextPath()%>/MainController">
 
                         <input type="hidden"
                                name="action"
+                               value="promotionManagement">
+
+                        <input type="hidden"
+                               name="promotionAction"
                                id="promoAction"
                                value="create">
 
@@ -430,7 +433,33 @@
                     <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3">
                         <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
                         <%-- TODO BACKEND: submit form xóa (khuyến nghị soft delete: set isDeleted = 1) --%>
-                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition">Xóa</button>
+                        <form method="post"
+                              action="<%=request.getContextPath()%>/MainController">
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="promotionManagement">
+
+                            <input
+                                type="hidden"
+                                name="promotionAction"
+                                value="delete">
+
+                            <input
+                                type="hidden"
+                                name="promotionId"
+                                id="deletePromotionId">
+
+                            <button
+                                type="submit"
+                                class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition">
+
+                                Xóa
+
+                            </button>
+
+                        </form>
                     </div>
                 </div>
             </div>
@@ -571,8 +600,13 @@
             // ===== Modal Xóa =====
             const dModal = document.getElementById('deleteModal');
             const dContent = document.getElementById('deleteModalContent');
-            function openDeleteModal(name) {
+            let deletePromotionId = 0;
+
+            function openDeleteModal(name, id) {
+
+                deletePromotionId = id;
                 document.getElementById('delName').textContent = name;
+                document.getElementById("deletePromotionId").value = id;
                 dModal.classList.remove('hidden');
                 setTimeout(() => {
                     dModal.classList.remove('opacity-0');

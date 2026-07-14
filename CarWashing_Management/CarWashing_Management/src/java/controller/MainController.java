@@ -143,11 +143,8 @@ public class MainController extends HttpServlet {
                         break;
 
                     case "promotionManagement":
-
                         request.setAttribute("ACTIVE_ADMIN", "khuyenmai");
-
                         url = "PromotionManagementController";
-
                         break;
                 }
             }

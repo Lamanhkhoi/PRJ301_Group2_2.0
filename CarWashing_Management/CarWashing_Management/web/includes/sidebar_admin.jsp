@@ -42,7 +42,7 @@
                 <span>Voucher &amp; Reward</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/Admin/admin_config.jsp" data-tab="cauhinh" 
+            <a href="<%=request.getContextPath()%>/MainController?action=adminConfig" data-tab="cauhinh" 
                class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 <%= "cauhinh".equals(activeTab) ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20" : "hover:bg-slate-800 hover:text-white"%>">
                 <i class="fa-solid fa-gear w-5 text-lg"></i> 
                 <span>Cấu Hình Hệ Thống</span>

@@ -46,7 +46,9 @@ public class AdminConfigController extends HttpServlet {
                 request.setAttribute(
                         "TierReviewCycle",
                         configs.get("TierReviewCycle"));
-
+                request.setAttribute(
+                        "PointRate",
+                        configs.get("PointRate"));
                 request.setAttribute(
                         "ACTIVE_ADMIN",
                         "cauhinh");
@@ -69,9 +71,6 @@ public class AdminConfigController extends HttpServlet {
                         Integer.parseInt(
                                 request.getParameter("tierId")));
 
-                tier.setTierName(
-                        request.getParameter("tierName"));
-
                 tier.setMinWashCount(
                         Integer.parseInt(
                                 request.getParameter("minWashCount")));
@@ -80,37 +79,19 @@ public class AdminConfigController extends HttpServlet {
                         Double.parseDouble(
                                 request.getParameter("minTotalSpent")));
 
-                tier.setBasePointRate(
-                        Double.parseDouble(
-                                request.getParameter("basePointRate")));
-
                 tier.setBonusPointRate(
                         Double.parseDouble(
-                                request.getParameter("bonusPointRate")));
+                                request.getParameter("bonusPointRate"))/ 100.0);
 
                 tier.setBookingWindowDays(
                         Integer.parseInt(
                                 request.getParameter("bookingWindowDays")));
 
-                tier.setPriorityLevel(
-                        Integer.parseInt(
-                                request.getParameter("priorityLevel")));
-
-                tier.setHasPriorityQueue(
-                        Boolean.parseBoolean(
-                                request.getParameter("hasPriorityQueue")));
-
                 tier.setFreeUpgradeMonthly(
-                        Boolean.parseBoolean(
-                                request.getParameter("freeUpgradeMonthly")));
+                        request.getParameter("freeUpgradeMonthly") != null);
 
                 tier.setFreeWashMonthly(
-                        Boolean.parseBoolean(
-                                request.getParameter("freeWashMonthly")));
-
-                tier.setIsActive(
-                        Boolean.parseBoolean(
-                                request.getParameter("isActive")));
+                        request.getParameter("freeWashMonthly") != null);
 
                 loyaltyDAO.updateTier(tier);
 
@@ -134,6 +115,9 @@ public class AdminConfigController extends HttpServlet {
                         "TierReviewCycle",
                         request.getParameter("TierReviewCycle"));
 
+                configDAO.updateConfig(
+                        "PointRate",
+                        request.getParameter("PointRate"));
                 response.sendRedirect(
                         request.getContextPath()
                         + "/MainController?action=adminConfig");

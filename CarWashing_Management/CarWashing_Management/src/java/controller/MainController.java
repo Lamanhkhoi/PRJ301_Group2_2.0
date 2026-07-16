@@ -146,6 +146,10 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_ADMIN", "khuyenmai");
                         url = "PromotionManagementController";
                         break;
+                    case "adminConfig":
+                        request.setAttribute("ACTIVE_ADMIN", "cauhinh");
+                        url = "AdminConfigController";
+                        break;
                 }
             }
         } catch (Exception e) {

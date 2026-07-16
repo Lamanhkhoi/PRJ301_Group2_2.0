@@ -52,12 +52,12 @@
         "text-amber-500",
         "text-purple-500"
     };
-    String pointRate
-            = (String) request.getAttribute("PointRate");
-
-    if (pointRate == null) {
-        pointRate = "";
+    Double basePointRate
+            = (Double) request.getAttribute("BasePointRate");
+    if (basePointRate == null) {
+        basePointRate = 0.0;
     }
+
     // ====================================================================
 %>
 <!DOCTYPE html>
@@ -128,8 +128,8 @@
                                         <input
                                             type="number"
                                             step="1"
-                                            name="PointRate"
-                                            value="<%= pointRate%>"
+                                            name="BasePointRate"
+                                            value="<%= basePointRate%>"
                                             min="1"
                                             class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">                                        
                                         <span class="text-slate-500 font-medium">VNĐ</span>
@@ -179,7 +179,9 @@
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm">
-                                    <% for (int i = 0; i < tiers.size(); i++) {
+                                    <% for (int i = 0;
+                                                i < tiers.size();
+                                                i++) {
                                             LoyaltyTier t = tiers.get(i);
                                             int bonusPct = (int) Math.round(t.getBonusPointRate() * 100);
                                     %>

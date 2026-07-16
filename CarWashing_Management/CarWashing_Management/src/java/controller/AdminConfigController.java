@@ -47,8 +47,8 @@ public class AdminConfigController extends HttpServlet {
                         "TierReviewCycle",
                         configs.get("TierReviewCycle"));
                 request.setAttribute(
-                        "PointRate",
-                        configs.get("PointRate"));
+                        "BasePointRate",
+                        loyaltyDAO.getBasePointRate());
                 request.setAttribute(
                         "ACTIVE_ADMIN",
                         "cauhinh");
@@ -81,7 +81,7 @@ public class AdminConfigController extends HttpServlet {
 
                 tier.setBonusPointRate(
                         Double.parseDouble(
-                                request.getParameter("bonusPointRate"))/ 100.0);
+                                request.getParameter("bonusPointRate")) / 100.0);
 
                 tier.setBookingWindowDays(
                         Integer.parseInt(
@@ -115,9 +115,9 @@ public class AdminConfigController extends HttpServlet {
                         "TierReviewCycle",
                         request.getParameter("TierReviewCycle"));
 
-                configDAO.updateConfig(
-                        "PointRate",
-                        request.getParameter("PointRate"));
+                loyaltyDAO.updateBasePointRate(
+                        Double.parseDouble(
+                                request.getParameter("BasePointRate")));
                 response.sendRedirect(
                         request.getContextPath()
                         + "/MainController?action=adminConfig");

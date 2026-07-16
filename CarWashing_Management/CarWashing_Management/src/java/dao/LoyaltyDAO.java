@@ -14,13 +14,11 @@ public class LoyaltyDAO extends DBContext {
 
         List<LoyaltyTier> list = new ArrayList<>();
 
-        String sql =
-                "SELECT * FROM LoyaltyTiers ORDER BY TierId";
+        String sql
+                = "SELECT * FROM LoyaltyTiers ORDER BY TierId";
 
         try (
-                Connection con = getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+                 Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
 
@@ -64,8 +62,8 @@ public class LoyaltyDAO extends DBContext {
 
     public boolean updateTier(LoyaltyTier t) {
 
-        String sql =
-                "UPDATE LoyaltyTiers "
+        String sql
+                = "UPDATE LoyaltyTiers "
                 + "SET "
                 + "MinWashCount=?,"
                 + "MinTotalSpent=?,"
@@ -76,8 +74,7 @@ public class LoyaltyDAO extends DBContext {
                 + "WHERE TierId=?";
 
         try (
-                Connection con = getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, t.getMinWashCount());
 
@@ -106,13 +103,12 @@ public class LoyaltyDAO extends DBContext {
 
     public boolean updateBasePointRate(double rate) {
 
-        String sql =
-                "UPDATE LoyaltyTiers "
+        String sql
+                = "UPDATE LoyaltyTiers "
                 + "SET BasePointRate=?";
 
         try (
-                Connection con = getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setDouble(1, rate);
 
@@ -127,4 +123,23 @@ public class LoyaltyDAO extends DBContext {
         return false;
     }
 
+    public double getBasePointRate() {
+
+        String sql
+                = "SELECT TOP 1 BasePointRate "
+                + "FROM LoyaltyTiers";
+
+        try (
+                 Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getDouble("BasePointRate");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 }

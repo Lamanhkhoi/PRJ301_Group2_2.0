@@ -759,170 +759,40 @@ public class BookingDAO {
         return false;
     }
 
-    /**
-     * Thực hiện SQL Transaction chốt đơn đặt lịch sau khi nhận tiền qua mã QR.
-     * Gồm 3 hành động: 1. Thêm mới bản ghi vào bảng Bookings với trạng thái
-     * 'Confirmed' 2. Cập nhật trừ điểm tích lũy của khách hàng (nếu có dùng) 3.
-     * Vô hiệu hóa Voucher bằng cách đổi trạng thái / cập nhật ngày sử dụng (nếu
-     * có dùng)
-     */
-//    public boolean insertRealPaidBooking(int accountId, Booking draft, int pointsUsed, int rewardId, double finalPrice, String paymentMemo) {
-//        Connection cn = null;
-//        PreparedStatement pstBooking = null;
-//        PreparedStatement pstPoints = null;
-//        PreparedStatement pstVoucher = null;
-//        ResultSet rs = null;
-//
-//        // Câu lệnh 1: Chèn lịch hẹn chính thức (Sử dụng RETURN_GENERATED_KEYS để lấy ID tự tăng của bản ghi vừa chèn)
-//        String sqlInsertBooking = "INSERT INTO Bookings (CustomerId, VehicleId, ServiceId, BookingDate, "
-//                + "SlotNumber, TotalAmount, Note) VALUES (?, ?, ?, ?, ?, ?, ?)";
-//
-//        // Câu lệnh 2: Trừ điểm trong bảng CustomerLoyalty (Hoặc bảng lưu thông tin Loyalty của bạn dựa trên AccountId)
-//        String sqlUpdatePoints = "UPDATE CustomerLoyalty SET CurrentPoints = CurrentPoints - ?, "
-//                + "LifetimeRedeemedPoints = LifetimeRedeemedPoints + ?, UpdatedAt = GETDATE() WHERE AccountId = ?";
-//
-//        // Câu lệnh 3: Cập nhật bảng RewardRedemptions theo sơ đồ DB thực tế của bạn
-//        String sqlUpdateReward = "UPDATE RewardRedemptions SET Status = 'Used', UsedBookingId = ?, UsedAt = GETDATE() "
-//                + "WHERE CustomerId = ? AND RewardId = ? AND Status = 'Available'"; // Giả định trạng thái chưa dùng là 'Active'
-//
-//        try {
-//            cn = DBContext.getConnection();
-//            if (cn != null) {
-//                // TẮT TÍNH NĂNG TỰ ĐỘNG COMMIT ĐỂ KÍCH HOẠT TRANSACTION
-//                cn.setAutoCommit(false);
-//
-//                // --- HÀNH ĐỘNG 1: INSERT BOOKING ---
-//                // Thêm Statement.RETURN_GENERATED_KEYS để lấy BookingId tự tăng từ SQL Server sinh ra
-//                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);
-//                pstBooking.setInt(1, draft.getCustomerId());
-//                pstBooking.setInt(2, draft.getVehicleId());
-//                pstBooking.setInt(3, draft.getServiceId());
-//                pstBooking.setDate(4, java.sql.Date.valueOf(draft.getBookingDate()));
-//                pstBooking.setInt(5, draft.getSlotNumber());
-//                pstBooking.setDouble(6, finalPrice);
-//                pstBooking.setString(7, "Thanh toan QR Code. Ma GD: " + paymentMemo);
-//
-//                int bookingRows = pstBooking.executeUpdate();
-//                if (bookingRows <= 0) {
-//                    cn.rollback();
-//                    return false;
-//                }
-//
-//                // Lấy ID tự tăng vừa được chèn vào DB của bảng Bookings
-//                int generatedBookingId = -1;
-//                rs = pstBooking.getGeneratedKeys();
-//                if (rs.next()) {
-//                    generatedBookingId = rs.getInt(1);
-//                }
-//
-//                if (generatedBookingId == -1) {
-//                    cn.rollback();
-//                    return false;
-//                }
-//
-//                // --- HÀNH ĐỘNG 2: TRỪ ĐIỂM TÍCH LŨY (Nếu khách có chọn tiêu điểm) ---
-//                if (pointsUsed > 0) {
-//                    pstPoints = cn.prepareStatement(sqlUpdatePoints);
-//
-//                    pstPoints.setInt(1, pointsUsed); // Dấu ? thứ 1: Trừ đi ở CurrentPoints
-//                    pstPoints.setInt(2, pointsUsed); // Dấu ? thứ 2: Cộng dồn vào LifetimeRedeemedPoints
-//                    pstPoints.setInt(3, accountId);  // Dấu ? thứ 3: Điều kiện WHERE AccountId
-//
-//                    int pointRows = pstPoints.executeUpdate();
-//                    if (pointRows <= 0) {
-//                        cn.rollback(); // Không trừ được điểm, hủy giao dịch
-//                        return false;
-//                    }
-//                }
-//
-//                // --- HÀNH ĐỘNG 3: VÔ HIỆU HÓA REWARD TRONG REWARDREDEMPTIONS ---
-//                // Thay vì truyền discountAmount, ta truyền thẳng rewardId nhận từ giao diện/Controller lên
-//                if (rewardId > 0) {
-//                    pstVoucher = cn.prepareStatement(sqlUpdateReward);
-//                    pstVoucher.setInt(1, generatedBookingId); // Gán khóa ngoại liên kết tới Booking vừa tạo thành công ở trên
-//                    pstVoucher.setInt(2, draft.getCustomerId());
-//                    pstVoucher.setInt(3, rewardId);
-//
-//                    int voucherRows = pstVoucher.executeUpdate();
-//                    if (voucherRows <= 0) {
-//                        cn.rollback(); // Không cập nhật được trạng thái đổi thưởng (có thể đã bị dùng từ trước), hủy giao dịch
-//                        return false;
-//                    }
-//                }
-//
-//                // NẾU TẤT CẢ CÁC BƯỚC ĐỀU THÀNH CÔNG -> HOÀN THÀNH TRANSACTION
-//                cn.commit();
-//                return true;
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            try {
-//                if (cn != null) {
-//                    cn.rollback();
-//                }
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//        } finally {
-//            // Mở lại chế độ AutoCommit mặc định và đóng tài nguyên an toàn
-//            try {
-//                if (rs != null) {
-//                    rs.close();
-//                }
-//                if (cn != null) {
-//                    cn.setAutoCommit(true);
-//                }
-//                if (pstBooking != null) {
-//                    pstBooking.close();
-//                }
-//                if (pstPoints != null) {
-//                    pstPoints.close();
-//                }
-//                if (pstVoucher != null) {
-//                    pstVoucher.close();
-//                }
-//                if (cn != null) {
-//                    cn.close();
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return false;
-//    }
-    public boolean insertRealPaidBooking(int accountId, Booking draft, int pointsUsed, int rewardId, double finalPrice, String paymentMemo) {
+    public boolean insertRealPaidBooking(int accountId, Booking draft, int pointsUsed, int rewardId, double voucherDiscount, int promotionId, double promotionDiscount, double finalPrice, String paymentMemo) {
         Connection cn = null;
         PreparedStatement pstBooking = null;
         PreparedStatement pstPoints = null;
-        PreparedStatement pstPointTrans = null; // TẠO THÊM STATEMENT CHO LỊCH SỬ ĐỔI ĐIỂM
+        PreparedStatement pstPointTrans = null;
         PreparedStatement pstVoucher = null;
+        PreparedStatement pstPayment = null;   // ← THÊM
         ResultSet rs = null;
 
-        // Câu lệnh 1: Chèn lịch hẹn chính thức
         String sqlInsertBooking = "INSERT INTO Bookings (CustomerId, VehicleId, ServiceId, BookingDate, "
-                + "SlotNumber, TotalAmount, Note, PendingEarnPoints, PointsCredited) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "SlotNumber, TotalAmount, Note) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        // Câu lệnh 2: Trừ điểm và cập nhật tổng số điểm đã đổi trong bảng CustomerLoyalty
         String sqlUpdatePoints = "UPDATE CustomerLoyalty SET CurrentPoints = CurrentPoints - ?, "
                 + "LifetimeRedeemedPoints = LifetimeRedeemedPoints + ?, UpdatedAt = GETDATE() WHERE AccountId = ?";
 
-        // CÂU LỆNH MỚI: Thêm bản ghi lịch sử vào bảng LoyaltyPointTransactions (Type: 'Redeem')
         String sqlInsertPointTrans = "INSERT INTO LoyaltyPointTransactions (AccountId, BookingId, RedemptionId, "
                 + "PointsChange, TransactionType, ExpiresAt, Description, CreatedAt) "
                 + "VALUES (?, ?, NULL, ?, 'Redeem', NULL, ?, GETDATE())";
 
-        // Câu lệnh 3: Cập nhật bảng RewardRedemptions khi dùng Voucher
         String sqlUpdateReward = "UPDATE RewardRedemptions SET Status = 'Used', UsedBookingId = ?, UsedAt = GETDATE() "
                 + "WHERE CustomerId = ? AND RewardId = ? AND Status = 'Available'";
+
+        // CÂU LỆNH MỚI: Ghi bản ghi Payments 1-1 với Booking, đúng theo schema (PromotionId, VoucherDiscountAmount...)
+        String sqlInsertPayment = "INSERT INTO Payments (BookingId, PromotionId, PromotionDiscountAmount, "
+                + "RedemptionId, VoucherDiscountAmount, FinalAmount, PaymentMethod, IsPaid, PaidAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?, 'QR', 1, GETDATE())";
 
         try {
             cn = DBContext.getConnection();
             if (cn != null) {
-                // TẮT TÍNH NĂNG TỰ ĐỘNG COMMIT ĐỂ KÍCH HOẠT TRANSACTION
                 cn.setAutoCommit(false);
 
                 // --- HÀNH ĐỘNG 1: INSERT BOOKING ---
-                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);
+                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);   // ← SỬA: thêm lại RETURN_GENERATED_KEYS (bug thiếu dòng này khiến booking luôn fail)
                 pstBooking.setInt(1, draft.getCustomerId());
                 pstBooking.setInt(2, draft.getVehicleId());
                 pstBooking.setInt(3, draft.getServiceId());
@@ -930,22 +800,18 @@ public class BookingDAO {
                 pstBooking.setInt(5, draft.getSlotNumber());
                 pstBooking.setDouble(6, finalPrice);
                 pstBooking.setString(7, "Thanh toan QR Code. Ma GD: " + paymentMemo);
-                int earnPoints = (int) (draft.getTotalAmount() / 1000);
-                pstBooking.setInt(8, earnPoints);
-                pstBooking.setBoolean(9, false);
+
                 int bookingRows = pstBooking.executeUpdate();
                 if (bookingRows <= 0) {
                     cn.rollback();
                     return false;
                 }
 
-                // Lấy ID tự tăng vừa được chèn vào DB của bảng Bookings
                 int generatedBookingId = -1;
                 rs = pstBooking.getGeneratedKeys();
                 if (rs.next()) {
                     generatedBookingId = rs.getInt(1);
                 }
-
                 if (generatedBookingId == -1) {
                     cn.rollback();
                     return false;
@@ -953,7 +819,6 @@ public class BookingDAO {
 
                 // --- HÀNH ĐỘNG 2: CẬP NHẬT ĐIỂM & GHI LỊCH SỬ GIAO DỊCH ĐIỂM ---
                 if (pointsUsed > 0) {
-                    // 2.1 Cập nhật số dư điểm của khách hàng
                     pstPoints = cn.prepareStatement(sqlUpdatePoints);
                     pstPoints.setInt(1, pointsUsed);
                     pstPoints.setInt(2, pointsUsed);
@@ -965,16 +830,15 @@ public class BookingDAO {
                         return false;
                     }
 
-                    // 2.2 Ghi lịch sử đổi điểm vào bảng LoyaltyPointTransactions
                     pstPointTrans = cn.prepareStatement(sqlInsertPointTrans);
                     pstPointTrans.setInt(1, accountId);
-                    pstPointTrans.setInt(2, generatedBookingId); // Liên kết với BookingId vừa tạo
-                    pstPointTrans.setInt(3, -pointsUsed);         // Để số âm (ví dụ: -450) vì đây là giao dịch trừ điểm
+                    pstPointTrans.setInt(2, generatedBookingId);
+                    pstPointTrans.setInt(3, -pointsUsed);
                     pstPointTrans.setString(4, "Trừ điểm tiêu dùng cho đơn đặt lịch #" + generatedBookingId);
 
                     int transRows = pstPointTrans.executeUpdate();
                     if (transRows <= 0) {
-                        cn.rollback(); // Ghi lịch sử thất bại -> Hủy toàn bộ giao dịch để tránh lệch dữ liệu
+                        cn.rollback();
                         return false;
                     }
                 }
@@ -993,7 +857,50 @@ public class BookingDAO {
                     }
                 }
 
-                // NẾU TẤT CẢ CÁC BƯỚC ĐỀU THÀNH CÔNG -> HOÀN THÀNH TRANSACTION
+                // --- HÀNH ĐỘNG 4: GHI BẢN GHI PAYMENTS (tính lại 2 khoản giảm để lưu đúng theo schema) ---
+                double basePrice = draft.getTotalAmount();
+
+//                RewardDAO rewardDAO = new RewardDAO();
+//                double voucherDiscount = rewardId > 0 ? rewardDAO.calculateVoucherDiscount(rewardId, basePrice) : 0.0;
+//
+//                PromotionDAO promotionDAO = new PromotionDAO();
+//                double promotionDiscount = promotionId > 0 ? promotionDAO.calculatePromoDiscount(promotionId, basePrice) : 0.0;
+                if (rewardId <= 0) {
+                    voucherDiscount = 0.0;
+                }
+                if (promotionId <= 0) {
+                    promotionDiscount = 0.0;
+                }
+                // Áp cùng logic co giãn tỉ lệ như CalculatePaymentController, đảm bảo không vượt basePrice
+                double totalDiscount = voucherDiscount + promotionDiscount;
+                if (totalDiscount > basePrice) {
+                    double ratio = basePrice / totalDiscount;
+                    voucherDiscount = voucherDiscount * ratio;
+                    promotionDiscount = basePrice - voucherDiscount;
+                }
+
+                pstPayment = cn.prepareStatement(sqlInsertPayment);
+                pstPayment.setInt(1, generatedBookingId);
+//                if (promotionId > 0) {
+                    pstPayment.setInt(2, promotionId);
+//                } else {
+//                    pstPayment.setNull(2, java.sql.Types.INTEGER);
+//                }
+                pstPayment.setDouble(3, promotionDiscount);
+//                if (rewardId > 0) {
+                    pstPayment.setInt(4, rewardId);
+//                } else {
+//                    pstPayment.setNull(4, java.sql.Types.INTEGER);
+//                }
+                pstPayment.setDouble(5, voucherDiscount);
+                pstPayment.setDouble(6, finalPrice);   // FinalAmount lấy từ số tiền thực khách đã chuyển qua QR
+
+                int paymentRows = pstPayment.executeUpdate();
+                if (paymentRows <= 0) {
+                    cn.rollback();
+                    return false;
+                }
+
                 cn.commit();
                 return true;
             }
@@ -1007,7 +914,6 @@ public class BookingDAO {
                 ex.printStackTrace();
             }
         } finally {
-            // Đóng tài nguyên an toàn trong khối finally để tránh rò rỉ bộ nhớ (Memory Leak)
             try {
                 if (rs != null) {
                     rs.close();
@@ -1022,10 +928,13 @@ public class BookingDAO {
                     pstPoints.close();
                 }
                 if (pstPointTrans != null) {
-                    pstPointTrans.close(); // ĐÓNG THÊM STATEMENT MỚI
+                    pstPointTrans.close();
                 }
                 if (pstVoucher != null) {
                     pstVoucher.close();
+                }
+                if (pstPayment != null) {
+                    pstPayment.close();   // ← THÊM
                 }
                 if (cn != null) {
                     cn.close();

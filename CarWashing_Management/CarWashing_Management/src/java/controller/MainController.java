@@ -136,9 +136,19 @@ public class MainController extends HttpServlet {
                     case "cancelBooking":
                         url = "CancelBookingController";
                         break;
+                    // --- LUỒNG QUẢN LÝ ADMIN DASHBOARD ---
                     case "rewardManagement":
                         request.setAttribute("ACTIVE_ADMIN", "voucherreward");
                         url = "RewardManagementController";
+                        break;
+
+                    case "promotionManagement":
+                        request.setAttribute("ACTIVE_ADMIN", "khuyenmai");
+                        url = "PromotionManagementController";
+                        break;
+                    case "adminConfig":
+                        request.setAttribute("ACTIVE_ADMIN", "cauhinh");
+                        url = "AdminConfigController";
                         break;
                 }
             }

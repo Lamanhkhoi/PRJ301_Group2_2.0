@@ -90,9 +90,6 @@
                                 <h1 class="text-2xl font-bold text-slate-800">Cấu Hình Hệ Thống</h1>
                                 <p class="text-sm text-slate-500 mt-1">Point rate, điều kiện lên hạng và đặc quyền của chương trình khách hàng thân thiết</p>
                             </div>
-                            <button onclick="openResetModal()" class="inline-flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 text-sm font-bold px-5 py-2.5 rounded-xl transition">
-                                <i class="fa-solid fa-rotate-left"></i> Khôi phục mặc định
-                            </button>
                         </div>
 
                         <%-- ===== BANNER CẢNH BÁO ===== --%>
@@ -435,53 +432,6 @@
                 if (e.target === tModal) {
 
                     closeTierModal();
-
-                }
-
-            });
-
-            // ===== Modal khôi phục mặc định =====
-
-            const rsModal = document.getElementById("resetModal");
-            const rsContent = document.getElementById("resetModalContent");
-
-            function openResetModal() {
-
-                rsModal.classList.remove("hidden");
-
-                setTimeout(function () {
-
-                    rsModal.classList.remove("opacity-0");
-
-                    rsContent.classList.remove("scale-95");
-
-                    rsContent.classList.add("scale-100");
-
-                }, 10);
-
-            }
-
-            function closeResetModal() {
-
-                rsModal.classList.add("opacity-0");
-
-                rsContent.classList.remove("scale-100");
-
-                rsContent.classList.add("scale-95");
-
-                setTimeout(function () {
-
-                    rsModal.classList.add("hidden");
-
-                }, 300);
-
-            }
-
-            rsModal.addEventListener("click", function (e) {
-
-                if (e.target === rsModal) {
-
-                    closeResetModal();
 
                 }
 

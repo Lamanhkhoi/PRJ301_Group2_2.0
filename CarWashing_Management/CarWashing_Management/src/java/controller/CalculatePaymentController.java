@@ -55,6 +55,7 @@ public class CalculatePaymentController extends HttpServlet {
             double voucherDiscount = (double) rewardDAO.calculateVoucherDiscount(redemptionId, basePrice);
             request.getSession().setAttribute("VOUCHERDISCOUNT", voucherDiscount);
             // 2b. Tính tiền giảm từ Promotion (PromotionDAO) — cũng tính trên basePrice gốc, ĐỘC LẬP với voucher
+//            double priceAfterVoucher = basePrice - voucherDiscount;
             PromotionDAO promotionDAO = new PromotionDAO();
             double promotionDiscount = (double) promotionDAO.calculatePromoDiscount(promotionId, basePrice);
             request.getSession().setAttribute("PROMOTIONDISCOUNT", promotionDiscount);
@@ -89,7 +90,7 @@ public class CalculatePaymentController extends HttpServlet {
 
             // 6. Build chuỗi JSON trả về — thêm field promotionDiscount
             String jsonResponse = String.format(
-                "{\"voucherDiscount\": %f, \"promotionDiscount\": %f, \"pointDiscount\": %d, \"grandTotal\": %f, \"maxPointsAllowed\": %d}",
+                "{\"voucherDiscount\": %.0f, \"promotionDiscount\": %.0f, \"pointDiscount\": %d, \"grandTotal\": %.0f, \"maxPointsAllowed\": %d}",
                 voucherDiscount, promotionDiscount, pointsUsed, grandTotal, maxPointsAllowed
             );
 

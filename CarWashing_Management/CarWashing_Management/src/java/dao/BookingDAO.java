@@ -765,7 +765,7 @@ public class BookingDAO {
         PreparedStatement pstPoints = null;
         PreparedStatement pstPointTrans = null;
         PreparedStatement pstVoucher = null;
-        PreparedStatement pstPayment = null;   // ← THÊM
+        PreparedStatement pstPayment = null;
         ResultSet rs = null;
 
         String sqlInsertBooking = "INSERT INTO Bookings (CustomerId, VehicleId, ServiceId, BookingDate, "
@@ -778,10 +778,10 @@ public class BookingDAO {
                 + "PointsChange, TransactionType, ExpiresAt, Description, CreatedAt) "
                 + "VALUES (?, ?, NULL, ?, 'Redeem', NULL, ?, GETDATE())";
 
+        // ← SỬA Bug 2: RedemptionId thay vì RewardId trong WHERE
         String sqlUpdateReward = "UPDATE RewardRedemptions SET Status = 'Used', UsedBookingId = ?, UsedAt = GETDATE() "
-                + "WHERE CustomerId = ? AND RewardId = ? AND Status = 'Available'";
+                + "WHERE CustomerId = ? AND RedemptionId = ? AND Status = 'Available'";
 
-        // CÂU LỆNH MỚI: Ghi bản ghi Payments 1-1 với Booking, đúng theo schema (PromotionId, VoucherDiscountAmount...)
         String sqlInsertPayment = "INSERT INTO Payments (BookingId, PromotionId, PromotionDiscountAmount, "
                 + "RedemptionId, VoucherDiscountAmount, FinalAmount, PaymentMethod, IsPaid, PaidAt) "
                 + "VALUES (?, ?, ?, ?, ?, ?, 'QR', 1, GETDATE())";
@@ -792,7 +792,7 @@ public class BookingDAO {
                 cn.setAutoCommit(false);
 
                 // --- HÀNH ĐỘNG 1: INSERT BOOKING ---
-                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);   // ← SỬA: thêm lại RETURN_GENERATED_KEYS (bug thiếu dòng này khiến booking luôn fail)
+                pstBooking = cn.prepareStatement(sqlInsertBooking, java.sql.Statement.RETURN_GENERATED_KEYS);
                 pstBooking.setInt(1, draft.getCustomerId());
                 pstBooking.setInt(2, draft.getVehicleId());
                 pstBooking.setInt(3, draft.getServiceId());
@@ -857,21 +857,15 @@ public class BookingDAO {
                     }
                 }
 
-                // --- HÀNH ĐỘNG 4: GHI BẢN GHI PAYMENTS (tính lại 2 khoản giảm để lưu đúng theo schema) ---
+                // --- HÀNH ĐỘNG 4: GHI BẢN GHI PAYMENTS ---
                 double basePrice = draft.getTotalAmount();
 
-//                RewardDAO rewardDAO = new RewardDAO();
-//                double voucherDiscount = rewardId > 0 ? rewardDAO.calculateVoucherDiscount(rewardId, basePrice) : 0.0;
-//
-//                PromotionDAO promotionDAO = new PromotionDAO();
-//                double promotionDiscount = promotionId > 0 ? promotionDAO.calculatePromoDiscount(promotionId, basePrice) : 0.0;
                 if (rewardId <= 0) {
                     voucherDiscount = 0.0;
                 }
                 if (promotionId <= 0) {
                     promotionDiscount = 0.0;
                 }
-                // Áp cùng logic co giãn tỉ lệ như CalculatePaymentController, đảm bảo không vượt basePrice
                 double totalDiscount = voucherDiscount + promotionDiscount;
                 if (totalDiscount > basePrice) {
                     double ratio = basePrice / totalDiscount;
@@ -881,19 +875,22 @@ public class BookingDAO {
 
                 pstPayment = cn.prepareStatement(sqlInsertPayment);
                 pstPayment.setInt(1, generatedBookingId);
-//                if (promotionId > 0) {
+
+                // ← SỬA Bug 1: dùng setNull thay vì setInt(x, 0) khi không có lựa chọn
+                if (promotionId > 0) {
                     pstPayment.setInt(2, promotionId);
-//                } else {
-//                    pstPayment.setNull(2, java.sql.Types.INTEGER);
-//                }
+                } else {
+                    pstPayment.setNull(2, java.sql.Types.INTEGER);
+                }
                 pstPayment.setDouble(3, promotionDiscount);
-//                if (rewardId > 0) {
+
+                if (rewardId > 0) {
                     pstPayment.setInt(4, rewardId);
-//                } else {
-//                    pstPayment.setNull(4, java.sql.Types.INTEGER);
-//                }
+                } else {
+                    pstPayment.setNull(4, java.sql.Types.INTEGER);
+                }
                 pstPayment.setDouble(5, voucherDiscount);
-                pstPayment.setDouble(6, finalPrice);   // FinalAmount lấy từ số tiền thực khách đã chuyển qua QR
+                pstPayment.setDouble(6, finalPrice);
 
                 int paymentRows = pstPayment.executeUpdate();
                 if (paymentRows <= 0) {
@@ -934,7 +931,7 @@ public class BookingDAO {
                     pstVoucher.close();
                 }
                 if (pstPayment != null) {
-                    pstPayment.close();   // ← THÊM
+                    pstPayment.close();
                 }
                 if (cn != null) {
                     cn.close();

@@ -1,22 +1,54 @@
 <%@page import="java.util.*"%>
 <%@page import="dto.LoyaltyTier"%>
+<%@page import="dto.TierChangeRecord"%>
+<%@page import="service.LoyaltyService"%>
+<%@page import="dao.TierChangeLogDAO"%>
+<%@page import="java.net.URLEncoder"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%--
     ============================================================
     TRANG: CẤU HÌNH HỆ THỐNG (Admin) - admin_config.jsp
     Bố cục: Card cấu hình chung (point rate, hạn điểm, chu kỳ xét hạng)
+            -> Card "Xét Lại Hạng Thành Viên" (THẬT - gọi LoyaltyService.recalculateAllTiers())
             -> Bảng 4 hạng thành viên (LoyaltyTier), nút Sửa mở modal chỉnh giá trị quy đổi
-            -> Nút Khôi phục mặc định + banner cảnh báo
-    TODO BACKEND (người phụ trách chức năng):
-      1. Mở comment dòng include admin-auth-check bên dưới khi gắn Controller.
-      2. Thay MOCK DATA: tiers -> DAO đọc bảng LoyaltyTier (dùng lại DTO có sẵn).
-         Cấu hình chung -> bảng SystemConfig trong DB mới (key-value).
-      3. Nút "Lưu" của modal + card cấu hình chung: submit POST tới Controller update.
+    Trang này được nạp qua MainController?action=adminConfig -> AdminConfigController
+    (KHÔNG còn vào thẳng URL JSP như trước) - đọc dữ liệu qua request attribute.
+    (Card "Xét Lại Hạng Thành Viên" thuộc Loyalty Engine - không cần đụng vào khi
+     chỉnh sửa các phần khác của trang.)
     ============================================================
 --%>
 <%-- <%@ include file="../includes/admin-auth-check.jsp" %> --%>
 <%
     request.setAttribute("ACTIVE_ADMIN", "cauhinh");
+
+    // ===== XỬ LÝ "XÉT LẠI HẠNG THỦ CÔNG" - phải nằm TRƯỚC mọi output HTML vì có sendRedirect =====
+    // Post-Redirect-Get: tránh chạy lại (đổi hạng thêm 1 lần nữa) nếu Admin lỡ bấm F5 sau khi submit.
+    // Redirect qua MainController (không redirect thẳng về admin_config.jsp) để trang tải lại
+    // ĐẦY ĐỦ dữ liệu thật (bảng tier, cấu hình chung) qua đúng AdminConfigController,
+    // tránh trang hiện trống vì thiếu request attribute LOYALTY_LIST/PointExpiryMonths...
+    if ("POST".equalsIgnoreCase(request.getMethod()) && "recalcTier".equals(request.getParameter("action"))) {
+        int windowMonths;
+        try {
+            windowMonths = Integer.parseInt(request.getParameter("windowMonths"));
+        } catch (Exception e) {
+            windowMonths = 12;
+        }
+        LoyaltyService loyaltyService = new LoyaltyService();
+        int changed = loyaltyService.recalculateAllTiers(windowMonths);
+        String tierMsg = (changed < 0)
+                ? "ERR:Có lỗi khi chạy - xem log server (Output/console) để biết chi tiết."
+                : "OK:Đã xét lại xong. Số tài khoản đổi hạng (lên hoặc xuống): " + changed
+                        + " (nhìn lại " + windowMonths + " tháng gần đây).";
+        response.sendRedirect(request.getContextPath()
+                + "/MainController?action=adminConfig&tierMsg=" + URLEncoder.encode(tierMsg, "UTF-8"));
+        return;
+    }
+
+    String tierMsgRaw = request.getParameter("tierMsg");
+    boolean tierMsgIsError = tierMsgRaw != null && tierMsgRaw.startsWith("ERR:");
+    String tierMsgText = tierMsgRaw != null ? tierMsgRaw.substring(tierMsgRaw.indexOf(':') + 1) : null;
+
+    List<TierChangeRecord> tierChanges = new TierChangeLogDAO().getRecentChanges(20);
 
     // ================= MOCK DATA - XÓA KHI GẮN BACKEND =================
     List<LoyaltyTier> tiers
@@ -157,6 +189,60 @@
                                 </div>
                             </div>
                             </form>
+                        </div>
+
+                        <%-- ===== CARD "XÉT LẠI HẠNG THÀNH VIÊN" - ĐÃ GẮN BACKEND THẬT (Loyalty Engine) ===== --%>
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                            <h2 class="text-lg font-bold text-slate-800 mb-2">
+                                <i class="fa-solid fa-ranking-star text-blue-500 mr-2"></i>Xét Lại Hạng Thành Viên
+                            </h2>
+                            <p class="text-sm text-slate-500 mb-4">
+                                Tính lại hạng cho <b>toàn bộ khách hàng</b> dựa trên số lần rửa + chi tiêu thật
+                                (Booking đã Completed, đã thanh toán) trong N tháng gần nhất. Áp dụng
+                                <b>ngay lập tức</b> khi bấm - cả lên hạng lẫn xuống hạng cùng lúc.
+                            </p>
+
+                            <% if (tierMsgText != null) { %>
+                            <div class="mb-4 rounded-xl px-4 py-3 text-sm font-semibold flex items-center gap-2
+                                        <%= tierMsgIsError ? "bg-red-50 text-red-700 border border-red-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200" %>">
+                                <i class="fa-solid <%= tierMsgIsError ? "fa-circle-exclamation" : "fa-circle-check" %>"></i> <%= tierMsgText %>
+                            </div>
+                            <% } %>
+
+                            <form method="post" action="<%=request.getContextPath()%>/Admin/admin_config.jsp" class="flex flex-wrap items-end gap-3">
+                                <input type="hidden" name="action" value="recalcTier">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Số tháng nhìn lại</label>
+                                    <input type="number" name="windowMonths" value="12" min="0"
+                                           class="w-40 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition">
+                                </div>
+                                <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition">
+                                    <i class="fa-solid fa-play"></i> Chạy xét lại ngay
+                                </button>
+                                <p class="text-xs text-slate-400 basis-full mt-1">
+                                    Mặc định 12 tháng (khớp quy ước vận hành thật). Demo nhanh có thể để 0 hoặc số nhỏ.
+                                </p>
+                            </form>
+
+                            <%-- ===== LỊCH SỬ ĐỔI HẠNG - để Admin biết CHÍNH XÁC ai đổi, từ đâu sang đâu ===== --%>
+                            <% if (!tierChanges.isEmpty()) { %>
+                            <div class="mt-5 pt-5 border-t border-slate-100">
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Lịch sử đổi hạng gần đây</p>
+                                <div class="space-y-2 max-h-64 overflow-y-auto">
+                                    <% for (TierChangeRecord r : tierChanges) { %>
+                                    <div class="flex items-center justify-between text-sm bg-slate-50 rounded-lg px-3 py-2">
+                                        <span class="text-slate-700 font-medium"><%= r.getAccountName() %></span>
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="text-slate-500"><%= r.getOldTierName() %></span>
+                                            <i class="fa-solid fa-arrow-right text-[10px] <%= r.isUpgrade() ? "text-emerald-500" : "text-red-400" %>"></i>
+                                            <span class="font-bold <%= r.isUpgrade() ? "text-emerald-600" : "text-red-500" %>"><%= r.getNewTierName() %></span>
+                                        </span>
+                                        <span class="text-xs text-slate-400 whitespace-nowrap"><%= r.getChangedAt() %></span>
+                                    </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <% } %>
                         </div>
 
                         <%-- ===== BẢNG HẠNG THÀNH VIÊN ===== --%>

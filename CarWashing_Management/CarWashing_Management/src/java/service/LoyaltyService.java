@@ -9,19 +9,37 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * LOYALTY ENGINE - phụ trách: Point, Tier, tích/trừ điểm, đền bù hủy lịch, đổi thưởng.
+ * LOYALTY ENGINE - phụ trách: Point, Tier, tích/trừ điểm, đổi thưởng.
  *
- * 4 hàm chính trong file này là các "cửa" mà module khác (Payment - Người 1,
- * Booking Management - Người 4) sẽ gọi vào. Không ai được tự ý INSERT/UPDATE
- * trực tiếp vào CustomerLoyalty / LoyaltyPointTransactions / RewardRedemptions
- * ngoài các hàm này, để đảm bảo logic điểm luôn nhất quán.
+ * 3 hàm ĐANG DÙNG (earnPoints, redeemReward, recalculateAllTiers) là các "cửa"
+ * mà module khác (Payment - Người 1) sẽ gọi vào. Không ai được tự ý INSERT/
+ * UPDATE trực tiếp vào CustomerLoyalty / LoyaltyPointTransactions /
+ * RewardRedemptions ngoài các hàm này, để đảm bảo logic điểm luôn nhất quán.
  *
- * *** LƯU Ý DB: cần đã chạy migration_loosen_points_check.sql trước khi dùng
- * handleBookingCancelled(), vì hàm này insert PointsRequired = 0 và PointsUsed = 0. ***
+ * handleBookingCancelled() đã @Deprecated - xem chi tiết lý do ngay tại hàm đó.
+ *
+ * *** LƯU Ý DB: migration_loosen_points_check.sql (nới CHECK constraint) vẫn
+ * cần giữ nguyên dù handleBookingCancelled() không còn dùng - vì bản thân việc
+ * nới lỏng constraint không gây hại gì, và có thể vẫn cần cho những trường hợp
+ * khác trong tương lai. ***
  */
 public class LoyaltyService {
 
     /**
+     * @deprecated KHÔNG CÒN DÙNG (quyết định của nhóm - chính sách đền bù hủy
+     * lịch đã thay đổi hoàn toàn). GIỮ LẠI CODE để tham khảo/phòng khi chính
+     * sách đổi lại, nhưng KHÔNG được gọi hàm này ở bất kỳ đâu trong code mới.
+     *
+     * LÝ DO: trước đây hàm này cấp 1 voucher giảm 100% khi khách hủy lịch hợp
+     * lệ. Nhóm đã đổi chính sách: khi khách Cancel HOẶC No-Show, KHÔNG cấp
+     * voucher đền bù nữa, và CŨNG KHÔNG cộng thêm điểm mới nào - điểm khách đã
+     * nhận từ lúc thanh toán (qua earnPoints(), chạy độc lập tại thời điểm
+     * thanh toán, không phụ thuộc booking sau này có bị hủy hay không) đơn
+     * giản là KHÔNG bị thu hồi lại, và đó là toàn bộ "đền bù". Vì vậy, khi 1
+     * booking chuyển sang Cancelled hoặc NoShow, phía gọi (CancelBookingController
+     * hoặc tương đương) KHÔNG CẦN gọi bất kỳ hàm nào của LoyaltyService cả -
+     * không có việc gì để làm ở tầng Loyalty trong tình huống này nữa.
+     *
      * Gọi khi 1 Booking chuyển sang trạng thái 'Cancelled' (khách tự hủy hợp lệ trong 24h).
      * KHÔNG được gọi hàm này cho trạng thái 'NoShow' - NoShow không được đền bù.
      *
@@ -39,6 +57,7 @@ public class LoyaltyService {
      * @param customerId khách sở hữu booking đó (CustomerId, không phải AccountId)
      * @return true nếu tạo đền bù thành công
      */
+    @Deprecated
     public boolean handleBookingCancelled(int bookingId, int customerId) {
         Connection cn = null;
         PreparedStatement pstGetAmount = null;
@@ -51,17 +70,38 @@ public class LoyaltyService {
             cn = DBContext.getConnection();
             cn.setAutoCommit(false); // Bắt đầu transaction
 
-            // ===== BƯỚC 1: Snapshot giá gói đã hủy =====
-            String sqlGetAmount = "SELECT TotalAmount FROM Bookings WHERE BookingId = ?";
+            // ===== BƯỚC 1: Snapshot số tiền THẬT SỰ đã trả cho booking này =====
+            // ĐÃ SỬA LỖ HỔNG: trước đây dùng Bookings.TotalAmount (giá gốc) làm mốc đền bù,
+            // không kiểm tra khách có thật sự mất tiền hay không -> có thể bị khai thác:
+            // trả tiền thật cho lần A -> hủy -> nhận voucher đền bù -> dùng voucher đó đặt
+            // lần B (trả 0đ thật) -> hủy tiếp B -> lại nhận thêm voucher mới (dù B vốn đã
+            // miễn phí) -> lặp vô hạn, chỉ cần trả tiền thật đúng 1 lần duy nhất ban đầu.
+            // Sửa bằng 2 thay đổi:
+            //   1. Dùng Payments.FinalAmount (tiền THẬT đã trả, sau khi trừ voucher/khuyến mãi)
+            //      làm mốc đền bù, thay vì giá gốc - công bằng hơn cho cả trường hợp bình thường.
+            //   2. Nếu FinalAmount = 0 (booking này vốn đã được thanh toán hoàn toàn bằng voucher
+            //      trước đó, khách không mất tiền thật) -> KHÔNG cấp voucher đền bù mới, chặn
+            //      đứng vòng lặp ngay tại gốc.
+            String sqlGetAmount = "SELECT p.FinalAmount FROM Bookings b "
+                    + "JOIN Payments p ON p.BookingId = b.BookingId AND p.IsPaid = 1 "
+                    + "WHERE b.BookingId = ?";
             pstGetAmount = cn.prepareStatement(sqlGetAmount);
             pstGetAmount.setInt(1, bookingId);
             rsAmount = pstGetAmount.executeQuery();
 
             if (!rsAmount.next()) {
                 cn.rollback();
-                return false; // Không tìm thấy booking - không tự chế dữ liệu
+                return false; // Không tìm thấy booking đã thanh toán thật - không tự chế dữ liệu
             }
-            double snapshotAmount = rsAmount.getDouble("TotalAmount");
+            double snapshotAmount = rsAmount.getDouble("FinalAmount");
+
+            if (snapshotAmount <= 0) {
+                cn.rollback();
+                System.out.println("handleBookingCancelled(): Booking #" + bookingId
+                        + " có FinalAmount = 0 (đã miễn phí từ trước) - KHÔNG cấp thêm voucher đền bù"
+                        + " để tránh vòng lặp hủy liên tục sinh voucher vô hạn.");
+                return true; // Xử lý đúng quy trình, chỉ là không có gì để đền bù - không phải lỗi
+            }
 
             // ===== BƯỚC 2: Tạo dòng Reward riêng cho lần đền bù này =====
             // DiscountPercent = 100 + MaxDiscountAmount = đúng giá gói đã hủy
@@ -372,6 +412,11 @@ public class LoyaltyService {
      * định riêng cơ chế gọi định kỳ (nút bấm tay của Admin, hay 1 scheduled
      * task) - đây là quyết định hạ tầng, chưa thuộc phạm vi hàm này.
      *
+     * MỖI LẦN 1 TÀI KHOẢN ĐỔI HẠNG, tự động ghi 1 dòng vào TierChangeLog
+     * (AccountId, OldTierId, NewTierId, ChangedAt) ngay trong cùng câu UPDATE
+     * bằng OUTPUT INTO - để Admin tra cứu lại được CHÍNH XÁC ai đổi hạng, từ
+     * đâu sang đâu, lúc nào (không chỉ biết tổng số người đổi hạng).
+     *
      * @param windowMonths số tháng nhìn lại (khuyến nghị 12, khớp hạn dùng điểm)
      * @return số tài khoản có hạng bị thay đổi trong lần chạy này,
      *         hoặc -1 nếu có lỗi khi chạy (phân biệt với 0 = chạy ổn nhưng không ai đổi hạng)
@@ -387,7 +432,11 @@ public class LoyaltyService {
                 + "               WHERE recent.RecentWashCount >= t.MinWashCount "
                 + "                  OR recent.RecentSpent    >= t.MinTotalSpent "
                 + "               ORDER BY t.MinWashCount DESC, t.MinTotalSpent DESC "
-                + "           ), 0) AS NewTierId "
+                // ĐÃ SỬA: KHÔNG hardcode 0 làm fallback "Member" nữa - trước đây giả định
+                // TierId đánh số từ 0 (Member=0), nhưng DB có thể đánh số từ 1 (IDENTITY(1,1)
+                // mặc định) tùy máy/bản seed. Tra động tier có MinWashCount+MinTotalSpent thấp
+                // nhất (chính là Member) làm fallback, không phụ thuộc số ID cụ thể là bao nhiêu.
+                + "           ), (SELECT TOP 1 TierId FROM LoyaltyTiers ORDER BY MinWashCount ASC, MinTotalSpent ASC)) AS NewTierId "
                 + "    FROM CustomerLoyalty cl "
                 + "    JOIN Customers cust ON cust.AccountId = cl.AccountId "
                 + "    CROSS APPLY ( "
@@ -402,6 +451,12 @@ public class LoyaltyService {
                 + ") "
                 + "UPDATE CustomerLoyalty "
                 + "SET CurrentTierId = tc.NewTierId, LastTierUpdatedAt = SYSDATETIME() "
+                // OUTPUT INTO: ghi log NGAY TRONG câu UPDATE này - deleted.CurrentTierId là giá
+                // trị TRƯỚC khi đổi, inserted.CurrentTierId là giá trị SAU khi đổi. Atomic tuyệt
+                // đối, không có khoảng hở giữa lúc đọc giá trị cũ và lúc UPDATE (khác với việc
+                // SELECT trước rồi UPDATE sau bằng 2 câu lệnh riêng, có thể bị race condition).
+                + "OUTPUT inserted.AccountId, deleted.CurrentTierId, inserted.CurrentTierId, SYSDATETIME() "
+                + "INTO TierChangeLog (AccountId, OldTierId, NewTierId, ChangedAt) "
                 + "FROM CustomerLoyalty cl "
                 + "JOIN TierCalc tc ON tc.AccountId = cl.AccountId "
                 + "WHERE tc.NewTierId <> tc.CurrentTierId";

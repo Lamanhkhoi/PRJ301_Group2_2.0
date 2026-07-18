@@ -111,6 +111,9 @@ public class MainController extends HttpServlet {
                     case "checkRealPaymentStatus":
                         url = "CheckRealPaymentController";
                         break;
+                    case "calculatePaymentDetails":
+                        url = "CalculatePaymentController";
+                        break;
                     case "executeInsertBooking":
                         url = "FinalizeBookingController";
                         break;

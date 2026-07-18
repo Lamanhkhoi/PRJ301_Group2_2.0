@@ -7,6 +7,8 @@ package controller;
 import dao.BookingDAO;
 import dao.CustomerLoyaltyDAO;
 import dao.CustomerVehicleDAO;
+import dao.PromotionDAO;
+import dao.RewardRedemptionDAO;
 import dao.TimeSlotDAO;
 import dao.WashServiceDAO;
 import dto.Account;
@@ -14,6 +16,8 @@ import dto.Booking;
 import dto.Customer;
 import dto.CustomerLoyalty;
 import dto.LoyaltyTier;
+import dto.Promotion;
+import dto.RewardRedemption;
 import dto.TimeSlot;
 import dto.Vehicle;
 import dto.WashService;
@@ -95,7 +99,7 @@ public class BookingController extends HttpServlet {
         List<TimeSlot> slotList = timeDAO.getAllAvailableSlots(bookingDate);
         // Gửi list này và ngày đã chọn sang trang JSP
         request.setAttribute("slots", slotList);
-        
+
     }
 
     private void handleProcessBooking(HttpServletRequest request, HttpServletResponse response)
@@ -190,9 +194,8 @@ public class BookingController extends HttpServlet {
             // CHỖ THAY ĐỔI QUAN TRỌNG: KHÔNG INSERT VÀO DB NỮA MÀ ĐẨY VÀO SESSION
             // =========================================================================
             CustomerVehicleDAO veDAO = new CustomerVehicleDAO();
-            
+
             // Tạo một đối tượng Booking tạm thời để đóng gói dữ liệu nháp
-            
             Booking bookingDraft = new Booking();
             bookingDraft.setCustomerId(cus.getCustomerId());
             bookingDraft.setVehicleId(vehicleId);
@@ -201,19 +204,26 @@ public class BookingController extends HttpServlet {
             bookingDraft.setSlotNumber(slotNumber);
             bookingDraft.setTotalAmount(service.getPrice()); // Lưu giá gốc từ DB vào nháp
             bookingDraft.setLicensePlate(veDAO.getVehicleById(vehicleId).getLicensePlate());
-            CustomerLoyaltyDAO loyalDAO = new  CustomerLoyaltyDAO();
-            Account account = (Account)session.getAttribute("USER");
+            CustomerLoyaltyDAO loyalDAO = new CustomerLoyaltyDAO();
+            Account account = (Account) session.getAttribute("USER");
             CustomerLoyalty loyal = loyalDAO.getLoyaltyProfileByAccountId(account.getAccountID());
             request.setAttribute("LOYAL", loyal);
+            request.getSession().setAttribute("LOYAL", loyal);
             // Gửi cả chuỗi thời gian (ví dụ "08:00-08:30") sang để hiển thị hóa đơn mà không cần truy vấn lại
             TimeSlotDAO timeDAO = new TimeSlotDAO();
             Map<Integer, TimeSlot> timeSlotMap = timeDAO.getAllTimeSlots();
             TimeSlot slot = timeSlotMap.get(slotNumber);
-            session.setAttribute("BOOKING_TIME_TEXT", slot.getStartTime().substring(0, 5) + "-" + slot.getEndTime().substring(0, 5)); 
-            
+            session.setAttribute("BOOKING_TIME_TEXT", slot.getStartTime().substring(0, 5) + "-" + slot.getEndTime().substring(0, 5));
+            // Khi tạo 1 booking draft MỚI, đảm bảo xóa memo của phiên thanh toán CŨ (nếu có) để tránh tái sử dụng nhầm
+            session.removeAttribute("PAYMENT_MEMO");
             // Đóng gói đối tượng nháp lưu trực tiếp vào Session
             session.setAttribute("BOOKING_DRAFT", bookingDraft);
-
+            RewardRedemptionDAO redDAO = new RewardRedemptionDAO();
+            List<RewardRedemption> redList = redDAO.getMyRedemptions(cus.getCustomerId(), "Available");
+            request.setAttribute("AVAILABLE_VOUCHERS", redList);
+            PromotionDAO proDAO = new PromotionDAO();
+            List<Promotion> proList = proDAO.getPromotions();
+            request.setAttribute("AVAILABLE_PROMOTIONS", proList);
             // Chuyển hướng (Redirect) thông qua MainController hoặc trực tiếp sang trang Payment
             // Nên redirect để trình duyệt thay đổi URL sạch sẽ sang trang thanh toán
             request.getRequestDispatcher("DashBoard/customer_payment.jsp").forward(request, response);

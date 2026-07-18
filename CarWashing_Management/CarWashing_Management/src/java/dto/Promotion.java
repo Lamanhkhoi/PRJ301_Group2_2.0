@@ -1,38 +1,31 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package dto;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
+/**
+ *
+ * @author LENOVO
+ */
 public class Promotion {
-
     private int promotionId;
     private String promotionName;
     private String description;
-
     private double discountPercent;
     private double minBillAmount;
     private double maxDiscountAmount;
-
-    private Timestamp startDate;
-    private Timestamp endDate;
-
+    private Date startDate;
+    private Date endDate;
     private boolean active;
-
-    private Timestamp createdAt;
+    private Date createAt;
 
     public Promotion() {
     }
 
-    public Promotion(int promotionId,
-            String promotionName,
-            String description,
-            double discountPercent,
-            double minBillAmount,
-            double maxDiscountAmount,
-            Timestamp startDate,
-            Timestamp endDate,
-            boolean active,
-            Timestamp createdAt) {
-
+    public Promotion(int promotionId, String promotionName, String description, double discountPercent, double minBillAmount, double maxDiscountAmount, Date startDate, Date endDate, boolean active, Date createAt) {
         this.promotionId = promotionId;
         this.promotionName = promotionName;
         this.description = description;
@@ -42,7 +35,7 @@ public class Promotion {
         this.startDate = startDate;
         this.endDate = endDate;
         this.active = active;
-        this.createdAt = createdAt;
+        this.createAt = createAt;
     }
 
     public int getPromotionId() {
@@ -93,19 +86,19 @@ public class Promotion {
         this.maxDiscountAmount = maxDiscountAmount;
     }
 
-    public Timestamp getStartDate() {
+    public Date getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Timestamp startDate) {
+    public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
-    public Timestamp getEndDate() {
+    public Date getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Timestamp endDate) {
+    public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 
@@ -117,12 +110,13 @@ public class Promotion {
         this.active = active;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
+    public Date getCreateAt() {
+        return createAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
-
+    
+    
 }

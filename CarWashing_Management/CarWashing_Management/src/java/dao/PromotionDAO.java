@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.sql.Date;
 import java.util.List;
 
 /**
@@ -136,12 +137,12 @@ public class PromotionDAO {
                 p.setMinBillAmount(rs.getDouble("MinBillAmount"));
                 p.setMaxDiscountAmount(rs.getDouble("MaxDiscountAmount"));
 
-                p.setStartDate(rs.getTimestamp("StartDate"));
-                p.setEndDate(rs.getTimestamp("EndDate"));
+                p.setStartDate(rs.getDate("StartDate"));
+                p.setEndDate(rs.getDate("EndDate"));
 
                 p.setActive(rs.getBoolean("IsActive"));
 
-                p.setCreatedAt(rs.getTimestamp("CreatedAt"));
+                p.setCreateAt(rs.getDate("CreatedAt"));
 
                 list.add(p);
             }
@@ -180,12 +181,12 @@ public class PromotionDAO {
                 p.setMinBillAmount(rs.getDouble("MinBillAmount"));
                 p.setMaxDiscountAmount(rs.getDouble("MaxDiscountAmount"));
 
-                p.setStartDate(rs.getTimestamp("StartDate"));
-                p.setEndDate(rs.getTimestamp("EndDate"));
+                p.setStartDate(rs.getDate("StartDate"));
+                p.setEndDate(rs.getDate("EndDate"));
 
                 p.setActive(rs.getBoolean("IsActive"));
 
-                p.setCreatedAt(rs.getTimestamp("CreatedAt"));
+                p.setCreateAt(rs.getDate("CreatedAt"));
 
                 return p;
             }
@@ -224,8 +225,8 @@ public class PromotionDAO {
             ps.setDouble(4, p.getMinBillAmount());
             ps.setDouble(5, p.getMaxDiscountAmount());
 
-            ps.setTimestamp(6, p.getStartDate());
-            ps.setTimestamp(7, p.getEndDate());
+            ps.setDate(6, (Date) p.getStartDate());
+            ps.setDate(7, (Date) p.getEndDate());
 
             ps.setBoolean(8, p.isActive());
 
@@ -264,8 +265,8 @@ public class PromotionDAO {
             ps.setDouble(4, p.getMinBillAmount());
             ps.setDouble(5, p.getMaxDiscountAmount());
 
-            ps.setTimestamp(6, p.getStartDate());
-            ps.setTimestamp(7, p.getEndDate());
+            ps.setDate(6, (Date) p.getStartDate());
+            ps.setDate(7, (Date) p.getEndDate());
 
             ps.setInt(8, p.getPromotionId());
 

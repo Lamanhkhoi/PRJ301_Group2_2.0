@@ -110,7 +110,6 @@ public class PromotionDAO {
         return 0.0;
     }
 
-
     //==========================
     // Lấy toàn bộ Promotion
     //==========================
@@ -121,9 +120,7 @@ public class PromotionDAO {
         String sql = "SELECT * FROM Promotions ORDER BY PromotionId DESC";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
 
@@ -162,8 +159,7 @@ public class PromotionDAO {
         String sql = "SELECT * FROM Promotions WHERE PromotionId=?";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
@@ -215,8 +211,7 @@ public class PromotionDAO {
                 + " VALUES(?,?,?,?,?,?,?,?)";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, p.getPromotionName());
             ps.setString(2, p.getDescription());
@@ -225,8 +220,9 @@ public class PromotionDAO {
             ps.setDouble(4, p.getMinBillAmount());
             ps.setDouble(5, p.getMaxDiscountAmount());
 
-            ps.setDate(6, (Date) p.getStartDate());
-            ps.setDate(7, (Date) p.getEndDate());
+            ps.setDate(6, new java.sql.Date(p.getStartDate().getTime()));
+
+            ps.setDate(7, new java.sql.Date(p.getEndDate().getTime()));
 
             ps.setBoolean(8, p.isActive());
 
@@ -255,8 +251,7 @@ public class PromotionDAO {
                 + "WHERE PromotionId=?";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, p.getPromotionName());
             ps.setString(2, p.getDescription());
@@ -265,8 +260,9 @@ public class PromotionDAO {
             ps.setDouble(4, p.getMinBillAmount());
             ps.setDouble(5, p.getMaxDiscountAmount());
 
-            ps.setDate(6, (Date) p.getStartDate());
-            ps.setDate(7, (Date) p.getEndDate());
+            ps.setDate(6, new java.sql.Date(p.getStartDate().getTime()));
+
+            ps.setDate(7, new java.sql.Date(p.getEndDate().getTime()));
 
             ps.setInt(8, p.getPromotionId());
 
@@ -287,8 +283,7 @@ public class PromotionDAO {
         String sql = "UPDATE Promotions SET IsActive=? WHERE PromotionId=?";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setBoolean(1, active);
             ps.setInt(2, id);
@@ -310,8 +305,7 @@ public class PromotionDAO {
         String sql = "DELETE FROM Promotions WHERE PromotionId=?";
 
         try (
-                Connection con = DBContext.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) {
+                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
@@ -323,5 +317,5 @@ public class PromotionDAO {
 
         return false;
     }
-
+    
 }

@@ -153,6 +153,31 @@ public class MainController extends HttpServlet {
                         request.setAttribute("ACTIVE_ADMIN", "cauhinh");
                         url = "AdminConfigController";
                         break;
+                
+                         // --- LUỒNG LOYALTY ENGINE (Điểm Thưởng / Đổi Thưởng / Voucher Của Tôi) ---
+                    case "customerLoyalty":
+                        url = "LoyaltyController";
+                        break;
+                    case "customerLoyaltyDashboard":
+                        request.setAttribute("ACTIVE_TAB", "diemthuong");
+                        url = "DashBoard/customer_loyalty.jsp";
+                        break;
+
+                    case "customerRewards":
+                        url = "RewardsController";
+                        break;
+                    case "customerRewardsDashboard":
+                        request.setAttribute("ACTIVE_TAB", "rewardcuatoi");
+                        url = "DashBoard/customer_rewards.jsp";
+                        break;
+
+                    case "customerVouchers":
+                        url = "VouchersController";
+                        break;
+                    case "customerVouchersDashboard":
+                        request.setAttribute("ACTIVE_TAB", "vouchercuatoi");
+                        url = "DashBoard/customer_vouchers.jsp";
+                        break;  
                 }
             }
         } catch (Exception e) {

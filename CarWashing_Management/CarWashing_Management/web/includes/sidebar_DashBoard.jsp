@@ -46,15 +46,15 @@
                 <i class="fa-solid fa-car w-5"></i> <span>Xe Của Tôi</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_loyalty.jsp" data-tab="diemthuong" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "diemthuong".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/MainController?action=customerLoyaltyDashboard" data-tab="diemthuong" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "diemthuong".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-coins w-5"></i> <span>Điểm Thưởng</span>
             </a>
 
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_vouchers.jsp" data-tab="vouchercuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "vouchercuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/MainController?action=customerRewardsDashboard" data-tab="vouchercuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "vouchercuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-wallet w-5"></i> <span>Voucher Của Tôi</span>
             </a>
                 
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp" data-tab="rewardcuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "rewardcuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
+            <a href="<%=request.getContextPath()%>/MainController?action=customerVouchersDashboard" data-tab="rewardcuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "rewardcuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-wallet w-5"></i> <span>Đổi Điểm Thưởng</span>
             </a>
         </nav>

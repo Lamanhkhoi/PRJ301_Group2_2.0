@@ -46,9 +46,7 @@
         default:         tierIcon = "fa-user";           tierLabel = "Member";
     }
 
-    // ===== Điểm sắp hết hạn trong 30 ngày (XẤP XỈ - xem giới hạn trong DAO) =====
     LoyaltyPointTransactionDAO txDAO = new LoyaltyPointTransactionDAO();
-    int expiringSoon = txDAO.getExpiringSoonPoints(accountId, 30);
 
     // ===== Filter + phân trang lấy từ query string, có giá trị mặc định an toàn =====
     String filter = request.getParameter("filter");
@@ -132,9 +130,6 @@
                         <p class="text-xs text-slate-500 mb-8 flex flex-wrap gap-x-4 gap-y-1">
                             <span><i class="fa-solid fa-circle-info text-slate-400 mr-1"></i> Điểm hết hạn sau 12 tháng kể từ ngày tích lũy</span>
                             <span><i class="fa-solid fa-rotate text-slate-400 mr-1"></i> Hạng được xét lại hàng tháng</span>
-                            <% if (expiringSoon > 0) { %>
-                            <span class="text-amber-600 font-medium"><i class="fa-solid fa-hourglass-half mr-1"></i> <%= expiringSoon %> P sắp hết hạn trong 30 ngày tới</span>
-                            <% } %>
                         </p>
 
                         <%-- ===== LỊCH SỬ ĐIỂM ===== --%>

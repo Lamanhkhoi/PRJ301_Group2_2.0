@@ -135,46 +135,4 @@ public class LoyaltyPointTransactionDAO {
         return total;
     }
  
-    /**
-     * Tính XẤP XỈ số điểm sắp hết hạn trong N ngày tới.
-     *
-     * GIỚI HẠN CẦN BIẾT: hàm này chỉ cộng PointsChange của các dòng "Earn" có
-     * ExpiresAt rơi trong khoảng [now, now+days], KHÔNG kiểm tra xem số điểm
-     * đó có còn thật sự nằm trong túi khách hay đã bị tiêu (Redeem) mất rồi.
-     * Vì bảng LoyaltyPointTransactions chỉ lưu số dư thay đổi (delta), không
-     * lưu theo từng "lô điểm" nào còn lại bao nhiêu, nên không thể tính chính
-     * xác 100% nếu không dựng thêm cơ chế trừ theo FIFO (lô cũ hết trước).
-     * Con số này chỉ mang tính CẢNH BÁO GẦN ĐÚNG cho khách, không dùng để
-     * tính toán số học chính xác ở bất kỳ đâu khác.
-     */
-    public int getExpiringSoonPoints(int accountId, int days) {
-        int total = 0;
-        Connection cn = null;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
- 
-        String sql = "SELECT ISNULL(SUM(PointsChange), 0) AS ExpiringSoon "
-                + "FROM LoyaltyPointTransactions "
-                + "WHERE AccountId = ? AND TransactionType = 'Earn' "
-                + "AND ExpiresAt IS NOT NULL "
-                + "AND ExpiresAt BETWEEN SYSDATETIME() AND DATEADD(DAY, ?, SYSDATETIME())";
- 
-        try {
-            cn = DBContext.getConnection();
-            pst = cn.prepareStatement(sql);
-            pst.setInt(1, accountId);
-            pst.setInt(2, days);
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                total = rs.getInt("ExpiringSoon");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception e) {}
-            try { if (pst != null) pst.close(); } catch (Exception e) {}
-            try { if (cn != null) cn.close(); } catch (Exception e) {}
-        }
-        return total;
-    }
 }

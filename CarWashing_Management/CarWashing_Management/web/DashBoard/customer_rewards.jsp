@@ -7,26 +7,6 @@
 <%@page import="dao.CustomerLoyaltyDAO"%>
 <%@page import="service.LoyaltyService"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%--
-    ============================================================
-    TRANG: ĐỔI THƯỞNG (Customer) - customer_rewards.jsp
-    Vào từ: nút "Xem tất cả" ở trang Ưu Đãi + nút "Đổi thưởng" trên thẻ thành viên
-    (trang này KHÔNG có mục sidebar riêng theo quyết định của nhóm)
-    Bố cục: Thanh điểm hiện có -> Lưới card reward -> Modal xác nhận đổi
-
-    ĐÃ GẮN BACKEND THẬT - không còn mock data.
-    LƯU Ý: DB thật KHÔNG có khái niệm "loại reward" (Giảm giá/Dịch vụ miễn
-    phí/Quà tặng) như bản thiết kế UI ban đầu - mọi Reward đều là voucher
-    giảm % (DiscountPercent + MinBillAmount + MaxDiscountAmount), nên đã
-    bỏ hẳn bộ lọc theo loại, thay bằng hiển thị chi tiết mức giảm ngay
-    trên card.
-
-    Xử lý đổi thưởng theo mẫu Post-Redirect-Get: submit POST lên chính
-    trang này -> gọi LoyaltyService.redeemReward() (kiểm tra + trừ điểm
-    + tạo voucher, đã test kỹ ở LoyaltyService) -> redirect lại bằng GET
-    kèm ?msg=... để tránh submit trùng khi khách bấm F5.
-    ============================================================
---%>
 <%@ include file="../includes/auth-check.jsp" %>
 <%
     request.setAttribute("ACTIVE_TAB", "uudai");
@@ -81,10 +61,7 @@
                         <%-- ===== HEADER + ĐIỂM HIỆN CÓ ===== --%>
                         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                             <div>
-                                <a href="<%=request.getContextPath()%>/DashBoard/customer_promotions.jsp" class="text-sm text-slate-400 hover:text-emerald-600 transition">
-                                    <i class="fa-solid fa-arrow-left mr-1"></i> Ưu Đãi
-                                </a>
-                                <h1 class="text-2xl font-bold text-slate-800 mt-1">Đổi Điểm Nhận Thưởng</h1>
+                                <h1 class="text-2xl font-bold text-slate-800">Đổi Điểm Nhận Thưởng</h1>
                             </div>
                             <div class="inline-flex items-center gap-2 bg-amber-100 rounded-full px-5 py-2.5 text-amber-700 font-bold shadow-sm">
                                 <i class="fa-solid fa-coins"></i> Bạn đang có <span id="pointDisplay"><%= String.format("%,d", currentPoints) %></span> P

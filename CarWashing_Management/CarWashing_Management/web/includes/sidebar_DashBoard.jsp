@@ -46,17 +46,6 @@
                 <i class="fa-solid fa-car w-5"></i> <span>Xe Của Tôi</span>
             </a>
 
-            <%-- TODO BACKEND: đổi href sang MainController?action=... khi có Controller --%>
-            <a href="<%=request.getContextPath()%>/DashBoard/customer_promotions.jsp" data-tab="uudai" class="sidebar-item flex items-center justify-between px-4 py-3 rounded-lg transition-colors <%= "uudai".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-ticket w-5"></i> <span>Ưu Đãi</span>
-                </div>
-                <% if (promoCount != null && promoCount > 0) {%>
-                <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm"><%= promoCount%></span>
-                <% }%>
-            </a>
-
-            <%-- ===== 2 MỤC MỚI (Loyalty Assignment). Trang Đổi Thưởng KHÔNG có mục riêng, vào từ nút "Xem tất cả" / "Đổi thưởng" ===== --%>
             <a href="<%=request.getContextPath()%>/DashBoard/customer_loyalty.jsp" data-tab="diemthuong" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "diemthuong".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
                 <i class="fa-solid fa-coins w-5"></i> <span>Điểm Thưởng</span>
             </a>
@@ -66,7 +55,7 @@
             </a>
                 
             <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp" data-tab="rewardcuatoi" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg transition-colors <%= "rewardcuatoi".equals(activeTab) ? "bg-emerald-500 text-white font-semibold" : "text-slate-300 hover:bg-slate-700"%>">
-                <i class="fa-solid fa-wallet w-5"></i> <span>Reward Của Tôi</span>
+                <i class="fa-solid fa-wallet w-5"></i> <span>Đổi Điểm Thưởng</span>
             </a>
         </nav>
     </div>

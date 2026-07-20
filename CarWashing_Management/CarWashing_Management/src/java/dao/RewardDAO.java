@@ -220,8 +220,7 @@ public class RewardDAO {
      * Dành RIÊNG cho catalog đổi thưởng của khách hàng (customer_rewards.jsp).
      * KHÁC getAllRewards() ở chỗ chỉ lấy IsActive = 1 - để ẩn khỏi mắt khách
      * những reward đang tắt, và đặc biệt là các reward hệ thống tự cấp khi đền
-     * bù hủy lịch (LoyaltyService.handleBookingCancelled tạo với IsActive=0,
-     * PointsRequired=0 - khách KHÔNG được thấy để tự đổi những dòng này). Sắp
+     * bù hủy lịch. Sắp
      * theo điểm cần thấp -> cao cho dễ nhìn.
      */
     public List<Reward> getActiveRewards() {

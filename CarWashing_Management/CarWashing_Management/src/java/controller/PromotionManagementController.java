@@ -5,6 +5,8 @@ import dto.Promotion;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -47,6 +49,18 @@ public class PromotionManagementController extends HttpServlet {
             //========================
             if (action.equals("create")) {
 
+                String startDateStr = request.getParameter("startDate");
+                String endDateStr = request.getParameter("endDate");
+
+                if (startDateStr != null && startDateStr.equals(endDateStr)) {
+                    request.getSession().setAttribute("PROMO_ERROR",
+                            "Không thể tạo khuyến mãi có thời hạn chỉ trong 1 ngày! Vui lòng chọn Từ ngày và Đến ngày khác nhau.");
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/MainController?action=promotionManagement");
+                    return;
+                }
+
                 Promotion p = new Promotion();
 
                 p.setPromotionName(request.getParameter("promotionName"));
@@ -61,13 +75,25 @@ public class PromotionManagementController extends HttpServlet {
                 p.setMaxDiscountAmount(
                         Double.parseDouble(request.getParameter("maxDiscountAmount")));
 
-                p.setStartDate(
-                        Timestamp.valueOf(
-                                request.getParameter("startDate") + " 00:00:00"));
+                try {
+                    java.util.Date parsed
+                            = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                    .parse(request.getParameter("startDate") + " 00:00:00");
 
-                p.setEndDate(
-                        Timestamp.valueOf(
-                                request.getParameter("endDate") + " 23:59:59"));
+                    p.setStartDate(new java.sql.Date(parsed.getTime()));
+                } catch (ParseException e) {
+                    throw new RuntimeException("Invalid startDate: " + request.getParameter("startDate"), e);
+                }
+
+                try {
+                    java.util.Date parsed
+                            = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                    .parse(request.getParameter("endDate") + " 23:59:59");
+
+                    p.setEndDate(new java.sql.Date(parsed.getTime()));
+                } catch (ParseException e) {
+                    throw new RuntimeException("Invalid endDate: " + request.getParameter("endDate"), e);
+                }
 
                 p.setActive(true);
 
@@ -84,6 +110,18 @@ public class PromotionManagementController extends HttpServlet {
             // UPDATE
             //========================
             if (action.equals("update")) {
+
+                String startDateStr = request.getParameter("startDate");
+                String endDateStr = request.getParameter("endDate");
+
+                if (startDateStr != null && startDateStr.equals(endDateStr)) {
+                    request.getSession().setAttribute("PROMO_ERROR",
+                            "Không thể cập nhật khuyến mãi có thời hạn chỉ trong 1 ngày!");
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/MainController?action=promotionManagement");
+                    return;
+                }
 
                 Promotion p = new Promotion();
 

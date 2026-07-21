@@ -170,15 +170,6 @@
 
                                             </button>
 
-                                            <!-- Delete -->
-                                            <button
-                                                onclick="openDeleteModal(<%=r.getRewardId()%>, '<%=r.getRewardName()%>')"
-                                                class="w-9 h-9 rounded-lg text-red-600 hover:bg-red-50">
-
-                                                <i class="fa-solid fa-trash"></i>
-
-                                            </button>
-
                                         </td>
 
                                     </tr>
@@ -341,22 +332,22 @@
                     minBill,
                     maxDiscount,
                     rewardId) {
-                if (rewardId === null) {
-                    document.getElementById("rewardId").value = "";
-                }
-                const isEdit = rewardId !== null;
+
+                const isEdit = rewardId !== null; // bắt cả null và undefined
+
                 if (!isEdit) {
-                    document.querySelector("#rewardModal form").reset();}
+                    document.querySelector("#rewardModal form").reset();
+                }
+
                 document.getElementById('rewardModalTitle').textContent = isEdit ? 'Sửa reward' : 'Tạo reward mới';
                 document.getElementById('rName').value = isEdit ? name : '';
                 document.getElementById('rDesc').value = isEdit ? desc : '';
-//                document.getElementById('rType').value = isEdit ? type : 'DISCOUNT';
                 document.getElementById("rMinBill").value = isEdit ? minBill : "";
                 document.getElementById("rMaxDiscount").value = isEdit ? maxDiscount : "";
                 document.getElementById('rPoints').value = isEdit ? points : '';
                 document.getElementById('rDiscount').value = isEdit ? discount : '';
-                document.getElementById("rewardId").value =
-                        rewardId === null ? "" : rewardId;
+                document.getElementById("rewardId").value = isEdit ? rewardId : "";
+
                 toggleDiscountField();
                 rModal.classList.remove('hidden');
                 setTimeout(() => {
@@ -372,34 +363,6 @@
             rModal.addEventListener('click', e => {
                 if (e.target === rModal)
                     closeRewardModal();
-            });
-            // ===== Modal Xóa =====
-            const dModal = document.getElementById('deleteModal');
-            const dContent = document.getElementById('deleteModalContent');
-            let deleteId = 0;
-            function openDeleteModal(id, name) {
-
-                deleteId = id;
-                document.getElementById("delName").innerHTML = name;
-                dModal.classList.remove("hidden");
-                setTimeout(() => {
-                    dModal.classList.remove("opacity-0");
-                    dContent.classList.replace("scale-95", "scale-100");
-                }, 10);
-            }
-            function deleteReward() {
-
-                location.href =
-                        "RewardManagementController?action=delete&rewardId=" + deleteId;
-            }
-            function closeDeleteModal() {
-                dModal.classList.add('opacity-0');
-                dContent.classList.replace('scale-100', 'scale-95');
-                setTimeout(() => dModal.classList.add('hidden'), 300);
-            }
-            dModal.addEventListener('click', e => {
-                if (e.target === dModal)
-                    closeDeleteModal();
             });
         </script>
     </body>

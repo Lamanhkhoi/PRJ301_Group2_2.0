@@ -26,39 +26,52 @@ import java.time.LocalDateTime;
 public class LoyaltyService {
 
     /**
-     * Gọi khi Payments.IsPaid chuyển thành 1 (thanh toán thành công) - do Người 1 gọi
-     * ngay trong transaction tạo Booking + Payment lúc processPayment.
+     * Gọi khi Payments.IsPaid chuyển thành 1 (thanh toán thành công) - do Người
+     * 1 gọi ngay trong transaction tạo Booking + Payment lúc processPayment.
      *
-     * Điểm tính trên FinalAmount (giá SAU khi trừ voucher/khuyến mãi), không phải
-     * TotalAmount gốc. Nhờ vậy nếu khách dùng voucher đền bù che 100% (FinalAmount = 0)
-     * thì totalPoints tự động ra 0 - đúng nguyên tắc "có trả tiền mới có điểm",
-     * không cần viết if riêng cho trường hợp đó.
+     * Điểm tính trên FinalAmount (giá SAU khi trừ voucher/khuyến mãi), không
+     * phải TotalAmount gốc. Nhờ vậy nếu khách dùng voucher đền bù che 100%
+     * (FinalAmount = 0) thì totalPoints tự động ra 0 - đúng nguyên tắc "có trả
+     * tiền mới có điểm", không cần viết if riêng cho trường hợp đó.
      *
-     * @param accountId     chủ tài khoản (CustomerLoyalty/LoyaltyPointTransactions dùng AccountId)
-     * @param bookingId     booking vừa thanh toán xong
-     * @param finalAmount   Payments.FinalAmount của booking đó
-     * @param bonusPointRate  bonus theo hạng hiện tại của khách (LoyaltyTiers.BonusPointRate,
-     *                        vd 0.10 cho hạng Bạc) - bên gọi tự JOIN CustomerLoyalty + LoyaltyTiers
-     *                        rồi truyền vào, hàm này không tự tra hạng để giữ trách nhiệm rõ ràng.
-     * @return true nếu xử lý thành công (kể cả trường hợp 0 điểm, vẫn coi là thành công)
+     * @param accountId chủ tài khoản (CustomerLoyalty/LoyaltyPointTransactions
+     * dùng AccountId)
+     * @param bookingId booking vừa thanh toán xong
+     * @param finalAmount Payments.FinalAmount của booking đó
+     * @param bonusPointRate bonus theo hạng hiện tại của khách
+     * (LoyaltyTiers.BonusPointRate, vd 0.10 cho hạng Bạc) - bên gọi tự JOIN
+     * CustomerLoyalty + LoyaltyTiers rồi truyền vào, hàm này không tự tra hạng
+     * để giữ trách nhiệm rõ ràng.
+     * @return true nếu xử lý thành công (kể cả trường hợp 0 điểm, vẫn coi là
+     * thành công)
      */
     public boolean earnPoints(int accountId, int bookingId, double finalAmount, double bonusPointRate) {
         Connection cn = null;
         PreparedStatement pstEarn = null;
+        PreparedStatement pstRate = null;
         PreparedStatement pstUpdateLoyalty = null;
-
-        // BasePointRate mặc định 1 điểm = 1.000đ (khớp DF_LoyaltyTiers_BasePointRate = 0.001)
-        int basePoints = (int) (finalAmount / 1000);
-        int bonusPoints = (int) (basePoints * bonusPointRate);
-        int totalPoints = basePoints + bonusPoints;
-
-        if (totalPoints <= 0) {
-            return true; // Không có gì để cộng (vd FinalAmount = 0) - không phải lỗi
-        }
+        ResultSet rsRate = null;
 
         try {
             cn = DBContext.getConnection();
             cn.setAutoCommit(false);
+
+            // BasePointRate mặc định 1 điểm = 1.000đ (khớp DF_LoyaltyTiers_BasePointRate = 0.001)
+            double basePointRate = 0.001;
+            String sqlRate = "SELECT TOP 1 BasePointRate FROM dbo.LoyaltyTiers";
+            pstRate = cn.prepareStatement(sqlRate);
+            rsRate = pstRate.executeQuery();
+            if(rsRate.next()){
+                basePointRate = rsRate.getDouble("basePointRate");
+            }
+            
+            int basePoints = (int) (finalAmount / basePointRate);
+            int bonusPoints = (int) (basePoints * bonusPointRate);
+            int totalPoints = basePoints + bonusPoints;
+
+            if (totalPoints <= 0) {
+                return true; // Không có gì để cộng (vd FinalAmount = 0) - không phải lỗi
+            }
 
             // Ghi sổ cái lịch sử điểm - hết hạn sau 12 tháng kể từ ngày earn
             String sqlEarn = "INSERT INTO LoyaltyPointTransactions "
@@ -100,20 +113,33 @@ public class LoyaltyService {
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                if (cn != null) cn.rollback();
+                if (cn != null) {
+                    cn.rollback();
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             return false;
         } finally {
-            try { if (pstEarn != null) pstEarn.close(); } catch (Exception e) {}
-            try { if (pstUpdateLoyalty != null) pstUpdateLoyalty.close(); } catch (Exception e) {}
+            try {
+                if (pstEarn != null) {
+                    pstEarn.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstUpdateLoyalty != null) {
+                    pstUpdateLoyalty.close();
+                }
+            } catch (Exception e) {
+            }
             try {
                 if (cn != null) {
                     cn.setAutoCommit(true);
                     cn.close();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -122,17 +148,20 @@ public class LoyaltyService {
      * ở customer_rewards.jsp. KHÁC handleBookingCancelled() (hệ thống tự cấp,
      * không tốn điểm thật) - hàm này TRỪ ĐIỂM THẬT của khách.
      *
-     * Luồng transaction (lỗi bước nào rollback hết):
-     *   1. Đọc lại Reward + CurrentPoints TRỰC TIẾP TỪ DB để kiểm tra (không tin
-     *      số điểm/trạng thái phía client gửi lên - client có thể bị sửa hoặc cũ).
-     *   2. Cấp voucher trước (INSERT RewardRedemptions, lấy RedemptionId vừa tạo).
-     *   3. Trừ điểm + ghi sổ cái 'Redeem' (gắn kèm RedemptionId ở bước 2 để
-     *      audit trail nối được voucher với đúng giao dịch trừ điểm nào).
+     * Luồng transaction (lỗi bước nào rollback hết): 1. Đọc lại Reward +
+     * CurrentPoints TRỰC TIẾP TỪ DB để kiểm tra (không tin số điểm/trạng thái
+     * phía client gửi lên - client có thể bị sửa hoặc cũ). 2. Cấp voucher trước
+     * (INSERT RewardRedemptions, lấy RedemptionId vừa tạo). 3. Trừ điểm + ghi
+     * sổ cái 'Redeem' (gắn kèm RedemptionId ở bước 2 để audit trail nối được
+     * voucher với đúng giao dịch trừ điểm nào).
      *
-     * @param accountId  dùng để trừ điểm (CustomerLoyalty/LoyaltyPointTransactions khóa theo AccountId)
-     * @param customerId dùng để gắn chủ sở hữu voucher (RewardRedemptions khóa theo CustomerId - KHÁC accountId)
-     * @param rewardId   reward khách muốn đổi
-     * @return "OK" nếu thành công, hoặc thông báo lỗi cụ thể để hiển thị cho khách
+     * @param accountId dùng để trừ điểm
+     * (CustomerLoyalty/LoyaltyPointTransactions khóa theo AccountId)
+     * @param customerId dùng để gắn chủ sở hữu voucher (RewardRedemptions khóa
+     * theo CustomerId - KHÁC accountId)
+     * @param rewardId reward khách muốn đổi
+     * @return "OK" nếu thành công, hoặc thông báo lỗi cụ thể để hiển thị cho
+     * khách
      */
     public String redeemReward(int accountId, int customerId, int rewardId) {
         Connection cn = null;
@@ -178,7 +207,7 @@ public class LoyaltyService {
             // ===== BƯỚC 2: Cấp voucher trước, lấy RedemptionId vừa sinh =====
             pstInsertRedemption = cn.prepareStatement(
                     "INSERT INTO RewardRedemptions (CustomerId, RewardId, PointsUsed, Status) "
-                            + "VALUES (?, ?, ?, N'Available')",
+                    + "VALUES (?, ?, ?, N'Available')",
                     Statement.RETURN_GENERATED_KEYS);
             pstInsertRedemption.setInt(1, customerId);
             pstInsertRedemption.setInt(2, rewardId);
@@ -197,8 +226,8 @@ public class LoyaltyService {
             // ===== BƯỚC 3: Trừ điểm + ghi sổ cái (gắn RedemptionId để audit trail đầy đủ) =====
             pstDeduct = cn.prepareStatement(
                     "UPDATE CustomerLoyalty SET CurrentPoints = CurrentPoints - ?, "
-                            + "LifetimeRedeemedPoints = LifetimeRedeemedPoints + ?, UpdatedAt = SYSDATETIME() "
-                            + "WHERE AccountId = ?");
+                    + "LifetimeRedeemedPoints = LifetimeRedeemedPoints + ?, UpdatedAt = SYSDATETIME() "
+                    + "WHERE AccountId = ?");
             pstDeduct.setInt(1, pointsRequired);
             pstDeduct.setInt(2, pointsRequired);
             pstDeduct.setInt(3, accountId);
@@ -209,7 +238,7 @@ public class LoyaltyService {
 
             pstLog = cn.prepareStatement(
                     "INSERT INTO LoyaltyPointTransactions (AccountId, RedemptionId, PointsChange, TransactionType, Description) "
-                            + "VALUES (?, ?, ?, N'Redeem', ?)");
+                    + "VALUES (?, ?, ?, N'Redeem', ?)");
             pstLog.setInt(1, accountId);
             pstLog.setInt(2, newRedemptionId);
             pstLog.setInt(3, -pointsRequired);
@@ -222,42 +251,84 @@ public class LoyaltyService {
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                if (cn != null) cn.rollback();
+                if (cn != null) {
+                    cn.rollback();
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             return "Có lỗi hệ thống, vui lòng thử lại";
         } finally {
-            try { if (rsReward != null) rsReward.close(); } catch (Exception e) {}
-            try { if (rsPoints != null) rsPoints.close(); } catch (Exception e) {}
-            try { if (rsGeneratedKey != null) rsGeneratedKey.close(); } catch (Exception e) {}
-            try { if (pstCheckReward != null) pstCheckReward.close(); } catch (Exception e) {}
-            try { if (pstCheckPoints != null) pstCheckPoints.close(); } catch (Exception e) {}
-            try { if (pstInsertRedemption != null) pstInsertRedemption.close(); } catch (Exception e) {}
-            try { if (pstDeduct != null) pstDeduct.close(); } catch (Exception e) {}
-            try { if (pstLog != null) pstLog.close(); } catch (Exception e) {}
+            try {
+                if (rsReward != null) {
+                    rsReward.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (rsPoints != null) {
+                    rsPoints.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (rsGeneratedKey != null) {
+                    rsGeneratedKey.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstCheckReward != null) {
+                    pstCheckReward.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstCheckPoints != null) {
+                    pstCheckPoints.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstInsertRedemption != null) {
+                    pstInsertRedemption.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstDeduct != null) {
+                    pstDeduct.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (pstLog != null) {
+                    pstLog.close();
+                }
+            } catch (Exception e) {
+            }
             try {
                 if (cn != null) {
                     cn.setAutoCommit(true);
                     cn.close();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
     /**
      * Chạy ĐỊNH KỲ (batch - vd cron hàng đêm/hàng tháng, KHÔNG chạy real-time
-     * ngay sau mỗi booking - theo đúng quyết định của nhóm) để xét lại hạng
-     * cho TẤT CẢ khách hàng cùng lúc, cả lên hạng lẫn xuống hạng.
+     * ngay sau mỗi booking - theo đúng quyết định của nhóm) để xét lại hạng cho
+     * TẤT CẢ khách hàng cùng lúc, cả lên hạng lẫn xuống hạng.
      *
      * KHÔNG dùng CustomerLoyalty.TotalWashCount/TotalSpent để xét hạng - 2 cột
      * này đang cộng dồn CẢ ĐỜI và hiện KHÔNG có bất kỳ đoạn code nào cập nhật
      * chúng (có thể là cột chưa hoàn thiện từ thiết kế ban đầu - nhãn UI ghi
-     * "Trong Năm" nhưng tên cột lại nghe như cả đời, đang mâu thuẫn - cần
-     * người phụ trách Dashboard xác nhận lại). Hàm này tính lại TRỰC TIẾP từ
-     * Bookings + Payments trong đúng N tháng gần nhất mỗi lần chạy, để việc
-     * xuống hạng phản ánh đúng hoạt động GẦN ĐÂY như đã chốt, không phụ
-     * thuộc 2 cột đó.
+     * "Trong Năm" nhưng tên cột lại nghe như cả đời, đang mâu thuẫn - cần người
+     * phụ trách Dashboard xác nhận lại). Hàm này tính lại TRỰC TIẾP từ Bookings
+     * + Payments trong đúng N tháng gần nhất mỗi lần chạy, để việc xuống hạng
+     * phản ánh đúng hoạt động GẦN ĐÂY như đã chốt, không phụ thuộc 2 cột đó.
      *
      * Chỉ tính booking đã BookingStatus='Completed' VÀ đã thanh toán
      * (Payments.IsPaid=1). Lọc theo cửa sổ thời gian dùng CompletedAt (thời
@@ -275,9 +346,10 @@ public class LoyaltyService {
      * bằng OUTPUT INTO - để Admin tra cứu lại được CHÍNH XÁC ai đổi hạng, từ
      * đâu sang đâu, lúc nào (không chỉ biết tổng số người đổi hạng).
      *
-     * @param windowMonths số tháng nhìn lại (khuyến nghị 12, khớp hạn dùng điểm)
-     * @return số tài khoản có hạng bị thay đổi trong lần chạy này,
-     *         hoặc -1 nếu có lỗi khi chạy (phân biệt với 0 = chạy ổn nhưng không ai đổi hạng)
+     * @param windowMonths số tháng nhìn lại (khuyến nghị 12, khớp hạn dùng
+     * điểm)
+     * @return số tài khoản có hạng bị thay đổi trong lần chạy này, hoặc -1 nếu
+     * có lỗi khi chạy (phân biệt với 0 = chạy ổn nhưng không ai đổi hạng)
      */
     public int recalculateAllTiers(int windowMonths) {
         Connection cn = null;
@@ -328,8 +400,18 @@ public class LoyaltyService {
             e.printStackTrace();
             return -1;
         } finally {
-            try { if (pst != null) pst.close(); } catch (Exception e) {}
-            try { if (cn != null) cn.close(); } catch (Exception e) {}
+            try {
+                if (pst != null) {
+                    pst.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (cn != null) {
+                    cn.close();
+                }
+            } catch (Exception e) {
+            }
         }
     }
 }

@@ -9,17 +9,17 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ include file="../includes/auth-check.jsp" %>
 <%
-    request.setAttribute("ACTIVE_TAB", "uudai");
+    request.setAttribute("ACTIVE_TAB", "rewardcuatoi");
 
     int accountId = userAcc.getAccountID();
     int customerId = cus.getCustomerId();
 
     // ===== XỬ LÝ ĐỔI THƯỞNG THẬT - phải nằm TRƯỚC mọi output HTML vì có sendRedirect =====
-    if ("POST".equalsIgnoreCase(request.getMethod()) && "redeem".equals(request.getParameter("action"))) {
+    if ("POST".equalsIgnoreCase(request.getMethod()) && "redeem".equals(request.getParameter("doAction"))) {
         int rewardId = Integer.parseInt(request.getParameter("rewardId"));
         LoyaltyService loyaltyService = new LoyaltyService();
         String result = loyaltyService.redeemReward(accountId, customerId, rewardId);
-        response.sendRedirect("customer_rewards.jsp?msg=" + URLEncoder.encode(result, "UTF-8"));
+        response.sendRedirect(request.getContextPath() + "/MainController?action=customerRewardsDashboard&msg=" + URLEncoder.encode(result, "UTF-8"));
         return;
     }
 
@@ -136,8 +136,8 @@
             <%-- ===== MODAL XÁC NHẬN ĐỔI THƯỞNG - form POST THẬT, không còn JS giả lập ===== --%>
             <div id="redeemModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0">
                 <div id="redeemContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
-                    <form method="post" action="customer_rewards.jsp">
-                        <input type="hidden" name="action" value="redeem">
+                    <form method="post" action="<%=request.getContextPath()%>/MainController?action=customerRewardsDashboard">
+                        <input type="hidden" name="doAction" value="redeem">
                         <input type="hidden" name="rewardId" id="rdRewardId" value="">
 
                         <div class="p-8 text-center">

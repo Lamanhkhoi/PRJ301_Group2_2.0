@@ -109,7 +109,7 @@ public class LoyaltyDAO extends DBContext {
 
         try (
                  Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
+            rate = rate/1000;   // khoi: sửa logic quy đổi điểm
             ps.setDouble(1, rate);
 
             return ps.executeUpdate() > 0;
@@ -133,7 +133,7 @@ public class LoyaltyDAO extends DBContext {
                  Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql);  ResultSet rs = ps.executeQuery()) {
 
             if (rs.next()) {
-                return rs.getDouble("BasePointRate");
+                return rs.getDouble("BasePointRate") * 1000;    // khoi: sửa logic quy đổi điểm
             }
 
         } catch (Exception e) {

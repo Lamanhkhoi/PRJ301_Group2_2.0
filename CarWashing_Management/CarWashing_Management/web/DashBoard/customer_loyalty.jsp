@@ -128,7 +128,7 @@
                         </div>
 
                         <p class="text-xs text-slate-500 mb-8 flex flex-wrap gap-x-4 gap-y-1">
-                            <span><i class="fa-solid fa-circle-info text-slate-400 mr-1"></i> Điểm hết hạn sau 12 tháng kể từ ngày tích lũy</span>
+                            
                             <span><i class="fa-solid fa-rotate text-slate-400 mr-1"></i> Hạng được xét lại hàng tháng</span>
                         </p>
 
@@ -136,20 +136,6 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
                                 <h3 class="text-lg font-bold text-slate-800">Lịch sử điểm</h3>
-                                <div class="flex gap-2" id="historyFilter">
-                                    <%
-                                        // 4 chip filter -> map value thật khớp CHECK constraint DB ("Earn"/"Redeem"/"Expire")
-                                        String[][] filters = {{"ALL", "Tất cả"}, {"Earn", "Cộng điểm"}, {"Redeem", "Trừ điểm"}, {"Expire", "Hết hạn"}};
-                                        for (String[] f : filters) {
-                                            boolean active = filter.equals(f[0]);
-                                            String cls = active
-                                                    ? "bg-emerald-500 text-white"
-                                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200";
-                                    %>
-                                    <a href="customer_loyalty.jsp?filter=<%= f[0] %>&page=1"
-                                       class="px-4 py-1.5 rounded-full text-xs font-semibold transition <%= cls %>"><%= f[1] %></a>
-                                    <% } %>
-                                </div>
                             </div>
 
                             <table class="w-full text-left border-collapse">
@@ -171,7 +157,7 @@
                                     <% } %>
                                     <% for (LoyaltyPointTransaction t : pointHistory) {
                                         int delta = t.getPointsChange();
-                                        String type = t.getTransactionType(); // "Earn" / "Redeem" / "Expire" / "AdminAdjust"
+                                        String type = t.getTransactionType(); // "Earn" / "Redeem" 
                                         boolean isExpire = "Expire".equals(type);
                                         String deltaClass = isExpire ? "text-slate-400" : (delta > 0 ? "text-emerald-600" : "text-red-500");
                                         String iconClass = isExpire ? "fa-hourglass-end text-slate-300" : (delta > 0 ? "fa-circle-plus text-emerald-400" : "fa-circle-minus text-red-400");
@@ -191,7 +177,7 @@
                             <%-- Phân trang thật - điều hướng qua query string, giữ nguyên filter đang chọn --%>
                             <div class="px-6 py-4 flex items-center justify-end gap-1.5 text-sm">
                                 <% if (pageNum > 1) { %>
-                                <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= pageNum - 1 %>"
+                                <a href="${pageContext.request.contextPath}/MainController?action=customerLoyaltyDashboard&<%= filter %>&page=<%= pageNum - 1 %>"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-left text-xs"></i></a>
                                 <% } else { %>
                                 <span class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300"><i class="fa-solid fa-chevron-left text-xs"></i></span>
@@ -201,13 +187,13 @@
                                     <% if (p == pageNum) { %>
                                     <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold"><%= p %></span>
                                     <% } else { %>
-                                    <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= p %>"
+                                    <a href="${pageContext.request.contextPath}/MainController?action=customerLoyaltyDashboard&filter=<%= filter %>&page=<%= p %>"
                                        class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><%= p %></a>
                                     <% } %>
                                 <% } %>
 
                                 <% if (pageNum < totalPages) { %>
-                                <a href="customer_loyalty.jsp?filter=<%= filter %>&page=<%= pageNum + 1 %>"
+                                <a href="${pageContext.request.contextPath}/MainController?action=customerLoyaltyDashboard&<%= filter %>&page=<%= pageNum + 1 %>"
                                    class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chevron-right text-xs"></i></a>
                                 <% } else { %>
                                 <span class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300"><i class="fa-solid fa-chevron-right text-xs"></i></span>

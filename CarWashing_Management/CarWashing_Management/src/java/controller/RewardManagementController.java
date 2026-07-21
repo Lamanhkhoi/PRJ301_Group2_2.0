@@ -23,6 +23,8 @@ public class RewardManagementController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
+
         RewardDAO dao = new RewardDAO();
 
         String action = request.getParameter("action");
@@ -86,6 +88,9 @@ public class RewardManagementController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
         try {
             RewardDAO dao = new RewardDAO();
             System.out.println("===== DO POST =====");
@@ -132,7 +137,9 @@ public class RewardManagementController extends HttpServlet {
             }
             String rewardIdStr = request.getParameter("rewardId");
             Reward reward = new Reward();
-            if (rewardIdStr != null && !rewardIdStr.isEmpty()) {
+            if (rewardIdStr != null && !rewardIdStr.trim().isEmpty()
+                    && !rewardIdStr.equalsIgnoreCase("undefined")
+                    && !rewardIdStr.equalsIgnoreCase("null")) {
                 reward.setRewardId(Integer.parseInt(rewardIdStr));
             }
             reward.setRewardName(rewardName);

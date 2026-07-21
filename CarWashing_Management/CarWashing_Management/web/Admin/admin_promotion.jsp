@@ -34,6 +34,10 @@
     if (promos == null) {
         promos = new ArrayList<>();
     }
+    String promoError = (String) session.getAttribute("PROMO_ERROR");
+    if (promoError != null) {
+        session.removeAttribute("PROMO_ERROR");
+    }
 
     java.text.SimpleDateFormat sdf
             = new java.text.SimpleDateFormat("yyyy-MM-dd");
@@ -202,15 +206,6 @@
                                                 title="Sửa">
 
                                                 <i class="fa-solid fa-pen-to-square"></i>
-
-                                            </button>
-
-                                            <button
-                                                onclick="openDeleteModal('<%=name%>',<%=p.getPromotionId()%>)"
-                                                class="w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 transition"
-                                                title="Xóa">
-
-                                                <i class="fa-solid fa-trash-can"></i>
 
                                             </button>
 
@@ -596,32 +591,19 @@
                 }
 
             });
-
-            // ===== Modal Xóa =====
-            const dModal = document.getElementById('deleteModal');
-            const dContent = document.getElementById('deleteModalContent');
-            let deletePromotionId = 0;
-
-            function openDeleteModal(name, id) {
-
-                deletePromotionId = id;
-                document.getElementById('delName').textContent = name;
-                document.getElementById("deletePromotionId").value = id;
-                dModal.classList.remove('hidden');
-                setTimeout(() => {
-                    dModal.classList.remove('opacity-0');
-                    dContent.classList.replace('scale-95', 'scale-100');
-                }, 10);
-            }
-            function closeDeleteModal() {
-                dModal.classList.add('opacity-0');
-                dContent.classList.replace('scale-100', 'scale-95');
-                setTimeout(() => dModal.classList.add('hidden'), 300);
-            }
-            dModal.addEventListener('click', e => {
-                if (e.target === dModal)
-                    closeDeleteModal();
+            document.querySelector('#promoModal form').addEventListener('submit', function (e) {
+                const start = document.getElementById('fStart').value;
+                const end = document.getElementById('fEnd').value;
+                if (start && end && start === end) {
+                    e.preventDefault();
+                    alert('Không thể tạo khuyến mãi có thời hạn chỉ trong 1 ngày! Vui lòng chọn "Từ ngày" và "Đến ngày" khác nhau.');
+                }
             });
+            <% if (promoError != null) {%>
+            window.addEventListener('DOMContentLoaded', function () {
+                alert('<%= promoError.replace("'", "\\'")%>');
+            });
+            <% }%>
         </script>
     </body>
 </html>

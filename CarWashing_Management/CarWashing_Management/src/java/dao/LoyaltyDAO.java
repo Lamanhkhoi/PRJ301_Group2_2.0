@@ -109,7 +109,6 @@ public class LoyaltyDAO extends DBContext {
 
         try (
                  Connection con = getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
             ps.setDouble(1, rate);
 
             return ps.executeUpdate() > 0;

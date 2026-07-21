@@ -1,8 +1,14 @@
 package controller;
 
 import dao.BookingDAO;
+import dao.CustomerLoyaltyDAO;
+import dao.LoyaltyDAO;
 import dto.Account;
 import dto.Booking;
+import dto.Customer;
+import dto.CustomerLoyalty;
+import dto.LoyaltyTier;
+import service.LoyaltyService;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -58,6 +64,16 @@ public class FinalizeBookingController extends HttpServlet {
                     account.getAccountID(), draft, pointsUsed, currentRewardId, voucherDiscount, currentPromotionId, promotionDiscount, finalPrice, sessionMemo);
 
             if (isTransactionSuccess) {
+                // khoi
+                LoyaltyService LS = new LoyaltyService();
+                int accountId = account.getAccountID();
+                Customer cus = (Customer) request.getSession().getAttribute("CUSTOMER");
+                int bookingId = bookingDAO.getLastBookingIdByCustomerId(cus.getCustomerId());
+                CustomerLoyaltyDAO loyaltyDAO = new CustomerLoyaltyDAO();
+                CustomerLoyalty loyalty = loyaltyDAO.getLoyaltyProfileByAccountId(account.getAccountID());
+                LoyaltyTier curentTier = loyalty.getCurrentTierDetails();
+                boolean EP = LS.earnPoints(accountId, bookingId, finalPrice, curentTier.getBonusPointRate());
+                // end khoi
                 session.removeAttribute("BOOKING_DRAFT");
                 session.removeAttribute("BOOKING_TIME_TEXT");
                 session.removeAttribute("PAYMENT_MEMO");

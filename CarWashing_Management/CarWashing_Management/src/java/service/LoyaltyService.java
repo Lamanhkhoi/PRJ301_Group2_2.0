@@ -57,7 +57,7 @@ public class LoyaltyService {
             cn.setAutoCommit(false);
 
             // BasePointRate mặc định 1 điểm = 1.000đ (khớp DF_LoyaltyTiers_BasePointRate = 0.001)
-            double basePointRate = 0.001;
+            double basePointRate = 1;
             String sqlRate = "SELECT TOP 1 BasePointRate FROM dbo.LoyaltyTiers";
             pstRate = cn.prepareStatement(sqlRate);
             rsRate = pstRate.executeQuery();
@@ -65,7 +65,7 @@ public class LoyaltyService {
                 basePointRate = rsRate.getDouble("basePointRate");
             }
             
-            int basePoints = (int) (finalAmount / basePointRate);
+            int basePoints = (int) (finalAmount / basePointRate );
             int bonusPoints = (int) (basePoints * bonusPointRate);
             int totalPoints = basePoints + bonusPoints;
 
@@ -74,9 +74,9 @@ public class LoyaltyService {
             }
 
             // Ghi sổ cái lịch sử điểm - hết hạn sau 12 tháng kể từ ngày earn
-            String sqlEarn = "INSERT INTO LoyaltyPointTransactions "
-                    + "(AccountId, BookingId, PointsChange, TransactionType, ExpiresAt, Description) "
-                    + "VALUES (?, ?, ?, N'Earn', DATEADD(MONTH, 12, SYSDATETIME()), ?)";
+            String sqlEarn = "INSERT INTO LoyaltyPointTransactions (AccountId, BookingId, RedemptionId, "
+                + "PointsChange, TransactionType, ExpiresAt, Description, CreatedAt) "
+                + "VALUES (?, ?, NULL, ?, 'Earn', NULL, ?, GETDATE())";
             pstEarn = cn.prepareStatement(sqlEarn);
             pstEarn.setInt(1, accountId);
             pstEarn.setInt(2, bookingId);

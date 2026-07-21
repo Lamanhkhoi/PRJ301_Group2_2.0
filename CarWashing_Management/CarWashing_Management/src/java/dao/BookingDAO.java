@@ -2,6 +2,8 @@ package dao;
 
 import dbutils.DBContext;
 import dto.Booking;
+import dto.CustomerLoyalty;
+import dto.LoyaltyTier;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import service.LoyaltyService;
 
 public class BookingDAO {
 
@@ -942,4 +945,30 @@ public class BookingDAO {
         }
         return false;
     }
+    
+    // khoi
+    public int getLastBookingIdByCustomerId(int customerId) {
+        int bookingId = -1;
+        String sql = "SELECT TOP (1) BookingId "
+                + "FROM Bookings "
+                + "WHERE CustomerId = ? "
+                + "ORDER BY BookingId DESC";
+
+        try ( Connection conn = new DBContext().getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, customerId);
+
+            try ( ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    bookingId = rs.getInt("BookingId");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return bookingId;
+    }
 }
+

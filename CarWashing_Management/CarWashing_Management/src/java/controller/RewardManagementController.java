@@ -30,19 +30,6 @@ public class RewardManagementController extends HttpServlet {
         String action = request.getParameter("action");
 
         /* ==========================
-       XÓA MỀM
-    ===========================*/
-        if ("delete".equals(action)) {
-
-            int rewardId = Integer.parseInt(request.getParameter("rewardId"));
-
-            dao.deleteReward(rewardId);
-
-            response.sendRedirect("MainController?action=rewardManagement");
-            return;
-        }
-
-        /* ==========================
        BẬT / TẮT ACTIVE
     ===========================*/
         if ("toggle".equals(action)) {

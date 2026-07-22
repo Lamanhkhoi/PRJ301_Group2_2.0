@@ -125,24 +125,6 @@ public class RewardDAO {
         return false;
     }
 
-    public boolean deleteReward(int rewardId) {
-
-        String sql = "UPDATE Rewards SET IsActive = 0 WHERE RewardId = ?";
-
-        try (
-                 Connection cn = DBContext.getConnection();  PreparedStatement ps = cn.prepareStatement(sql)) {
-
-            ps.setInt(1, rewardId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
     public List<Reward> searchReward(String keyword) {
 
         List<Reward> list = new ArrayList<>();
@@ -333,3 +315,4 @@ public class RewardDAO {
     }
 
 }
+

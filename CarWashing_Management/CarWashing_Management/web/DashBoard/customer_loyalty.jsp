@@ -53,7 +53,7 @@
     if (filter == null || filter.trim().isEmpty()) filter = "ALL";
 
     int pageNum = 1;
-    try { pageNum = Integer.parseInt(request.getParameter("page")); } catch (Exception e) { /* giữ mặc định 1 */ }
+    try { pageNum = Integer.parseInt(request.getParameter("page")); } catch (Exception e) {  }
     if (pageNum < 1) pageNum = 1;
 
     final int PAGE_SIZE = 5;
@@ -61,7 +61,7 @@
     int totalRows = txDAO.countHistory(accountId, filter);
     int totalPages = (int) Math.ceil(totalRows / (double) PAGE_SIZE);
     if (totalPages < 1) totalPages = 1;
-    if (pageNum > totalPages) pageNum = totalPages; // tự kéo về trang hợp lệ nếu gõ tay số trang quá lớn
+    if (pageNum > totalPages) pageNum = totalPages; 
 
     SimpleDateFormat dateFmt = new SimpleDateFormat("dd/MM/yyyy");
 %>
@@ -119,7 +119,7 @@
                                 <div class="text-right">
                                     <p class="text-4xl font-extrabold text-amber-300 tracking-tight"><%= String.format("%,d", currentPoints) %> <span class="text-xl">P</span></p>
                                     <p class="text-xs text-slate-400 mt-1">Điểm khả dụng</p>
-                                    <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp"
+                                    <a href="${pageContext.request.contextPath}/MainController?action=customerRewardsDashboard"
                                        class="inline-flex items-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-600 transition text-white text-sm font-bold px-5 py-2 rounded-xl shadow-md shadow-emerald-500/30">
                                         <i class="fa-solid fa-gift"></i> Đổi thưởng
                                     </a>
@@ -159,8 +159,8 @@
                                         int delta = t.getPointsChange();
                                         String type = t.getTransactionType(); // "Earn" / "Redeem" 
                                         boolean isExpire = "Expire".equals(type);
-                                        String deltaClass = isExpire ? "text-slate-400" : (delta > 0 ? "text-emerald-600" : "text-red-500");
-                                        String iconClass = isExpire ? "fa-hourglass-end text-slate-300" : (delta > 0 ? "fa-circle-plus text-emerald-400" : "fa-circle-minus text-red-400");
+                                        String deltaClass = (delta > 0 ? "text-emerald-600" : "text-red-500");
+                                        String iconClass = (delta > 0 ? "fa-circle-plus text-emerald-400" : "fa-circle-minus text-red-400");
                                     %>
                                     <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
                                         <td class="py-3.5 px-6 text-slate-500 whitespace-nowrap"><%= dateFmt.format(t.getCreatedAt()) %></td>

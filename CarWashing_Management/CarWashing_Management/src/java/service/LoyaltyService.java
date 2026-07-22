@@ -145,10 +145,9 @@ public class LoyaltyService {
 
     /**
      * Đổi 1 reward trong catalog lấy voucher - do khách chủ động bấm "Đổi ngay"
-     * ở customer_rewards.jsp. KHÁC handleBookingCancelled() (hệ thống tự cấp,
-     * không tốn điểm thật) - hàm này TRỪ ĐIỂM THẬT của khách.
+     * ở customer_rewards.jsp. 
      *
-     * Luồng transaction (lỗi bước nào rollback hết): 1. Đọc lại Reward +
+     * Luồng transaction: 1. Đọc lại Reward +
      * CurrentPoints TRỰC TIẾP TỪ DB để kiểm tra (không tin số điểm/trạng thái
      * phía client gửi lên - client có thể bị sửa hoặc cũ). 2. Cấp voucher trước
      * (INSERT RewardRedemptions, lấy RedemptionId vừa tạo). 3. Trừ điểm + ghi
@@ -174,8 +173,7 @@ public class LoyaltyService {
             cn.setAutoCommit(false);
 
             // ===== BƯỚC 1a: Đọc lại Reward THẬT từ DB =====
-            pstCheckReward = cn.prepareStatement(
-                    "SELECT PointsRequired, IsActive FROM Rewards WHERE RewardId = ?");
+            pstCheckReward = cn.prepareStatement("SELECT PointsRequired, IsActive FROM Rewards WHERE RewardId = ?");
             pstCheckReward.setInt(1, rewardId);
             rsReward = pstCheckReward.executeQuery();
             if (!rsReward.next()) {
@@ -189,9 +187,8 @@ public class LoyaltyService {
                 return "Phần thưởng này hiện không còn khả dụng";
             }
 
-            // ===== BƯỚC 1b: Đọc lại điểm hiện có THẬT từ DB =====
-            pstCheckPoints = cn.prepareStatement(
-                    "SELECT CurrentPoints FROM CustomerLoyalty WHERE AccountId = ?");
+            // ===== BƯỚC 1b: Đọc lại điểm hiện có từ DB =====
+            pstCheckPoints = cn.prepareStatement("SELECT CurrentPoints FROM CustomerLoyalty WHERE AccountId = ?");
             pstCheckPoints.setInt(1, accountId);
             rsPoints = pstCheckPoints.executeQuery();
             if (!rsPoints.next()) {

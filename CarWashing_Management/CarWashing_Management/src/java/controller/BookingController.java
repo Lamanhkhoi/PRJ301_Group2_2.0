@@ -164,32 +164,7 @@ public class BookingController extends HttpServlet {
             // 5. Kiểm tra tính hợp lệ của Service dịch vụ trong Database trước khi lấy giá tiền
             WashServiceDAO w = new WashServiceDAO();
             WashService service = w.getServiceById(serviceId);
-//            if (service == null) {
-//                session.setAttribute("ALERT_TYPE", "fail");
-//                session.setAttribute("ALERT_MSG", "Lỗi: Dịch vụ bạn chọn không tồn tại trong hệ thống!");
-//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
-//                return;
-//            }
 
-            // 6. Thực hiện gọi DAO để chèn vào Database
-//            boolean isSuccess = bookingDAO.createNewBooking(
-//                    cus.getCustomerId(),
-//                    vehicleId,
-//                    serviceId,
-//                    bookingDate,
-//                    slotNumber,
-//                    service.getPrice()
-//            );
-//
-//            if (isSuccess) {
-//                session.setAttribute("ALERT_TYPE", "success");
-//                session.setAttribute("ALERT_MSG", "Booking thành công!");
-//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=success");
-//            } else {
-//                session.setAttribute("ALERT_TYPE", "fail");
-//                session.setAttribute("ALERT_MSG", "Booking thất bại! Vui lòng thử chọn khung giờ khác.");
-//                response.sendRedirect(request.getContextPath() + "/MainController?action=customerBookingPage&status=fail");
-//            }
             // =========================================================================
             // CHỖ THAY ĐỔI QUAN TRỌNG: KHÔNG INSERT VÀO DB NỮA MÀ ĐẨY VÀO SESSION
             // =========================================================================

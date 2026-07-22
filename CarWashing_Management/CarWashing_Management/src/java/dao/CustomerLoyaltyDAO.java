@@ -31,23 +31,16 @@ public class CustomerLoyaltyDAO {
 
                 if (rs1.next()) {
                     loyalty = new CustomerLoyalty();
-                    // Lưu ý: Đặt tên hàm set tương ứng với cấu trúc thuộc tính DTO của bạn
+                    // Lưu ý: Đặt tên hàm set tương ứng với cấu trúc thuộc tính DTO
                     loyalty.setAccountId(rs1.getInt("AccountId"));
                     loyalty.setCurrentPoints(rs1.getInt("CurrentPoints"));
                     loyalty.setLifetimeEarnedPoints(rs1.getInt("LifetimeEarnedPoints"));
                     loyalty.setLifetimeRedeemedPoints(rs1.getInt("LifetimeRedeemedPoints"));
-                    
-                    // ĐÃ SỬA: KHÔNG đọc TotalSpent/TotalWashCount từ cột DB nữa (2 cột này đứng yên,
-                    // không có code nào cập nhật - xem ghi chú dưới). Tính lại bằng rolling-window
-                    // 12 tháng NGAY BÊN DƯỚI, gán đè vào 2 field này để "hạng kế tiếp" và "% tiến
-                    // trình" phía dưới dùng ĐÚNG CÙNG con số đã quyết định CurrentTierId, tránh
-                    // tình trạng badge ghi "Gold" nhưng thanh tiến trình lại tính theo số liệu khác.
-                    loyalty.setTotalSpent(0);   // sẽ gán đè lại ngay sau khối này
-                    loyalty.setTotalWashCount(0);
+
 
                     // Đọc cấu hình chi tiết đặc quyền từ bảng LoyaltyTiers
                     LoyaltyTier currentTier = new LoyaltyTier();
-                    currentTier.setTierId(rs1.getInt("TierId")); // cần để tìm ĐÚNG hạng kế tiếp theo thứ bậc, không suy ngược từ ngưỡng
+                    currentTier.setTierId(rs1.getInt("TierId")); // cần để tìm ĐÚNG hạng kế tiếp theo thứ bậc
                     currentTier.setTierName(rs1.getString("TierName"));
                     currentTier.setBonusPointRate(rs1.getDouble("BonusPointRate"));
                     currentTier.setBookingWindowDays(rs1.getInt("BookingWindowDays"));
@@ -110,12 +103,7 @@ public class CustomerLoyaltyDAO {
                 }
 
                 // LỆNH 2: Xác định chính xác "Next Reward" (Hạng mục tiêu liền kề tiếp theo)
-                // ĐÃ SỬA BUG: bản cũ tìm hạng kế tiếp bằng cách so ngưỡng thô (kể cả bản
-                // AND đã thử trước đó) - dù có thể đúng với dữ liệu hiện tại (4 hạng tăng
-                // ngưỡng đồng đều), nhưng KHÔNG chắc đúng nếu Người 3 (phụ trách cấu hình
-                // Tier) sau này chỉnh ngưỡng không tăng đều giữa 2 tiêu chí. Sửa dứt điểm:
-                // không suy ngược từ ngưỡng nữa, tìm THẲNG TierId liền kề phía trên TierId
-                // hiện tại - đúng tuyệt đối trong MỌI trường hợp, bất kể ngưỡng cấu hình ra sao.
+                
                 if (loyalty != null) {
                     int currentTierId = (loyalty.getCurrentTierDetails() != null)
                             ? loyalty.getCurrentTierDetails().getTierId() : 0;

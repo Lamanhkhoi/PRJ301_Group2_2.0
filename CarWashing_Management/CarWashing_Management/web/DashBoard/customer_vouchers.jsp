@@ -12,10 +12,7 @@
 
     LƯU Ý QUAN TRỌNG - việc còn thiếu ở tầng hệ thống (không thuộc phạm vi trang này):
     Bảng RewardRedemptions KHÔNG có cột ngày hết hạn cho voucher (khác với điểm
-    thưởng có ExpiresAt). Trạng thái "Expired" tồn tại trong CHECK constraint
-    nhưng CHƯA CÓ cơ chế nào (cron job / kiểm tra định kỳ) tự động chuyển
-    Available -> Expired theo thời gian. Trang này chỉ hiển thị đúng những gì
-    DB có (RedeemedAt, UsedAt), không tự bịa ngày hết hạn giả.
+    thưởng có ExpiresAt).
 
     Vì số lượng voucher của 1 khách thường không nhiều (không như lịch sử điểm
     có thể hàng trăm dòng/năm), trang này tải hết 1 lần rồi lọc tab bằng JS
@@ -78,7 +75,7 @@
                                 <h1 class="text-2xl font-bold text-slate-800">Voucher Của Tôi</h1>
                                 <p class="text-sm text-slate-500 mt-1">Voucher bạn đã đổi từ điểm thưởng. Đưa mã cho nhân viên khi sử dụng.</p>
                             </div>
-                            <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp"
+                            <a href="${pageContext.request.contextPath}/MainController?action=customerRewardsDashboard"
                                class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 transition text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-sm shadow-emerald-500/30">
                                 <i class="fa-solid fa-plus"></i> Đổi thêm voucher
                             </a>
@@ -92,9 +89,7 @@
                             <button data-tab="Used" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
                                 Đã dùng <span class="ml-1 bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-full"><%= cntUsed %></span>
                             </button>
-                            <button data-tab="Expired" class="v-tab pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
-                                Hết hạn <span class="ml-1 bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-full"><%= cntExpired %></span>
-                            </button>
+                            
                         </div>
 
                         <%-- ===== LƯỚI VOUCHER "VÉ XÉ" ===== --%>
@@ -144,7 +139,7 @@
                         <div id="voucherEmpty" class="<%= cntAvail > 0 ? "hidden" : "" %> text-center py-16 text-slate-400">
                             <i class="fa-solid fa-ticket text-4xl mb-3 block"></i>
                             <p class="text-sm font-medium">Không có voucher nào trong mục này</p>
-                            <a href="<%=request.getContextPath()%>/DashBoard/customer_rewards.jsp" class="inline-block mt-3 text-sm font-bold text-emerald-600 hover:text-emerald-700">
+                            <a href="${pageContext.request.contextPath}/MainController?action=customerRewardsDashboard" class="inline-block mt-3 text-sm font-bold text-emerald-600 hover:text-emerald-700">
                                 Đổi điểm lấy voucher ngay <i class="fa-solid fa-arrow-right ml-1"></i>
                             </a>
                         </div>

@@ -209,7 +209,7 @@
                             </div>
                             <% } %>
 
-                            <form method="post" action="<%=request.getContextPath()%>/Admin/admin_config.jsp" class="flex flex-wrap items-end gap-3">
+                            <form method="post" action="<%=request.getContextPath()%>MainController?action=adminConfig" class="flex flex-wrap items-end gap-3">
                                 <input type="hidden" name="action" value="recalcTier">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-1.5">Số tháng nhìn lại</label>

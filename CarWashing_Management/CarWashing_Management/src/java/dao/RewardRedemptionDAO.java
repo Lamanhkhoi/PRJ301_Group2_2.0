@@ -20,7 +20,7 @@ public class RewardRedemptionDAO {
     /**
      * Lấy danh sách voucher của 1 khách, lọc theo trạng thái.
      * @param customerId  LƯU Ý: CustomerId (cus.getCustomerId()), KHÔNG PHẢI AccountId
-     * @param statusFilter "ALL" hoặc đúng 1 trong "Available" / "Used" / "Expired"
+     * @param statusFilter "ALL" hoặc đúng 1 trong "Available" / "Used" 
      */
     public List<RewardRedemption> getMyRedemptions(int customerId, String statusFilter) {
         List<RewardRedemption> list = new ArrayList<>();
@@ -46,27 +46,6 @@ public class RewardRedemptionDAO {
             e.printStackTrace();
         }
         return list;
-    }
-
-    /**
-     * Đếm số voucher theo từng trạng thái - dùng để hiện số trên 3 tab
-     * (Khả dụng / Đã dùng / Hết hạn) mà không cần tải hết dữ liệu về.
-     */
-    public int countByStatus(int customerId, String status) {
-        int count = 0;
-        String sql = "SELECT COUNT(*) AS Total FROM RewardRedemptions WHERE CustomerId = ? AND Status = ?";
-
-        try (Connection cn = DBContext.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
-            ps.setInt(1, customerId);
-            ps.setString(2, status);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) count = rs.getInt("Total");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return count;
     }
 
     private RewardRedemption mapRow(ResultSet rs) throws SQLException {

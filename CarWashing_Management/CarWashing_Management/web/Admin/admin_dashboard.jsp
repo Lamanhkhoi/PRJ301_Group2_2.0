@@ -6,67 +6,7 @@
 <%@page import="dto.AdminDashboardData.ChartPoint"%>
 <%@page import="dto.AdminDashboardData.ServiceStat"%>
 <%@page import="dto.AdminDashboardData.RecentBooking"%>
-<%!
-    // Chuyển List<ChartPoint> thành 2 mảng JSON (labels, values) để nạp vào Chart.js.
-    // Viết thủ công (không dùng thư viện JSON ngoài) vì dữ liệu chỉ gồm số và nhãn tiếng Việt đơn giản.
-    private String chartLabelsJson(List<ChartPoint> points) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < points.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append("\"").append(points.get(i).getLabel().replace("\"", "\\\"")).append("\"");
-        }
-        return sb.append("]").toString();
-    }
-
-    private String chartValuesJson(List<ChartPoint> points) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < points.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(points.get(i).getValue());
-        }
-        return sb.append("]").toString();
-    }
-
-    private String serviceLabelsJson(List<ServiceStat> stats) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < stats.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append("\"").append(stats.get(i).getServiceName().replace("\"", "\\\"")).append("\"");
-        }
-        return sb.append("]").toString();
-    }
-
-    private String serviceValuesJson(List<ServiceStat> stats) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < stats.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(stats.get(i).getBookingCount());
-        }
-        return sb.append("]").toString();
-    }
-
-    private String statusBadgeClass(String status) {
-        if (status == null) return "bg-slate-100 text-slate-600";
-        switch (status) {
-            case "Pending": return "bg-amber-100 text-amber-700";
-            case "CheckedIn": return "bg-blue-100 text-blue-700";
-            case "Completed": return "bg-emerald-100 text-emerald-700";
-            case "NoShow": return "bg-rose-100 text-rose-700";
-            default: return "bg-slate-100 text-slate-600";
-        }
-    }
-
-    private String statusLabel(String status) {
-        if (status == null) return "--";
-        switch (status) {
-            case "Pending": return "Chờ xử lý";
-            case "CheckedIn": return "Đang rửa";
-            case "Completed": return "Hoàn tất";
-            case "NoShow": return "Không đến";
-            default: return status;
-        }
-    }
-%>
+<%@page import="util.DashboardViewUtil" %>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -105,7 +45,7 @@
                         </div>
                         <% } else { %>
 
-                        <!-- ============ CÂU HỎI 1: HÔM NAY KIẾM ĐƯỢC BAO NHIÊU? ============ -->
+                        <!-- KPI Cards -->
                         <section>
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Hôm nay</span>
@@ -156,7 +96,7 @@
                             </div>
                         </section>
 
-                        <!-- ============ CÂU HỎI 2: CỬA HÀNG CÓ VẤN ĐỀ GÌ KHÔNG? ============ -->
+                        <!-- Analyst -->
                         <section>
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Tình Hình Kinh Doanh</span>
@@ -205,6 +145,7 @@
                                 </div>
                             </form>
 
+                            <!-- Canvas lúc đầu hoàn toàn trống. Chart.js sẽ vẽ lên đó -->
                             <!-- Revenue Chart + Booking Trend -->
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -261,7 +202,7 @@
                             </div>
                         </section>
 
-                        <!-- ============ CÂU HỎI 3: NHỮNG NGÀY TỚI CẦN CHUẨN BỊ GÌ? ============ -->
+                        <!-- Booking hiện tại và sắp tới -->
                         <section>
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Đang Diễn Ra</span>
@@ -283,8 +224,8 @@
                                                 <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName() %> · <%= rb.getLicensePlate() %></p>
                                                 <p class="text-xs text-slate-400"><%= rb.getServiceName() %></p>
                                             </div>
-                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus()) %>">
-                                                <%= statusLabel(rb.getBookingStatus()) %>
+                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= DashboardViewUtil.statusBadgeClass(rb.getBookingStatus()) %>">
+                                                <%= DashboardViewUtil.statusLabel(rb.getBookingStatus()) %>
                                             </span>
                                         </div>
                                         <% } %>
@@ -306,8 +247,8 @@
                                                 <p class="text-sm font-medium text-slate-700"><%= rb.getCustomerName() %> · <%= rb.getLicensePlate() %></p>
                                                 <p class="text-xs text-slate-400"><%= rb.getServiceName() %></p>
                                             </div>
-                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= statusBadgeClass(rb.getBookingStatus()) %>">
-                                                <%= statusLabel(rb.getBookingStatus()) %>
+                                            <span class="text-xs font-medium px-2 py-1 rounded-full <%= DashboardViewUtil.statusBadgeClass(rb.getBookingStatus()) %>">
+                                                <%= DashboardViewUtil.statusLabel(rb.getBookingStatus()) %>
                                             </span>
                                         </div>
                                         <% } %>
@@ -330,26 +271,31 @@
             // 2 hàm nhỏ dùng cho thanh bộ lọc: đổi loại kỳ (Tuần/Tháng/Quý/Năm) hoặc
             // dịch chuyển kỳ (Kỳ trước/Kỳ sau/Hôm nay). Vẫn là 1 lượt submit form POST
             // bình thường (reload lại trang), không dùng fetch/AJAX.
+            
+            // Filter type: WEEK, MONTH, QUARTER, YEAR
             function dashboardSetFilter(type) {
                 document.getElementById('filterTypeInput').value = type;
                 document.getElementById('navigateInput').value = '';
                 document.getElementById('dashboardFilterForm').submit();
             }
+            // Go prev or next or today
             function dashboardNavigate(direction) {
                 document.getElementById('navigateInput').value = direction;
                 document.getElementById('dashboardFilterForm').submit();
             }
-
-            const revenueLabels = <%= chartLabelsJson(data.getRevenueChart()) %>;
-            const revenueValues = <%= chartValuesJson(data.getRevenueChart()) %>;
-            const bookingLabels = <%= chartLabelsJson(data.getBookingTrend()) %>;
-            const bookingValues = <%= chartValuesJson(data.getBookingTrend()) %>;
-            const serviceLabels = <%= serviceLabelsJson(data.getTopServices()) %>;
-            const serviceValues = <%= serviceValuesJson(data.getTopServices()) %>;
+            
+            // Xử lý chart sau khi covert sang json
+            const revenueLabels = <%= DashboardViewUtil.chartLabelsJson(data.getRevenueChart()) %>;
+            const revenueValues = <%= DashboardViewUtil.chartValuesJson(data.getRevenueChart()) %>;
+            const bookingLabels = <%= DashboardViewUtil.chartLabelsJson(data.getBookingTrend()) %>;
+            const bookingValues = <%= DashboardViewUtil.chartValuesJson(data.getBookingTrend()) %>;
+            const serviceLabels = <%= DashboardViewUtil.serviceLabelsJson(data.getTopServices()) %>;
+            const serviceValues = <%= DashboardViewUtil.serviceValuesJson(data.getTopServices()) %>;
             const paidCount = <%= data.getPaidCount() %>;
             const pendingCount = <%= data.getPendingCount() %>;
             const cancelCount = <%= data.getCancelCount() %>;
-
+            
+            // Tạo chart
             new Chart(document.getElementById('revenueChart'), {
                 type: 'line',
                 data: {

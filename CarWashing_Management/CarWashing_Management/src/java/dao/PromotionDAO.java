@@ -296,26 +296,4 @@ public class PromotionDAO {
 
         return false;
     }
-
-    //==========================
-    // Delete thật
-    //==========================
-    public boolean deletePromotion(int id) {
-
-        String sql = "DELETE FROM Promotions WHERE PromotionId=?";
-
-        try (
-                 Connection con = DBContext.getConnection();  PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-    
 }

@@ -5,7 +5,7 @@
 <%--
     ============================================================
     TRANG: QUẢN LÝ KHUYẾN MÃI (Admin) - admin_promotion.jsp
-    Bố cục: Toolbar (search + filter + nút Tạo) -> Bảng danh sách -> Modal Tạo/Sửa -> Modal Xóa
+    Bố cục: Toolbar (search + filter + nút Tạo) -> Bảng danh sách -> Modal Tạo/Sửa 
 
     LƯU Ý:
     Banner ở trang Ưu Đãi của Customer lấy từ field "Ảnh banner"
@@ -18,8 +18,7 @@
             + update
       3. Toggle:
             + đổi IsActive
-      4. Delete:
-            + soft delete hoặc hard delete
+      
     ============================================================
 --%>
 
@@ -415,49 +414,7 @@
 
             </div>
 
-            <%-- ===== MODAL XÁC NHẬN XÓA ===== --%>
-            <div id="deleteModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0">
-                <div id="deleteModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
-                    <div class="p-8 text-center">
-                        <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800">Xóa chương trình?</h3>
-                        <p class="text-sm text-slate-500 mt-2">Bạn sắp xóa <span id="delName" class="font-bold text-slate-700"></span>. Hành động này không thể hoàn tác.</p>
-                    </div>
-                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex gap-3">
-                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition">Hủy</button>
-                        <%-- TODO BACKEND: submit form xóa (khuyến nghị soft delete: set isDeleted = 1) --%>
-                        <form method="post"
-                              action="<%=request.getContextPath()%>/MainController">
-
-                            <input
-                                type="hidden"
-                                name="action"
-                                value="promotionManagement">
-
-                            <input
-                                type="hidden"
-                                name="promotionAction"
-                                value="delete">
-
-                            <input
-                                type="hidden"
-                                name="promotionId"
-                                id="deletePromotionId">
-
-                            <button
-                                type="submit"
-                                class="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition">
-
-                                Xóa
-
-                            </button>
-
-                        </form>
-                    </div>
-                </div>
-            </div>
+            
         </div>
 
         <script>
